@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -12,10 +13,36 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useFinance } from '@/context/finance-context';
+
 export default function NuevoGastoScreen() {
+  const { addExpense } = useFinance();
   const [monto, setMonto] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [tipo, setTipo] = useState<'personal' | 'compartido'>('personal');
+
+  const amount = Number(monto.replace(',', '.'));
+  const isValidAmount = Number.isFinite(amount) && amount > 0;
+
+  const guardarGasto = () => {
+    if (!isValidAmount) {
+      Alert.alert('Monto inválido', 'Ingresa un monto mayor a 0.');
+      return;
+    }
+
+    if (!descripcion.trim()) {
+      Alert.alert('Falta la descripción', 'Escribe una descripción para el gasto.');
+      return;
+    }
+
+    addExpense({
+      amount,
+      description: descripcion.trim(),
+      type: tipo,
+    });
+
+    router.back();
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -105,25 +132,20 @@ export default function NuevoGastoScreen() {
                 Por ahora se dividirá 50% / 50%.
               </Text>
 
-              {monto !== '' && !isNaN(Number(monto)) && (
+              {isValidAmount && (
                 <>
                   <Text style={styles.sharedAmount}>
-                    Tu parte: S/ {(Number(monto) / 2).toFixed(2)}
+                    Tu parte: S/ {(amount / 2).toFixed(2)}
                   </Text>
                   <Text style={styles.sharedAmount}>
-                    Pareja: S/ {(Number(monto) / 2).toFixed(2)}
+                    Pareja: S/ {(amount / 2).toFixed(2)}
                   </Text>
                 </>
               )}
             </View>
           )}
 
-          <TouchableOpacity
-            style={styles.saveButton}
-            onPress={() => {
-              console.log({ monto, descripcion, tipo });
-            }}
-          >
+          <TouchableOpacity style={styles.saveButton} onPress={guardarGasto}>
             <Text style={styles.saveButtonText}>Guardar gasto</Text>
           </TouchableOpacity>
         </ScrollView>
