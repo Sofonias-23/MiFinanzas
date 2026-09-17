@@ -20,6 +20,12 @@ export default function RootLayout() {
             presentation: 'card',
           }}
         />
+        <Stack.Screen
+          name="nuevo-ingreso"
+          options={{
+            presentation: 'card',
+          }}
+        />
       </Stack>
     </FinanceProvider>
   );
