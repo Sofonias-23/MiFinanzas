@@ -1,5 +1,7 @@
 import { router } from 'expo-router';
+import { useEffect } from 'react';
 import {
+  ActivityIndicator,
   ScrollView,
   StyleSheet,
   Text,
@@ -11,9 +13,38 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFinance } from '@/context/finance-context';
 
 export default function HomeScreen() {
-  const { expenses, totalMyExpenses, totalSharedExpenses } = useFinance();
+  const {
+    user,
+    authLoading,
+    expenses,
+    loadingExpenses,
+    signOut,
+    totalMyExpenses,
+    totalSharedExpenses,
+  } = useFinance();
+
+  useEffect(() => {
+    if (!authLoading && !user) router.replace('/login');
+  }, [authLoading, user]);
+
+  if (authLoading || !user) {
+    return (
+      <SafeAreaView style={styles.loadingContainer}>
+        <ActivityIndicator size="large" />
+        <Text style={styles.loadingText}>Cargando MiFinanzas...</Text>
+      </SafeAreaView>
+    );
+  }
+
   const ingresos = 0;
   const saldo = ingresos - totalMyExpenses;
+  const displayName = user.user_metadata?.display_name || user.email?.split('@')[0] || 'Usuario';
+  const initial = displayName.slice(0, 1).toUpperCase();
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.replace('/login');
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -23,12 +54,12 @@ export default function HomeScreen() {
       >
         <View style={styles.header}>
           <View>
-            <Text style={styles.saludo}>Hola, Sofonías</Text>
+            <Text style={styles.saludo}>Hola, {displayName}</Text>
             <Text style={styles.subtitulo}>Resumen financiero</Text>
           </View>
 
-          <TouchableOpacity style={styles.avatar}>
-            <Text style={styles.avatarText}>S</Text>
+          <TouchableOpacity style={styles.avatar} onPress={handleSignOut}>
+            <Text style={styles.avatarText}>{initial}</Text>
           </TouchableOpacity>
         </View>
 
@@ -64,7 +95,7 @@ export default function HomeScreen() {
           <TouchableOpacity style={styles.actionCard}>
             <Text style={styles.actionIcon}>↗</Text>
             <Text style={styles.actionTitle}>Ingreso</Text>
-            <Text style={styles.actionSubtitle}>Agregar</Text>
+            <Text style={styles.actionSubtitle}>Próximamente</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.actionCard}>
@@ -87,7 +118,7 @@ export default function HomeScreen() {
           </View>
 
           <Text style={styles.monthFooter}>
-            Configuraremos tu presupuesto mensual más adelante.
+            Tus gastos ya se guardan en Supabase.
           </Text>
         </View>
 
@@ -112,12 +143,17 @@ export default function HomeScreen() {
 
         <Text style={styles.sectionTitle}>Movimientos recientes</Text>
 
-        {expenses.length === 0 ? (
+        {loadingExpenses ? (
+          <View style={styles.emptyCard}>
+            <ActivityIndicator />
+            <Text style={styles.emptySubtitle}>Cargando movimientos...</Text>
+          </View>
+        ) : expenses.length === 0 ? (
           <View style={styles.emptyCard}>
             <Text style={styles.emptyIcon}>🧾</Text>
             <Text style={styles.emptyTitle}>Aún no tienes movimientos</Text>
             <Text style={styles.emptySubtitle}>
-              Tus gastos e ingresos aparecerán aquí.
+              Tus gastos guardados aparecerán aquí.
             </Text>
           </View>
         ) : (
@@ -144,28 +180,32 @@ export default function HomeScreen() {
                     </View>
                   </View>
 
-                  <Text style={styles.movementAmount}>
-                    - S/ {myPart.toFixed(2)}
-                  </Text>
+                  <Text style={styles.movementAmount}>- S/ {myPart.toFixed(2)}</Text>
                 </View>
               );
             })}
           </View>
         )}
+
+        <TouchableOpacity style={styles.logoutButton} onPress={handleSignOut}>
+          <Text style={styles.logoutText}>Cerrar sesión</Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  loadingContainer: {
     flex: 1,
     backgroundColor: '#0B1220',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
   },
-  content: {
-    padding: 20,
-    paddingBottom: 40,
-  },
+  loadingText: { color: '#94A3B8' },
+  container: { flex: 1, backgroundColor: '#0B1220' },
+  content: { padding: 20, paddingBottom: 40 },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -173,16 +213,8 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 24,
   },
-  saludo: {
-    color: '#FFFFFF',
-    fontSize: 26,
-    fontWeight: '700',
-  },
-  subtitulo: {
-    color: '#94A3B8',
-    fontSize: 14,
-    marginTop: 4,
-  },
+  saludo: { color: '#FFFFFF', fontSize: 26, fontWeight: '700' },
+  subtitulo: { color: '#94A3B8', fontSize: 14, marginTop: 4 },
   avatar: {
     width: 44,
     height: 44,
@@ -191,217 +223,46 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  balanceCard: {
-    backgroundColor: '#111C30',
-    borderRadius: 24,
-    padding: 22,
-  },
-  balanceLabel: {
-    color: '#94A3B8',
-    fontSize: 14,
-  },
-  balance: {
-    color: '#FFFFFF',
-    fontSize: 38,
-    fontWeight: '800',
-    marginTop: 6,
-    marginBottom: 24,
-  },
-  balanceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  miniLabel: {
-    color: '#64748B',
-    fontSize: 13,
-  },
-  ingreso: {
-    color: '#22C55E',
-    fontSize: 17,
-    fontWeight: '700',
-    marginTop: 4,
-  },
-  gasto: {
-    color: '#F87171',
-    fontSize: 17,
-    fontWeight: '700',
-    marginTop: 4,
-  },
-  sectionTitle: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '700',
-    marginTop: 28,
-    marginBottom: 14,
-  },
-  actionsRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  actionCard: {
-    flex: 1,
-    backgroundColor: '#111827',
-    borderRadius: 18,
-    paddingVertical: 18,
-    alignItems: 'center',
-  },
-  actionIcon: {
-    color: '#60A5FA',
-    fontSize: 24,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  actionTitle: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  actionSubtitle: {
-    color: '#64748B',
-    fontSize: 11,
-    marginTop: 3,
-  },
-  monthCard: {
-    backgroundColor: '#111827',
-    borderRadius: 18,
-    padding: 18,
-  },
-  monthRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  monthLabel: {
-    color: '#CBD5E1',
-    fontSize: 14,
-  },
-  monthValue: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  progressBackground: {
-    height: 10,
-    backgroundColor: '#1E293B',
-    borderRadius: 20,
-    marginTop: 14,
-    overflow: 'hidden',
-  },
-  progressBar: {
-    width: '0%',
-    height: '100%',
-    backgroundColor: '#3B82F6',
-  },
-  monthFooter: {
-    color: '#64748B',
-    fontSize: 12,
-    marginTop: 10,
-  },
-  sharedCard: {
-    backgroundColor: '#111827',
-    borderRadius: 18,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  sharedLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  sharedIcon: {
-    width: 46,
-    height: 46,
-    borderRadius: 14,
-    backgroundColor: '#1E293B',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  sharedIconText: {
-    fontSize: 22,
-  },
-  sharedTitle: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  sharedSubtitle: {
-    color: '#64748B',
-    fontSize: 12,
-    marginTop: 3,
-  },
-  arrow: {
-    color: '#64748B',
-    fontSize: 30,
-  },
-  emptyCard: {
-    backgroundColor: '#111827',
-    borderRadius: 18,
-    padding: 24,
-    alignItems: 'center',
-  },
-  emptyIcon: {
-    fontSize: 32,
-    marginBottom: 10,
-  },
-  emptyTitle: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  emptySubtitle: {
-    color: '#64748B',
-    fontSize: 13,
-    textAlign: 'center',
-    marginTop: 6,
-  },
-  movementsList: {
-    gap: 10,
-  },
-  movementCard: {
-    backgroundColor: '#111827',
-    borderRadius: 16,
-    padding: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  movementLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  movementIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    backgroundColor: '#1E293B',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  movementTextWrap: {
-    flex: 1,
-  },
-  movementTitle: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  movementMeta: {
-    color: '#64748B',
-    fontSize: 11,
-    marginTop: 4,
-  },
-  movementAmount: {
-    color: '#F87171',
-    fontSize: 14,
-    fontWeight: '700',
-    marginLeft: 10,
-  },
+  avatarText: { color: '#FFFFFF', fontSize: 18, fontWeight: '700' },
+  balanceCard: { backgroundColor: '#111C30', borderRadius: 24, padding: 22 },
+  balanceLabel: { color: '#94A3B8', fontSize: 14 },
+  balance: { color: '#FFFFFF', fontSize: 38, fontWeight: '800', marginTop: 6, marginBottom: 24 },
+  balanceRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  miniLabel: { color: '#64748B', fontSize: 13 },
+  ingreso: { color: '#22C55E', fontSize: 17, fontWeight: '700', marginTop: 4 },
+  gasto: { color: '#F87171', fontSize: 17, fontWeight: '700', marginTop: 4 },
+  sectionTitle: { color: '#FFFFFF', fontSize: 18, fontWeight: '700', marginTop: 28, marginBottom: 14 },
+  actionsRow: { flexDirection: 'row', gap: 10 },
+  actionCard: { flex: 1, backgroundColor: '#111827', borderRadius: 18, paddingVertical: 18, alignItems: 'center' },
+  actionIcon: { color: '#60A5FA', fontSize: 24, fontWeight: '700', marginBottom: 8 },
+  actionTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
+  actionSubtitle: { color: '#64748B', fontSize: 11, marginTop: 3 },
+  monthCard: { backgroundColor: '#111827', borderRadius: 18, padding: 18 },
+  monthRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  monthLabel: { color: '#CBD5E1', fontSize: 14 },
+  monthValue: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
+  progressBackground: { height: 10, backgroundColor: '#1E293B', borderRadius: 20, marginTop: 14, overflow: 'hidden' },
+  progressBar: { width: '0%', height: '100%', backgroundColor: '#3B82F6' },
+  monthFooter: { color: '#64748B', fontSize: 12, marginTop: 10 },
+  sharedCard: { backgroundColor: '#111827', borderRadius: 18, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  sharedLeft: { flexDirection: 'row', alignItems: 'center' },
+  sharedIcon: { width: 46, height: 46, borderRadius: 14, backgroundColor: '#1E293B', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  sharedIconText: { fontSize: 22 },
+  sharedTitle: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
+  sharedSubtitle: { color: '#64748B', fontSize: 12, marginTop: 3 },
+  arrow: { color: '#64748B', fontSize: 30 },
+  emptyCard: { backgroundColor: '#111827', borderRadius: 18, padding: 24, alignItems: 'center', gap: 6 },
+  emptyIcon: { fontSize: 32, marginBottom: 10 },
+  emptyTitle: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
+  emptySubtitle: { color: '#64748B', fontSize: 13, textAlign: 'center', marginTop: 6 },
+  movementsList: { gap: 10 },
+  movementCard: { backgroundColor: '#111827', borderRadius: 16, padding: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  movementLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+  movementIcon: { width: 42, height: 42, borderRadius: 12, backgroundColor: '#1E293B', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  movementTextWrap: { flex: 1 },
+  movementTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
+  movementMeta: { color: '#64748B', fontSize: 11, marginTop: 4 },
+  movementAmount: { color: '#F87171', fontSize: 14, fontWeight: '700', marginLeft: 10 },
+  logoutButton: { marginTop: 28, padding: 16, alignItems: 'center' },
+  logoutText: { color: '#94A3B8', fontWeight: '700' },
 });
