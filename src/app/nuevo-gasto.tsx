@@ -15,29 +15,23 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ExpenseCategory, useFinance } from '@/context/finance-context';
 
-const CATEGORIES: { value: ExpenseCategory; label: string; icon: string }[] = [
-  { value: 'comida', label: 'Comida', icon: '🍽️' },
-  { value: 'transporte', label: 'Transporte', icon: '🚕' },
-  { value: 'hogar', label: 'Hogar', icon: '🏠' },
-  { value: 'ocio', label: 'Ocio', icon: '🎬' },
-  { value: 'salud', label: 'Salud', icon: '❤️' },
-  { value: 'compras', label: 'Compras', icon: '🛍️' },
-  { value: 'servicios', label: 'Servicios', icon: '💡' },
-  { value: 'educacion', label: 'Educación', icon: '📚' },
-  { value: 'otros', label: 'Otros', icon: '📦' },
-];
-
 export default function NuevoGastoScreen() {
-  const { user, authLoading, addExpense } = useFinance();
+  const { user, authLoading, addExpense, categories, loadingCategories } = useFinance();
   const [monto, setMonto] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [tipo, setTipo] = useState<'personal' | 'compartido'>('personal');
-  const [categoria, setCategoria] = useState<ExpenseCategory>('comida');
+  const [categoria, setCategoria] = useState<ExpenseCategory>('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) router.replace('/login');
   }, [authLoading, user]);
+
+  useEffect(() => {
+    if (categories.length > 0 && !categories.some((item) => item.slug === categoria)) {
+      setCategoria(categories[0].slug);
+    }
+  }, [categories, categoria]);
 
   const amount = Number(monto.replace(',', '.'));
   const isValidAmount = Number.isFinite(amount) && amount > 0;
@@ -50,6 +44,11 @@ export default function NuevoGastoScreen() {
 
     if (!descripcion.trim()) {
       Alert.alert('Falta la descripción', 'Escribe una descripción para el gasto.');
+      return;
+    }
+
+    if (!categoria) {
+      Alert.alert('Falta la categoría', 'Agrega o selecciona una categoría.');
       return;
     }
 
@@ -88,12 +87,9 @@ export default function NuevoGastoScreen() {
           </TouchableOpacity>
 
           <Text style={styles.title}>Nuevo gasto</Text>
-          <Text style={styles.subtitle}>
-            Se guardará en tu cuenta de MiFinanzas.
-          </Text>
+          <Text style={styles.subtitle}>Se guardará en tu cuenta de MiFinanzas.</Text>
 
           <Text style={styles.label}>Monto</Text>
-
           <TextInput
             style={styles.inputMonto}
             placeholder="S/ 0.00"
@@ -104,7 +100,6 @@ export default function NuevoGastoScreen() {
           />
 
           <Text style={styles.label}>Descripción</Text>
-
           <TextInput
             style={styles.input}
             placeholder="Ej. Cine, supermercado, taxi..."
@@ -113,60 +108,58 @@ export default function NuevoGastoScreen() {
             onChangeText={setDescripcion}
           />
 
-          <Text style={styles.label}>Categoría</Text>
-          <View style={styles.categoryGrid}>
-            {CATEGORIES.map((item) => {
-              const selected = categoria === item.value;
-              return (
-                <TouchableOpacity
-                  key={item.value}
-                  style={[styles.categoryButton, selected && styles.categoryButtonActive]}
-                  onPress={() => setCategoria(item.value)}
-                >
-                  <Text style={styles.categoryIcon}>{item.icon}</Text>
-                  <Text style={[styles.categoryText, selected && styles.categoryTextActive]}>
-                    {item.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
+          <View style={styles.categoryHeader}>
+            <Text style={styles.labelNoMargin}>Categoría</Text>
+            <TouchableOpacity onPress={() => router.push('/categorias')}>
+              <Text style={styles.manageText}>Administrar</Text>
+            </TouchableOpacity>
           </View>
 
-          <Text style={styles.label}>Tipo de gasto</Text>
+          {loadingCategories ? (
+            <Text style={styles.categoryStatus}>Cargando categorías...</Text>
+          ) : categories.length === 0 ? (
+            <TouchableOpacity style={styles.emptyCategories} onPress={() => router.push('/categorias')}>
+              <Text style={styles.emptyCategoriesTitle}>No tienes categorías</Text>
+              <Text style={styles.emptyCategoriesText}>Toca aquí para crear la primera.</Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.categoryGrid}>
+              {categories.map((item) => {
+                const selected = categoria === item.slug;
+                return (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={[styles.categoryButton, selected && styles.categoryButtonActive]}
+                    onPress={() => setCategoria(item.slug)}
+                  >
+                    <Text style={styles.categoryIcon}>{item.icon}</Text>
+                    <Text style={[styles.categoryText, selected && styles.categoryTextActive]}>
+                      {item.name}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
 
+          <Text style={styles.label}>Tipo de gasto</Text>
           <View style={styles.tipoRow}>
             <TouchableOpacity
-              style={[
-                styles.tipoButton,
-                tipo === 'personal' && styles.tipoActivo,
-              ]}
+              style={[styles.tipoButton, tipo === 'personal' && styles.tipoActivo]}
               onPress={() => setTipo('personal')}
             >
               <Text style={styles.tipoIcon}>👤</Text>
-              <Text
-                style={[
-                  styles.tipoText,
-                  tipo === 'personal' && styles.tipoTextActivo,
-                ]}
-              >
+              <Text style={[styles.tipoText, tipo === 'personal' && styles.tipoTextActivo]}>
                 Personal
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[
-                styles.tipoButton,
-                tipo === 'compartido' && styles.tipoActivo,
-              ]}
+              style={[styles.tipoButton, tipo === 'compartido' && styles.tipoActivo]}
               onPress={() => setTipo('compartido')}
             >
               <Text style={styles.tipoIcon}>👥</Text>
-              <Text
-                style={[
-                  styles.tipoText,
-                  tipo === 'compartido' && styles.tipoTextActivo,
-                ]}
-              >
+              <Text style={[styles.tipoText, tipo === 'compartido' && styles.tipoTextActivo]}>
                 Compartido
               </Text>
             </TouchableOpacity>
@@ -181,25 +174,19 @@ export default function NuevoGastoScreen() {
 
               {isValidAmount && (
                 <>
-                  <Text style={styles.sharedAmount}>
-                    Tu parte: S/ {(amount / 2).toFixed(2)}
-                  </Text>
-                  <Text style={styles.sharedAmount}>
-                    Pareja: S/ {(amount / 2).toFixed(2)}
-                  </Text>
+                  <Text style={styles.sharedAmount}>Tu parte: S/ {(amount / 2).toFixed(2)}</Text>
+                  <Text style={styles.sharedAmount}>Pareja: S/ {(amount / 2).toFixed(2)}</Text>
                 </>
               )}
             </View>
           )}
 
           <TouchableOpacity
-            style={[styles.saveButton, saving && styles.saveButtonDisabled]}
+            style={[styles.saveButton, (saving || categories.length === 0) && styles.saveButtonDisabled]}
             onPress={guardarGasto}
-            disabled={saving}
+            disabled={saving || categories.length === 0}
           >
-            <Text style={styles.saveButtonText}>
-              {saving ? 'Guardando...' : 'Guardar gasto'}
-            </Text>
+            <Text style={styles.saveButtonText}>{saving ? 'Guardando...' : 'Guardar gasto'}</Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -215,8 +202,15 @@ const styles = StyleSheet.create({
   title: { color: '#FFFFFF', fontSize: 30, fontWeight: '800', marginTop: 25 },
   subtitle: { color: '#64748B', fontSize: 14, marginTop: 6, marginBottom: 30 },
   label: { color: '#CBD5E1', fontSize: 14, fontWeight: '600', marginBottom: 8, marginTop: 18 },
+  labelNoMargin: { color: '#CBD5E1', fontSize: 14, fontWeight: '600' },
   inputMonto: { backgroundColor: '#111827', borderRadius: 18, padding: 20, color: '#FFFFFF', fontSize: 30, fontWeight: '700' },
   input: { backgroundColor: '#111827', borderRadius: 16, padding: 16, color: '#FFFFFF', fontSize: 16 },
+  categoryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 18, marginBottom: 10 },
+  manageText: { color: '#60A5FA', fontSize: 13, fontWeight: '700' },
+  categoryStatus: { color: '#64748B', fontSize: 13 },
+  emptyCategories: { backgroundColor: '#111827', borderRadius: 16, padding: 18, alignItems: 'center' },
+  emptyCategoriesTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
+  emptyCategoriesText: { color: '#64748B', fontSize: 12, marginTop: 4 },
   categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   categoryButton: {
     width: '31%',
