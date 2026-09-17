@@ -13,13 +13,26 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useFinance } from '@/context/finance-context';
+import { ExpenseCategory, useFinance } from '@/context/finance-context';
+
+const CATEGORIES: { value: ExpenseCategory; label: string; icon: string }[] = [
+  { value: 'comida', label: 'Comida', icon: '🍽️' },
+  { value: 'transporte', label: 'Transporte', icon: '🚕' },
+  { value: 'hogar', label: 'Hogar', icon: '🏠' },
+  { value: 'ocio', label: 'Ocio', icon: '🎬' },
+  { value: 'salud', label: 'Salud', icon: '❤️' },
+  { value: 'compras', label: 'Compras', icon: '🛍️' },
+  { value: 'servicios', label: 'Servicios', icon: '💡' },
+  { value: 'educacion', label: 'Educación', icon: '📚' },
+  { value: 'otros', label: 'Otros', icon: '📦' },
+];
 
 export default function NuevoGastoScreen() {
   const { user, authLoading, addExpense } = useFinance();
   const [monto, setMonto] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [tipo, setTipo] = useState<'personal' | 'compartido'>('personal');
+  const [categoria, setCategoria] = useState<ExpenseCategory>('comida');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -46,6 +59,7 @@ export default function NuevoGastoScreen() {
         amount,
         description: descripcion.trim(),
         type: tipo,
+        category: categoria,
       });
       router.back();
     } catch (error: any) {
@@ -98,6 +112,25 @@ export default function NuevoGastoScreen() {
             value={descripcion}
             onChangeText={setDescripcion}
           />
+
+          <Text style={styles.label}>Categoría</Text>
+          <View style={styles.categoryGrid}>
+            {CATEGORIES.map((item) => {
+              const selected = categoria === item.value;
+              return (
+                <TouchableOpacity
+                  key={item.value}
+                  style={[styles.categoryButton, selected && styles.categoryButtonActive]}
+                  onPress={() => setCategoria(item.value)}
+                >
+                  <Text style={styles.categoryIcon}>{item.icon}</Text>
+                  <Text style={[styles.categoryText, selected && styles.categoryTextActive]}>
+                    {item.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
 
           <Text style={styles.label}>Tipo de gasto</Text>
 
@@ -184,6 +217,23 @@ const styles = StyleSheet.create({
   label: { color: '#CBD5E1', fontSize: 14, fontWeight: '600', marginBottom: 8, marginTop: 18 },
   inputMonto: { backgroundColor: '#111827', borderRadius: 18, padding: 20, color: '#FFFFFF', fontSize: 30, fontWeight: '700' },
   input: { backgroundColor: '#111827', borderRadius: 16, padding: 16, color: '#FFFFFF', fontSize: 16 },
+  categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  categoryButton: {
+    width: '31%',
+    minHeight: 78,
+    backgroundColor: '#111827',
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#1E293B',
+    paddingHorizontal: 6,
+    paddingVertical: 10,
+  },
+  categoryButtonActive: { borderColor: '#3B82F6', backgroundColor: '#172554' },
+  categoryIcon: { fontSize: 22, marginBottom: 5 },
+  categoryText: { color: '#94A3B8', fontSize: 11, fontWeight: '700', textAlign: 'center' },
+  categoryTextActive: { color: '#FFFFFF' },
   tipoRow: { flexDirection: 'row', gap: 12 },
   tipoButton: { flex: 1, backgroundColor: '#111827', borderRadius: 16, padding: 18, alignItems: 'center', borderWidth: 1, borderColor: '#1E293B' },
   tipoActivo: { borderColor: '#3B82F6', backgroundColor: '#172554' },
