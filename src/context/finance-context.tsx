@@ -22,22 +22,39 @@ export type Expense = {
   householdId?: string | null;
 };
 
+export type Income = {
+  id: string;
+  amount: number;
+  description: string;
+  createdAt: string;
+};
+
 type NewExpense = {
   amount: number;
   description: string;
   type: ExpenseType;
 };
 
+type NewIncome = {
+  amount: number;
+  description: string;
+};
+
 type FinanceContextValue = {
   user: User | null;
   authLoading: boolean;
   expenses: Expense[];
+  incomes: Income[];
   loadingExpenses: boolean;
+  loadingIncomes: boolean;
   addExpense: (expense: NewExpense) => Promise<void>;
+  addIncome: (income: NewIncome) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, displayName?: string) => Promise<boolean>;
   signOut: () => Promise<void>;
   refreshExpenses: () => Promise<void>;
+  refreshIncomes: () => Promise<void>;
+  totalIncome: number;
   totalMyExpenses: number;
   totalSharedExpenses: number;
 };
@@ -55,6 +72,15 @@ function mapExpense(row: any): Expense {
   };
 }
 
+function mapIncome(row: any): Income {
+  return {
+    id: row.id,
+    amount: Number(row.amount),
+    description: row.description,
+    createdAt: row.created_at,
+  };
+}
+
 function createUuid() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (char) => {
     const random = Math.floor(Math.random() * 16);
@@ -67,7 +93,9 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [incomes, setIncomes] = useState<Income[]>([]);
   const [loadingExpenses, setLoadingExpenses] = useState(false);
+  const [loadingIncomes, setLoadingIncomes] = useState(false);
   const [householdId, setHouseholdId] = useState<string | null>(null);
 
   const refreshExpenses = useCallback(async () => {
@@ -81,7 +109,6 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
       .from('expenses')
       .select('id, amount, description, type, created_at, household_id')
       .order('created_at', { ascending: false });
-
     setLoadingExpenses(false);
 
     if (error) {
@@ -90,6 +117,27 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     }
 
     setExpenses((data ?? []).map(mapExpense));
+  }, [user]);
+
+  const refreshIncomes = useCallback(async () => {
+    if (!user) {
+      setIncomes([]);
+      return;
+    }
+
+    setLoadingIncomes(true);
+    const { data, error } = await supabase
+      .from('incomes')
+      .select('id, amount, description, created_at')
+      .order('created_at', { ascending: false });
+    setLoadingIncomes(false);
+
+    if (error) {
+      console.warn('No se pudieron cargar los ingresos:', error.message);
+      return;
+    }
+
+    setIncomes((data ?? []).map(mapIncome));
   }, [user]);
 
   useEffect(() => {
@@ -106,6 +154,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
       setAuthLoading(false);
       if (!session) {
         setExpenses([]);
+        setIncomes([]);
         setHouseholdId(null);
       }
     });
@@ -120,6 +169,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     if (!user) return;
 
     refreshExpenses();
+    refreshIncomes();
 
     supabase
       .from('households')
@@ -132,18 +182,23 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
       });
 
     const channel = supabase
-      .channel(`expenses-${user.id}`)
+      .channel(`finance-${user.id}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'expenses' },
         () => refreshExpenses()
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'incomes' },
+        () => refreshIncomes()
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, refreshExpenses]);
+  }, [user, refreshExpenses, refreshIncomes]);
 
   const ensureHousehold = useCallback(async () => {
     if (!user) throw new Error('Debes iniciar sesión.');
@@ -202,6 +257,28 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     [ensureHousehold, user]
   );
 
+  const addIncome = useCallback(
+    async (income: NewIncome) => {
+      if (!user) throw new Error('Debes iniciar sesión.');
+
+      const { data, error } = await supabase
+        .from('incomes')
+        .insert({
+          created_by: user.id,
+          description: income.description.trim(),
+          amount: income.amount,
+        })
+        .select('id, amount, description, created_at')
+        .single();
+
+      if (error) throw error;
+
+      const saved = mapIncome(data);
+      setIncomes((current) => [saved, ...current.filter((item) => item.id !== saved.id)]);
+    },
+    [user]
+  );
+
   const signIn = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
@@ -227,6 +304,11 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     if (error) throw error;
   }, []);
 
+  const totalIncome = useMemo(
+    () => incomes.reduce((total, income) => total + income.amount, 0),
+    [incomes]
+  );
+
   const totalMyExpenses = useMemo(
     () =>
       expenses.reduce(
@@ -251,12 +333,17 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         user,
         authLoading,
         expenses,
+        incomes,
         loadingExpenses,
+        loadingIncomes,
         addExpense,
+        addIncome,
         signIn,
         signUp,
         signOut,
         refreshExpenses,
+        refreshIncomes,
+        totalIncome,
         totalMyExpenses,
         totalSharedExpenses,
       }}
