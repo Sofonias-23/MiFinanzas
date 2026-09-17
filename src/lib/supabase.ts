@@ -2,16 +2,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
 import 'react-native-url-polyfill/auto';
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+// La publishable key es segura para usar en el cliente. La protección real
+// de los datos se hace con RLS en Supabase. Nunca uses aquí una service_role key.
+const supabaseUrl = 'https://gkswlvmmbavocipwbfhy.supabase.co';
+const supabasePublishableKey = 'sb_publishable_u2JGEpaFOoYeJBdDZPbzGQ_J-9p2-NY';
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn(
-    'Faltan EXPO_PUBLIC_SUPABASE_URL o EXPO_PUBLIC_SUPABASE_ANON_KEY. Crea un archivo .env local.'
-  );
-}
-
-export const supabase = createClient(supabaseUrl ?? '', supabaseAnonKey ?? '', {
+export const supabase = createClient(supabaseUrl, supabasePublishableKey, {
   auth: {
     storage: AsyncStorage,
     autoRefreshToken: true,
