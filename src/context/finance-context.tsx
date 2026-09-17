@@ -12,16 +12,14 @@ import {
 import { supabase } from '@/lib/supabase';
 
 export type ExpenseType = 'personal' | 'compartido';
-export type ExpenseCategory =
-  | 'comida'
-  | 'transporte'
-  | 'hogar'
-  | 'ocio'
-  | 'salud'
-  | 'compras'
-  | 'servicios'
-  | 'educacion'
-  | 'otros';
+export type ExpenseCategory = string;
+
+export type Category = {
+  id: string;
+  slug: string;
+  name: string;
+  icon: string;
+};
 
 export type Expense = {
   id: string;
@@ -57,15 +55,20 @@ type FinanceContextValue = {
   authLoading: boolean;
   expenses: Expense[];
   incomes: Income[];
+  categories: Category[];
   loadingExpenses: boolean;
   loadingIncomes: boolean;
+  loadingCategories: boolean;
   addExpense: (expense: NewExpense) => Promise<void>;
   addIncome: (income: NewIncome) => Promise<void>;
+  addCategory: (name: string, icon: string) => Promise<void>;
+  deleteCategory: (id: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, displayName?: string) => Promise<boolean>;
   signOut: () => Promise<void>;
   refreshExpenses: () => Promise<void>;
   refreshIncomes: () => Promise<void>;
+  refreshCategories: () => Promise<void>;
   totalIncome: number;
   totalMyExpenses: number;
   totalSharedExpenses: number;
@@ -94,6 +97,27 @@ function mapIncome(row: any): Income {
   };
 }
 
+function mapCategory(row: any): Category {
+  return {
+    id: row.id,
+    slug: row.slug,
+    name: row.name,
+    icon: row.icon,
+  };
+}
+
+function slugify(value: string) {
+  const normalized = value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  return normalized || `categoria-${Date.now()}`;
+}
+
 function createUuid() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (char) => {
     const random = Math.floor(Math.random() * 16);
@@ -107,8 +131,10 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   const [authLoading, setAuthLoading] = useState(true);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [incomes, setIncomes] = useState<Income[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loadingExpenses, setLoadingExpenses] = useState(false);
   const [loadingIncomes, setLoadingIncomes] = useState(false);
+  const [loadingCategories, setLoadingCategories] = useState(false);
   const [householdId, setHouseholdId] = useState<string | null>(null);
 
   const refreshExpenses = useCallback(async () => {
@@ -153,6 +179,27 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     setIncomes((data ?? []).map(mapIncome));
   }, [user]);
 
+  const refreshCategories = useCallback(async () => {
+    if (!user) {
+      setCategories([]);
+      return;
+    }
+
+    setLoadingCategories(true);
+    const { data, error } = await supabase
+      .from('expense_categories')
+      .select('id, slug, name, icon')
+      .order('created_at', { ascending: true });
+    setLoadingCategories(false);
+
+    if (error) {
+      console.warn('No se pudieron cargar las categorías:', error.message);
+      return;
+    }
+
+    setCategories((data ?? []).map(mapCategory));
+  }, [user]);
+
   useEffect(() => {
     let mounted = true;
 
@@ -168,6 +215,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
       if (!session) {
         setExpenses([]);
         setIncomes([]);
+        setCategories([]);
         setHouseholdId(null);
       }
     });
@@ -183,6 +231,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
 
     refreshExpenses();
     refreshIncomes();
+    refreshCategories();
 
     supabase
       .from('households')
@@ -206,12 +255,17 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         { event: '*', schema: 'public', table: 'incomes' },
         () => refreshIncomes()
       )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'expense_categories' },
+        () => refreshCategories()
+      )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, refreshExpenses, refreshIncomes]);
+  }, [user, refreshExpenses, refreshIncomes, refreshCategories]);
 
   const ensureHousehold = useCallback(async () => {
     if (!user) throw new Error('Debes iniciar sesión.');
@@ -293,6 +347,61 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     [user]
   );
 
+  const addCategory = useCallback(
+    async (name: string, icon: string) => {
+      if (!user) throw new Error('Debes iniciar sesión.');
+
+      const cleanName = name.trim();
+      if (!cleanName) throw new Error('Escribe un nombre para la categoría.');
+
+      if (categories.some((category) => category.name.toLowerCase() === cleanName.toLowerCase())) {
+        throw new Error('Ya existe una categoría con ese nombre.');
+      }
+
+      const baseSlug = slugify(cleanName);
+      let slug = baseSlug;
+      if (categories.some((category) => category.slug === slug)) {
+        slug = `${baseSlug}-${Date.now().toString().slice(-6)}`;
+      }
+
+      const { data, error } = await supabase
+        .from('expense_categories')
+        .insert({
+          user_id: user.id,
+          slug,
+          name: cleanName,
+          icon: icon || '📦',
+        })
+        .select('id, slug, name, icon')
+        .single();
+
+      if (error) throw error;
+
+      const saved = mapCategory(data);
+      setCategories((current) => [...current, saved]);
+    },
+    [categories, user]
+  );
+
+  const deleteCategory = useCallback(
+    async (id: string) => {
+      if (!user) throw new Error('Debes iniciar sesión.');
+      if (categories.length <= 1) {
+        throw new Error('Debes conservar al menos una categoría.');
+      }
+
+      const { error } = await supabase
+        .from('expense_categories')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      setCategories((current) => current.filter((category) => category.id !== id));
+    },
+    [categories.length, user]
+  );
+
   const signIn = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
@@ -348,15 +457,20 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         authLoading,
         expenses,
         incomes,
+        categories,
         loadingExpenses,
         loadingIncomes,
+        loadingCategories,
         addExpense,
         addIncome,
+        addCategory,
+        deleteCategory,
         signIn,
         signUp,
         signOut,
         refreshExpenses,
         refreshIncomes,
+        refreshCategories,
         totalIncome,
         totalMyExpenses,
         totalSharedExpenses,
