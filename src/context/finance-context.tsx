@@ -12,12 +12,23 @@ import {
 import { supabase } from '@/lib/supabase';
 
 export type ExpenseType = 'personal' | 'compartido';
+export type ExpenseCategory =
+  | 'comida'
+  | 'transporte'
+  | 'hogar'
+  | 'ocio'
+  | 'salud'
+  | 'compras'
+  | 'servicios'
+  | 'educacion'
+  | 'otros';
 
 export type Expense = {
   id: string;
   amount: number;
   description: string;
   type: ExpenseType;
+  category: ExpenseCategory;
   createdAt: string;
   householdId?: string | null;
 };
@@ -33,6 +44,7 @@ type NewExpense = {
   amount: number;
   description: string;
   type: ExpenseType;
+  category: ExpenseCategory;
 };
 
 type NewIncome = {
@@ -67,6 +79,7 @@ function mapExpense(row: any): Expense {
     amount: Number(row.amount),
     description: row.description,
     type: row.type,
+    category: row.category ?? 'otros',
     createdAt: row.created_at,
     householdId: row.household_id,
   };
@@ -107,7 +120,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     setLoadingExpenses(true);
     const { data, error } = await supabase
       .from('expenses')
-      .select('id, amount, description, type, created_at, household_id')
+      .select('id, amount, description, type, category, created_at, household_id')
       .order('created_at', { ascending: false });
     setLoadingExpenses(false);
 
@@ -243,10 +256,11 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
           description: expense.description.trim(),
           amount: expense.amount,
           type: expense.type,
+          category: expense.category,
           my_share: myShare,
           partner_share: partnerShare,
         })
-        .select('id, amount, description, type, created_at, household_id')
+        .select('id, amount, description, type, category, created_at, household_id')
         .single();
 
       if (error) throw error;
