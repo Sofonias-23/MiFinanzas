@@ -26,6 +26,10 @@ export default function RootLayout() {
           name="categorias"
           options={{ presentation: 'card' }}
         />
+        <Stack.Screen
+          name="metodos-pago"
+          options={{ presentation: 'card' }}
+        />
       </Stack>
     </FinanceProvider>
   );
