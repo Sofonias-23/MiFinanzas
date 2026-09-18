@@ -21,12 +21,20 @@ export type Category = {
   icon: string;
 };
 
+export type PaymentMethod = {
+  id: string;
+  slug: string;
+  name: string;
+  icon: string;
+};
+
 export type Expense = {
   id: string;
   amount: number;
   description: string;
   type: ExpenseType;
   category: ExpenseCategory;
+  paymentMethod: string;
   createdAt: string;
   householdId?: string | null;
 };
@@ -43,6 +51,7 @@ type NewExpense = {
   description: string;
   type: ExpenseType;
   category: ExpenseCategory;
+  paymentMethod: string;
 };
 
 type NewIncome = {
@@ -56,19 +65,24 @@ type FinanceContextValue = {
   expenses: Expense[];
   incomes: Income[];
   categories: Category[];
+  paymentMethods: PaymentMethod[];
   loadingExpenses: boolean;
   loadingIncomes: boolean;
   loadingCategories: boolean;
+  loadingPaymentMethods: boolean;
   addExpense: (expense: NewExpense) => Promise<void>;
   addIncome: (income: NewIncome) => Promise<void>;
   addCategory: (name: string, icon: string) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
+  addPaymentMethod: (name: string, icon: string) => Promise<void>;
+  deletePaymentMethod: (id: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, displayName?: string) => Promise<boolean>;
   signOut: () => Promise<void>;
   refreshExpenses: () => Promise<void>;
   refreshIncomes: () => Promise<void>;
   refreshCategories: () => Promise<void>;
+  refreshPaymentMethods: () => Promise<void>;
   totalIncome: number;
   totalMyExpenses: number;
   totalSharedExpenses: number;
@@ -83,6 +97,7 @@ function mapExpense(row: any): Expense {
     description: row.description,
     type: row.type,
     category: row.category ?? 'otros',
+    paymentMethod: row.payment_method ?? 'sin-especificar',
     createdAt: row.created_at,
     householdId: row.household_id,
   };
@@ -106,6 +121,15 @@ function mapCategory(row: any): Category {
   };
 }
 
+function mapPaymentMethod(row: any): PaymentMethod {
+  return {
+    id: row.id,
+    slug: row.slug,
+    name: row.name,
+    icon: row.icon,
+  };
+}
+
 function slugify(value: string) {
   const normalized = value
     .normalize('NFD')
@@ -115,7 +139,7 @@ function slugify(value: string) {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 
-  return normalized || `categoria-${Date.now()}`;
+  return normalized || `item-${Date.now()}`;
 }
 
 function createUuid() {
@@ -132,9 +156,11 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [incomes, setIncomes] = useState<Income[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [loadingExpenses, setLoadingExpenses] = useState(false);
   const [loadingIncomes, setLoadingIncomes] = useState(false);
   const [loadingCategories, setLoadingCategories] = useState(false);
+  const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(false);
   const [householdId, setHouseholdId] = useState<string | null>(null);
 
   const refreshExpenses = useCallback(async () => {
@@ -146,7 +172,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     setLoadingExpenses(true);
     const { data, error } = await supabase
       .from('expenses')
-      .select('id, amount, description, type, category, created_at, household_id')
+      .select('id, amount, description, type, category, payment_method, created_at, household_id')
       .order('created_at', { ascending: false });
     setLoadingExpenses(false);
 
@@ -200,6 +226,27 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     setCategories((data ?? []).map(mapCategory));
   }, [user]);
 
+  const refreshPaymentMethods = useCallback(async () => {
+    if (!user) {
+      setPaymentMethods([]);
+      return;
+    }
+
+    setLoadingPaymentMethods(true);
+    const { data, error } = await supabase
+      .from('payment_methods')
+      .select('id, slug, name, icon')
+      .order('created_at', { ascending: true });
+    setLoadingPaymentMethods(false);
+
+    if (error) {
+      console.warn('No se pudieron cargar los métodos de pago:', error.message);
+      return;
+    }
+
+    setPaymentMethods((data ?? []).map(mapPaymentMethod));
+  }, [user]);
+
   useEffect(() => {
     let mounted = true;
 
@@ -216,6 +263,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         setExpenses([]);
         setIncomes([]);
         setCategories([]);
+        setPaymentMethods([]);
         setHouseholdId(null);
       }
     });
@@ -232,6 +280,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     refreshExpenses();
     refreshIncomes();
     refreshCategories();
+    refreshPaymentMethods();
 
     supabase
       .from('households')
@@ -260,12 +309,17 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         { event: '*', schema: 'public', table: 'expense_categories' },
         () => refreshCategories()
       )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'payment_methods' },
+        () => refreshPaymentMethods()
+      )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, refreshExpenses, refreshIncomes, refreshCategories]);
+  }, [user, refreshExpenses, refreshIncomes, refreshCategories, refreshPaymentMethods]);
 
   const ensureHousehold = useCallback(async () => {
     if (!user) throw new Error('Debes iniciar sesión.');
@@ -311,10 +365,11 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
           amount: expense.amount,
           type: expense.type,
           category: expense.category,
+          payment_method: expense.paymentMethod,
           my_share: myShare,
           partner_share: partnerShare,
         })
-        .select('id, amount, description, type, category, created_at, household_id')
+        .select('id, amount, description, type, category, payment_method, created_at, household_id')
         .single();
 
       if (error) throw error;
@@ -402,6 +457,61 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     [categories.length, user]
   );
 
+  const addPaymentMethod = useCallback(
+    async (name: string, icon: string) => {
+      if (!user) throw new Error('Debes iniciar sesión.');
+
+      const cleanName = name.trim();
+      if (!cleanName) throw new Error('Escribe un nombre para el método de pago.');
+
+      if (paymentMethods.some((method) => method.name.toLowerCase() === cleanName.toLowerCase())) {
+        throw new Error('Ya existe un método de pago con ese nombre.');
+      }
+
+      const baseSlug = slugify(cleanName);
+      let slug = baseSlug;
+      if (paymentMethods.some((method) => method.slug === slug)) {
+        slug = `${baseSlug}-${Date.now().toString().slice(-6)}`;
+      }
+
+      const { data, error } = await supabase
+        .from('payment_methods')
+        .insert({
+          user_id: user.id,
+          slug,
+          name: cleanName,
+          icon: icon || '💳',
+        })
+        .select('id, slug, name, icon')
+        .single();
+
+      if (error) throw error;
+
+      const saved = mapPaymentMethod(data);
+      setPaymentMethods((current) => [...current, saved]);
+    },
+    [paymentMethods, user]
+  );
+
+  const deletePaymentMethod = useCallback(
+    async (id: string) => {
+      if (!user) throw new Error('Debes iniciar sesión.');
+      if (paymentMethods.length <= 1) {
+        throw new Error('Debes conservar al menos un método de pago.');
+      }
+
+      const { error } = await supabase
+        .from('payment_methods')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      setPaymentMethods((current) => current.filter((method) => method.id !== id));
+    },
+    [paymentMethods.length, user]
+  );
+
   const signIn = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
@@ -458,19 +568,24 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         expenses,
         incomes,
         categories,
+        paymentMethods,
         loadingExpenses,
         loadingIncomes,
         loadingCategories,
+        loadingPaymentMethods,
         addExpense,
         addIncome,
         addCategory,
         deleteCategory,
+        addPaymentMethod,
+        deletePaymentMethod,
         signIn,
         signUp,
         signOut,
         refreshExpenses,
         refreshIncomes,
         refreshCategories,
+        refreshPaymentMethods,
         totalIncome,
         totalMyExpenses,
         totalSharedExpenses,
