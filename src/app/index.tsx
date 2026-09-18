@@ -18,6 +18,8 @@ export default function HomeScreen() {
     authLoading,
     expenses,
     incomes,
+    categories,
+    paymentMethods,
     loadingExpenses,
     loadingIncomes,
     signOut,
@@ -33,17 +35,26 @@ export default function HomeScreen() {
   const recentMovements = useMemo(() => {
     const expenseMovements = expenses.map((expense) => {
       const myPart = expense.type === 'compartido' ? expense.amount / 2 : expense.amount;
+      const category = categories.find((item) => item.slug === expense.category);
+      const payment = paymentMethods.find((item) => item.slug === expense.paymentMethod);
+
+      const detailParts = [
+        category ? `${category.icon} ${category.name}` : expense.category,
+        payment ? `${payment.icon} ${payment.name}` : expense.paymentMethod,
+      ];
+
+      if (expense.type === 'compartido') {
+        detailParts.push(`Tu parte S/ ${myPart.toFixed(2)}`);
+      }
+
       return {
         id: `expense-${expense.id}`,
         kind: 'expense' as const,
         description: expense.description,
         amount: myPart,
         createdAt: expense.createdAt,
-        icon: expense.type === 'compartido' ? '👥' : '🧾',
-        meta:
-          expense.type === 'compartido'
-            ? `Compartido · tu parte S/ ${myPart.toFixed(2)}`
-            : 'Gasto personal',
+        icon: category?.icon ?? (expense.type === 'compartido' ? '👥' : '🧾'),
+        meta: detailParts.join(' · '),
       };
     });
 
@@ -63,7 +74,7 @@ export default function HomeScreen() {
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       )
       .slice(0, 8);
-  }, [expenses, incomes]);
+  }, [expenses, incomes, categories, paymentMethods]);
 
   const monthlySummary = useMemo(() => {
     const now = new Date();
@@ -89,6 +100,47 @@ export default function HomeScreen() {
 
     return { income, expense, balance: income - expense };
   }, [expenses, incomes]);
+
+  const topPaymentMethod = useMemo(() => {
+    const now = new Date();
+    const stats = new Map<string, { count: number; total: number }>();
+
+    for (const expense of expenses) {
+      const date = new Date(expense.createdAt);
+      const isThisMonth =
+        date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
+
+      if (!isThisMonth || expense.paymentMethod === 'sin-especificar') continue;
+
+      const current = stats.get(expense.paymentMethod) ?? { count: 0, total: 0 };
+      current.count += 1;
+      current.total += expense.amount;
+      stats.set(expense.paymentMethod, current);
+    }
+
+    const ordered = [...stats.entries()].sort(
+      (a, b) => b[1].count - a[1].count || b[1].total - a[1].total
+    );
+
+    if (ordered.length === 0) return null;
+
+    const [slug, values] = ordered[0];
+    const method = paymentMethods.find((item) => item.slug === slug);
+    const knownTransactions = [...stats.values()].reduce(
+      (total, item) => total + item.count,
+      0
+    );
+
+    return {
+      slug,
+      name: method?.name ?? slug,
+      icon: method?.icon ?? '💳',
+      count: values.count,
+      total: values.total,
+      percentage:
+        knownTransactions > 0 ? Math.round((values.count / knownTransactions) * 100) : 0,
+    };
+  }, [expenses, paymentMethods]);
 
   if (authLoading || !user) {
     return (
@@ -197,6 +249,46 @@ export default function HomeScreen() {
           </View>
         </View>
 
+        <Text style={styles.sectionTitle}>Hábitos de pago</Text>
+
+        <TouchableOpacity
+          style={styles.paymentHabitCard}
+          onPress={() => router.push('/metodos-pago')}
+        >
+          {topPaymentMethod ? (
+            <>
+              <View style={styles.paymentHabitTop}>
+                <View style={styles.paymentHabitIconBox}>
+                  <Text style={styles.paymentHabitIcon}>{topPaymentMethod.icon}</Text>
+                </View>
+                <View style={styles.paymentHabitText}>
+                  <Text style={styles.paymentHabitLabel}>Método más usado este mes</Text>
+                  <Text style={styles.paymentHabitName}>{topPaymentMethod.name}</Text>
+                </View>
+                <Text style={styles.paymentHabitPercentage}>
+                  {topPaymentMethod.percentage}%
+                </Text>
+              </View>
+              <View style={styles.paymentHabitDivider} />
+              <View style={styles.paymentHabitMetrics}>
+                <Text style={styles.paymentHabitMetric}>
+                  {topPaymentMethod.count} pagos
+                </Text>
+                <Text style={styles.paymentHabitMetric}>
+                  S/ {topPaymentMethod.total.toFixed(2)}
+                </Text>
+              </View>
+            </>
+          ) : (
+            <View>
+              <Text style={styles.paymentHabitName}>Aún no hay datos suficientes</Text>
+              <Text style={styles.paymentHabitEmpty}>
+                Registra gastos indicando cómo pagaste y aquí verás qué método usas más.
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
+
         <Text style={styles.sectionTitle}>Gastos compartidos</Text>
 
         <TouchableOpacity style={styles.sharedCard}>
@@ -243,7 +335,9 @@ export default function HomeScreen() {
                     <Text style={styles.movementTitle} numberOfLines={1}>
                       {movement.description}
                     </Text>
-                    <Text style={styles.movementMeta}>{movement.meta}</Text>
+                    <Text style={styles.movementMeta} numberOfLines={1}>
+                      {movement.meta}
+                    </Text>
                   </View>
                 </View>
 
@@ -336,7 +430,11 @@ const styles = StyleSheet.create({
   actionTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
   actionSubtitle: { color: '#64748B', fontSize: 11, marginTop: 3 },
   monthCard: { backgroundColor: '#111827', borderRadius: 18, padding: 18 },
-  monthRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  monthRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   monthRowSpacing: { marginTop: 10 },
   monthLabel: { color: '#CBD5E1', fontSize: 14 },
   monthIncome: { color: '#22C55E', fontSize: 14, fontWeight: '700' },
@@ -345,6 +443,51 @@ const styles = StyleSheet.create({
   monthBalanceLabel: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
   monthBalance: { color: '#FFFFFF', fontSize: 17, fontWeight: '800' },
   monthBalanceNegative: { color: '#F87171' },
+  paymentHabitCard: {
+    backgroundColor: '#111827',
+    borderRadius: 18,
+    padding: 17,
+  },
+  paymentHabitTop: { flexDirection: 'row', alignItems: 'center' },
+  paymentHabitIconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: '#1E293B',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  paymentHabitIcon: { fontSize: 23 },
+  paymentHabitText: { flex: 1 },
+  paymentHabitLabel: { color: '#64748B', fontSize: 11 },
+  paymentHabitName: {
+    color: '#FFFFFF',
+    fontSize: 17,
+    fontWeight: '800',
+    marginTop: 2,
+  },
+  paymentHabitPercentage: {
+    color: '#60A5FA',
+    fontSize: 22,
+    fontWeight: '800',
+  },
+  paymentHabitDivider: {
+    height: 1,
+    backgroundColor: '#1E293B',
+    marginVertical: 14,
+  },
+  paymentHabitMetrics: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  paymentHabitMetric: { color: '#CBD5E1', fontSize: 13, fontWeight: '700' },
+  paymentHabitEmpty: {
+    color: '#64748B',
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 5,
+  },
   sharedCard: {
     backgroundColor: '#111827',
     borderRadius: 18,
