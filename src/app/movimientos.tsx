@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
   ScrollView,
@@ -15,6 +15,12 @@ import { useFinance } from '@/context/finance-context';
 
 type Filter = 'todos' | 'personal' | 'compartido';
 
+function normalizeFilter(value: string | string[] | undefined): Filter {
+  const selected = Array.isArray(value) ? value[0] : value;
+  if (selected === 'personal' || selected === 'compartido') return selected;
+  return 'todos';
+}
+
 export default function MovimientosScreen() {
   const {
     user,
@@ -25,12 +31,17 @@ export default function MovimientosScreen() {
     paymentMethods,
   } = useFinance();
 
-  const [filter, setFilter] = useState<Filter>('todos');
+  const params = useLocalSearchParams<{ filter?: string | string[] }>();
+  const [filter, setFilter] = useState<Filter>(() => normalizeFilter(params.filter));
   const [search, setSearch] = useState('');
 
   useEffect(() => {
     if (!authLoading && !user) router.replace('/login');
   }, [authLoading, user]);
+
+  useEffect(() => {
+    setFilter(normalizeFilter(params.filter));
+  }, [params.filter]);
 
   const movements = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -63,8 +74,9 @@ export default function MovimientosScreen() {
       });
 
     const incomeMovements =
-      filter === 'todos'
-        ? incomes
+      filter === 'compartido'
+        ? []
+        : incomes
             .filter((income) =>
               query ? income.description.toLowerCase().includes(query) : true
             )
@@ -75,9 +87,8 @@ export default function MovimientosScreen() {
               amount: income.amount,
               createdAt: income.createdAt,
               icon: '💰',
-              meta: 'Ingreso',
-            }))
-        : [];
+              meta: 'Ingreso personal',
+            }));
 
     return [...expenseMovements, ...incomeMovements].sort(
       (a, b) =>
@@ -109,8 +120,8 @@ export default function MovimientosScreen() {
       <View style={styles.filters}>
         {[
           ['todos', 'Todos'],
-          ['personal', 'Personales'],
-          ['compartido', 'Compartidos'],
+          ['personal', 'Mi dinero'],
+          ['compartido', 'Pareja'],
         ].map(([value, label]) => {
           const active = filter === value;
           return (
