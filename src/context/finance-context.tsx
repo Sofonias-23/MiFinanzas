@@ -76,6 +76,7 @@ type FinanceContextValue = {
   deleteCategory: (id: string) => Promise<void>;
   addPaymentMethod: (name: string, icon: string) => Promise<void>;
   deletePaymentMethod: (id: string) => Promise<void>;
+  resetFinanceData: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, displayName?: string) => Promise<boolean>;
   signOut: () => Promise<void>;
@@ -140,14 +141,6 @@ function slugify(value: string) {
     .replace(/^-+|-+$/g, '');
 
   return normalized || `item-${Date.now()}`;
-}
-
-function createUuid() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (char) => {
-    const random = Math.floor(Math.random() * 16);
-    const value = char === 'x' ? random : (random & 0x3) | 0x8;
-    return value.toString(16);
-  });
 }
 
 export function FinanceProvider({ children }: { children: ReactNode }) {
@@ -283,13 +276,13 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     refreshPaymentMethods();
 
     supabase
-      .from('households')
-      .select('id')
-      .eq('created_by', user.id)
+      .from('household_members')
+      .select('household_id')
+      .eq('user_id', user.id)
       .limit(1)
       .maybeSingle()
       .then(({ data }) => {
-        if (data?.id) setHouseholdId(data.id);
+        setHouseholdId(data?.household_id ?? null);
       });
 
     const channel = supabase
@@ -325,23 +318,10 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     if (!user) throw new Error('Debes iniciar sesión.');
     if (householdId) return householdId;
 
-    const id = createUuid();
-    const { error: householdError } = await supabase.from('households').insert({
-      id,
-      name: 'Nosotros',
-      created_by: user.id,
-    });
+    const { data, error } = await supabase.rpc('ensure_my_household');
+    if (error) throw error;
 
-    if (householdError) throw householdError;
-
-    const { error: memberError } = await supabase.from('household_members').insert({
-      household_id: id,
-      user_id: user.id,
-      role: 'owner',
-    });
-
-    if (memberError) throw memberError;
-
+    const id = data as string;
     setHouseholdId(id);
     return id;
   }, [householdId, user]);
@@ -512,6 +492,26 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     [paymentMethods.length, user]
   );
 
+  const resetFinanceData = useCallback(async () => {
+    if (!user) throw new Error('Debes iniciar sesión.');
+
+    const { error } = await supabase.rpc('reset_my_finance_data');
+    if (error) throw error;
+
+    await Promise.all([
+      refreshExpenses(),
+      refreshIncomes(),
+      refreshCategories(),
+      refreshPaymentMethods(),
+    ]);
+  }, [
+    user,
+    refreshExpenses,
+    refreshIncomes,
+    refreshCategories,
+    refreshPaymentMethods,
+  ]);
+
   const signIn = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
@@ -579,6 +579,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         deleteCategory,
         addPaymentMethod,
         deletePaymentMethod,
+        resetFinanceData,
         signIn,
         signUp,
         signOut,
