@@ -18,6 +18,7 @@ export default function RootLayout() {
         <Stack.Screen name="estadisticas" />
         <Stack.Screen name="perfil" />
         <Stack.Screen name="pareja" options={{ presentation: 'card' }} />
+        <Stack.Screen name="deudas" options={{ presentation: 'card' }} />
         <Stack.Screen name="nuevo-gasto" options={{ presentation: 'card' }} />
         <Stack.Screen name="nuevo-ingreso" options={{ presentation: 'card' }} />
         <Stack.Screen name="categorias" options={{ presentation: 'card' }} />
