@@ -63,7 +63,7 @@ export default function PerfilScreen() {
   const handleReset = () => {
     Alert.alert(
       'Empezar de cero',
-      'Se borrarán tus gastos, ingresos, categorías personalizadas y métodos de pago. Tu cuenta seguirá existiendo. Esta acción no se puede deshacer.',
+      'Se borrarán tus gastos, ingresos, deudas, categorías personalizadas y métodos de pago. Tu cuenta seguirá existiendo. Esta acción no se puede deshacer.',
       [
         { text: 'Cancelar', style: 'cancel' },
         {
@@ -132,6 +132,13 @@ export default function PerfilScreen() {
           />
           <Divider />
           <MenuRow
+            icon="🧾"
+            title="Deudas"
+            subtitle="Lo que te deben y lo que debes"
+            onPress={() => router.push('/deudas')}
+          />
+          <Divider />
+          <MenuRow
             icon="👥"
             title="Pareja"
             subtitle={
@@ -150,7 +157,7 @@ export default function PerfilScreen() {
         <View style={styles.dangerCard}>
           <Text style={styles.dangerTitle}>⚠️ Empezar de cero</Text>
           <Text style={styles.dangerText}>
-            Borra tus movimientos y configuración financiera, pero conserva tu usuario y contraseña.
+            Borra tus movimientos, deudas y configuración financiera, pero conserva tu usuario y contraseña.
           </Text>
           <TouchableOpacity
             style={[styles.resetButton, resetting && styles.disabled]}
