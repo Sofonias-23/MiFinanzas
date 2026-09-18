@@ -14,22 +14,14 @@ export default function RootLayout() {
       >
         <Stack.Screen name="login" />
         <Stack.Screen name="index" />
-        <Stack.Screen
-          name="nuevo-gasto"
-          options={{ presentation: 'card' }}
-        />
-        <Stack.Screen
-          name="nuevo-ingreso"
-          options={{ presentation: 'card' }}
-        />
-        <Stack.Screen
-          name="categorias"
-          options={{ presentation: 'card' }}
-        />
-        <Stack.Screen
-          name="metodos-pago"
-          options={{ presentation: 'card' }}
-        />
+        <Stack.Screen name="movimientos" />
+        <Stack.Screen name="estadisticas" />
+        <Stack.Screen name="perfil" />
+        <Stack.Screen name="pareja" options={{ presentation: 'card' }} />
+        <Stack.Screen name="nuevo-gasto" options={{ presentation: 'card' }} />
+        <Stack.Screen name="nuevo-ingreso" options={{ presentation: 'card' }} />
+        <Stack.Screen name="categorias" options={{ presentation: 'card' }} />
+        <Stack.Screen name="metodos-pago" options={{ presentation: 'card' }} />
       </Stack>
     </FinanceProvider>
   );
