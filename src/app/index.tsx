@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BottomNav } from '@/components/bottom-nav';
 import { useFinance } from '@/context/finance-context';
 
 export default function HomeScreen() {
@@ -22,7 +23,6 @@ export default function HomeScreen() {
     paymentMethods,
     loadingExpenses,
     loadingIncomes,
-    signOut,
     totalIncome,
     totalMyExpenses,
     totalSharedExpenses,
@@ -38,23 +38,20 @@ export default function HomeScreen() {
       const category = categories.find((item) => item.slug === expense.category);
       const payment = paymentMethods.find((item) => item.slug === expense.paymentMethod);
 
-      const detailParts = [
-        category ? `${category.icon} ${category.name}` : expense.category,
-        payment ? `${payment.icon} ${payment.name}` : expense.paymentMethod,
-      ];
-
-      if (expense.type === 'compartido') {
-        detailParts.push(`Tu parte S/ ${myPart.toFixed(2)}`);
-      }
-
       return {
         id: `expense-${expense.id}`,
         kind: 'expense' as const,
         description: expense.description,
         amount: myPart,
         createdAt: expense.createdAt,
-        icon: category?.icon ?? (expense.type === 'compartido' ? '👥' : '🧾'),
-        meta: detailParts.join(' · '),
+        icon: category?.icon ?? '🧾',
+        meta: [
+          category?.name ?? expense.category,
+          payment?.name ?? expense.paymentMethod,
+          expense.type === 'compartido' ? 'Compartido' : null,
+        ]
+          .filter(Boolean)
+          .join(' · '),
       };
     });
 
@@ -73,74 +70,8 @@ export default function HomeScreen() {
         (a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       )
-      .slice(0, 8);
+      .slice(0, 3);
   }, [expenses, incomes, categories, paymentMethods]);
-
-  const monthlySummary = useMemo(() => {
-    const now = new Date();
-    const isThisMonth = (dateText: string) => {
-      const date = new Date(dateText);
-      return (
-        date.getFullYear() === now.getFullYear() &&
-        date.getMonth() === now.getMonth()
-      );
-    };
-
-    const income = incomes
-      .filter((item) => isThisMonth(item.createdAt))
-      .reduce((total, item) => total + item.amount, 0);
-
-    const expense = expenses
-      .filter((item) => isThisMonth(item.createdAt))
-      .reduce(
-        (total, item) =>
-          total + (item.type === 'compartido' ? item.amount / 2 : item.amount),
-        0
-      );
-
-    return { income, expense, balance: income - expense };
-  }, [expenses, incomes]);
-
-  const topPaymentMethod = useMemo(() => {
-    const now = new Date();
-    const stats = new Map<string, { count: number; total: number }>();
-
-    for (const expense of expenses) {
-      const date = new Date(expense.createdAt);
-      const isThisMonth =
-        date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
-
-      if (!isThisMonth || expense.paymentMethod === 'sin-especificar') continue;
-
-      const current = stats.get(expense.paymentMethod) ?? { count: 0, total: 0 };
-      current.count += 1;
-      current.total += expense.amount;
-      stats.set(expense.paymentMethod, current);
-    }
-
-    const ordered = [...stats.entries()].sort(
-      (a, b) => b[1].count - a[1].count || b[1].total - a[1].total
-    );
-
-    if (ordered.length === 0) return null;
-
-    const [slug, values] = ordered[0];
-    const method = paymentMethods.find((item) => item.slug === slug);
-    const knownTransactions = [...stats.values()].reduce(
-      (total, item) => total + item.count,
-      0
-    );
-
-    return {
-      slug,
-      name: method?.name ?? slug,
-      icon: method?.icon ?? '💳',
-      count: values.count,
-      total: values.total,
-      percentage:
-        knownTransactions > 0 ? Math.round((values.count / knownTransactions) * 100) : 0,
-    };
-  }, [expenses, paymentMethods]);
 
   if (authLoading || !user) {
     return (
@@ -154,28 +85,24 @@ export default function HomeScreen() {
   const saldo = totalIncome - totalMyExpenses;
   const displayName =
     user.user_metadata?.display_name || user.email?.split('@')[0] || 'Usuario';
-  const initial = displayName.slice(0, 1).toUpperCase();
   const loadingMovements = loadingExpenses || loadingIncomes;
 
-  const handleSignOut = async () => {
-    await signOut();
-    router.replace('/login');
-  };
-
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <ScrollView
+        style={styles.flex}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
           <View>
-            <Text style={styles.saludo}>Hola, {displayName}</Text>
-            <Text style={styles.subtitulo}>Resumen financiero</Text>
+            <Text style={styles.brand}>MiFinanzas</Text>
+            <Text style={styles.hello}>Hola, {displayName}</Text>
           </View>
-
-          <TouchableOpacity style={styles.avatar} onPress={handleSignOut}>
-            <Text style={styles.avatarText}>{initial}</Text>
+          <TouchableOpacity style={styles.profileButton} onPress={() => router.push('/perfil')}>
+            <Text style={styles.profileButtonText}>
+              {displayName.slice(0, 1).toUpperCase()}
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -183,155 +110,77 @@ export default function HomeScreen() {
           <Text style={styles.balanceLabel}>Saldo disponible</Text>
           <Text style={styles.balance}>S/ {saldo.toFixed(2)}</Text>
 
-          <View style={styles.balanceRow}>
-            <View>
-              <Text style={styles.miniLabel}>Ingresos</Text>
-              <Text style={styles.ingreso}>+ S/ {totalIncome.toFixed(2)}</Text>
+          <View style={styles.balanceSummary}>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>Ingresos</Text>
+              <Text style={styles.income}>+ S/ {totalIncome.toFixed(2)}</Text>
             </View>
-
-            <View>
-              <Text style={styles.miniLabel}>Gastos</Text>
-              <Text style={styles.gasto}>- S/ {totalMyExpenses.toFixed(2)}</Text>
+            <View style={styles.summaryItemRight}>
+              <Text style={styles.summaryLabel}>Gastos</Text>
+              <Text style={styles.expense}>- S/ {totalMyExpenses.toFixed(2)}</Text>
             </View>
           </View>
         </View>
-
-        <Text style={styles.sectionTitle}>Acciones rápidas</Text>
 
         <View style={styles.actionsRow}>
           <TouchableOpacity
-            style={styles.actionCard}
+            style={[styles.actionButton, styles.expenseButton]}
             onPress={() => router.push('/nuevo-gasto')}
           >
-            <Text style={styles.actionIcon}>＋</Text>
-            <Text style={styles.actionTitle}>Gasto</Text>
-            <Text style={styles.actionSubtitle}>Registrar</Text>
+            <Text style={styles.actionSign}>−</Text>
+            <View>
+              <Text style={styles.actionTitle}>Gasto</Text>
+              <Text style={styles.actionSubtitle}>Registrar compra</Text>
+            </View>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.actionCard}
+            style={[styles.actionButton, styles.incomeButton]}
             onPress={() => router.push('/nuevo-ingreso')}
           >
-            <Text style={[styles.actionIcon, styles.incomeActionIcon]}>↗</Text>
-            <Text style={styles.actionTitle}>Ingreso</Text>
-            <Text style={styles.actionSubtitle}>Agregar</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.actionCard}>
-            <Text style={styles.actionIcon}>👥</Text>
-            <Text style={styles.actionTitle}>Pareja</Text>
-            <Text style={styles.actionSubtitle}>Después</Text>
+            <Text style={styles.actionSign}>＋</Text>
+            <View>
+              <Text style={styles.actionTitle}>Ingreso</Text>
+              <Text style={styles.actionSubtitle}>Agregar dinero</Text>
+            </View>
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.sectionTitle}>Este mes</Text>
+        {totalSharedExpenses > 0 && (
+          <TouchableOpacity style={styles.sharedCard} onPress={() => router.push('/pareja')}>
+            <View>
+              <Text style={styles.sharedTitle}>👥 Nosotros</Text>
+              <Text style={styles.sharedText}>Gastos compartidos acumulados</Text>
+            </View>
+            <Text style={styles.sharedAmount}>S/ {totalSharedExpenses.toFixed(2)}</Text>
+          </TouchableOpacity>
+        )}
 
-        <View style={styles.monthCard}>
-          <View style={styles.monthRow}>
-            <Text style={styles.monthLabel}>Ingresos</Text>
-            <Text style={styles.monthIncome}>+ S/ {monthlySummary.income.toFixed(2)}</Text>
-          </View>
-          <View style={[styles.monthRow, styles.monthRowSpacing]}>
-            <Text style={styles.monthLabel}>Gastos</Text>
-            <Text style={styles.monthExpense}>- S/ {monthlySummary.expense.toFixed(2)}</Text>
-          </View>
-          <View style={styles.monthDivider} />
-          <View style={styles.monthRow}>
-            <Text style={styles.monthBalanceLabel}>Balance del mes</Text>
-            <Text
-              style={[
-                styles.monthBalance,
-                monthlySummary.balance < 0 && styles.monthBalanceNegative,
-              ]}
-            >
-              S/ {monthlySummary.balance.toFixed(2)}
-            </Text>
-          </View>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Últimos movimientos</Text>
+          <TouchableOpacity onPress={() => router.push('/movimientos')}>
+            <Text style={styles.link}>Ver todos</Text>
+          </TouchableOpacity>
         </View>
-
-        <Text style={styles.sectionTitle}>Hábitos de pago</Text>
-
-        <TouchableOpacity
-          style={styles.paymentHabitCard}
-          onPress={() => router.push('/metodos-pago')}
-        >
-          {topPaymentMethod ? (
-            <>
-              <View style={styles.paymentHabitTop}>
-                <View style={styles.paymentHabitIconBox}>
-                  <Text style={styles.paymentHabitIcon}>{topPaymentMethod.icon}</Text>
-                </View>
-                <View style={styles.paymentHabitText}>
-                  <Text style={styles.paymentHabitLabel}>Método más usado este mes</Text>
-                  <Text style={styles.paymentHabitName}>{topPaymentMethod.name}</Text>
-                </View>
-                <Text style={styles.paymentHabitPercentage}>
-                  {topPaymentMethod.percentage}%
-                </Text>
-              </View>
-              <View style={styles.paymentHabitDivider} />
-              <View style={styles.paymentHabitMetrics}>
-                <Text style={styles.paymentHabitMetric}>
-                  {topPaymentMethod.count} pagos
-                </Text>
-                <Text style={styles.paymentHabitMetric}>
-                  S/ {topPaymentMethod.total.toFixed(2)}
-                </Text>
-              </View>
-            </>
-          ) : (
-            <View>
-              <Text style={styles.paymentHabitName}>Aún no hay datos suficientes</Text>
-              <Text style={styles.paymentHabitEmpty}>
-                Registra gastos indicando cómo pagaste y aquí verás qué método usas más.
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
-
-        <Text style={styles.sectionTitle}>Gastos compartidos</Text>
-
-        <TouchableOpacity style={styles.sharedCard}>
-          <View style={styles.sharedLeft}>
-            <View style={styles.sharedIcon}>
-              <Text style={styles.sharedIconText}>👥</Text>
-            </View>
-
-            <View>
-              <Text style={styles.sharedTitle}>Nosotros</Text>
-              <Text style={styles.sharedSubtitle}>
-                Total compartido: S/ {totalSharedExpenses.toFixed(2)}
-              </Text>
-            </View>
-          </View>
-
-          <Text style={styles.arrow}>›</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.sectionTitle}>Movimientos recientes</Text>
 
         {loadingMovements ? (
           <View style={styles.emptyCard}>
             <ActivityIndicator />
-            <Text style={styles.emptySubtitle}>Cargando movimientos...</Text>
           </View>
         ) : recentMovements.length === 0 ? (
           <View style={styles.emptyCard}>
-            <Text style={styles.emptyIcon}>🧾</Text>
-            <Text style={styles.emptyTitle}>Aún no tienes movimientos</Text>
-            <Text style={styles.emptySubtitle}>
-              Tus ingresos y gastos aparecerán aquí.
-            </Text>
+            <Text style={styles.emptyTitle}>Todavía no tienes movimientos</Text>
+            <Text style={styles.emptyText}>Registra tu primer gasto o ingreso.</Text>
           </View>
         ) : (
-          <View style={styles.movementsList}>
+          <View style={styles.list}>
             {recentMovements.map((movement) => (
-              <View key={movement.id} style={styles.movementCard}>
+              <View key={movement.id} style={styles.movementRow}>
                 <View style={styles.movementLeft}>
-                  <View style={styles.movementIcon}>
-                    <Text>{movement.icon}</Text>
+                  <View style={styles.iconBox}>
+                    <Text style={styles.icon}>{movement.icon}</Text>
                   </View>
-                  <View style={styles.movementTextWrap}>
+                  <View style={styles.movementText}>
                     <Text style={styles.movementTitle} numberOfLines={1}>
                       {movement.description}
                     </Text>
@@ -344,8 +193,8 @@ export default function HomeScreen() {
                 <Text
                   style={
                     movement.kind === 'income'
-                      ? styles.movementIncomeAmount
-                      : styles.movementExpenseAmount
+                      ? styles.movementIncome
+                      : styles.movementExpense
                   }
                 >
                   {movement.kind === 'income' ? '+' : '-'} S/ {movement.amount.toFixed(2)}
@@ -354,211 +203,134 @@ export default function HomeScreen() {
             ))}
           </View>
         )}
-
-        <TouchableOpacity style={styles.logoutButton} onPress={handleSignOut}>
-          <Text style={styles.logoutText}>Cerrar sesión</Text>
-        </TouchableOpacity>
       </ScrollView>
+
+      <BottomNav active="inicio" />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
+  container: { flex: 1, backgroundColor: '#0B1220' },
   loadingContainer: {
     flex: 1,
     backgroundColor: '#0B1220',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
+    gap: 10,
   },
   loadingText: { color: '#94A3B8' },
-  container: { flex: 1, backgroundColor: '#0B1220' },
-  content: { padding: 20, paddingBottom: 40 },
+  content: { padding: 20, paddingBottom: 28 },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 8,
-    marginBottom: 24,
+    marginBottom: 20,
   },
-  saludo: { color: '#FFFFFF', fontSize: 26, fontWeight: '700' },
-  subtitulo: { color: '#94A3B8', fontSize: 14, marginTop: 4 },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#2563EB',
+  brand: { color: '#FFFFFF', fontSize: 24, fontWeight: '800' },
+  hello: { color: '#64748B', fontSize: 13, marginTop: 3 },
+  profileButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: '#1D4ED8',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText: { color: '#FFFFFF', fontSize: 18, fontWeight: '700' },
-  balanceCard: { backgroundColor: '#111C30', borderRadius: 24, padding: 22 },
-  balanceLabel: { color: '#94A3B8', fontSize: 14 },
-  balance: {
-    color: '#FFFFFF',
-    fontSize: 38,
-    fontWeight: '800',
-    marginTop: 6,
-    marginBottom: 24,
+  profileButtonText: { color: '#FFFFFF', fontSize: 17, fontWeight: '800' },
+  balanceCard: { backgroundColor: '#111827', borderRadius: 22, padding: 20 },
+  balanceLabel: { color: '#94A3B8', fontSize: 13 },
+  balance: { color: '#FFFFFF', fontSize: 36, fontWeight: '800', marginTop: 6 },
+  balanceSummary: {
+    flexDirection: 'row',
+    marginTop: 22,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#1E293B',
   },
-  balanceRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  miniLabel: { color: '#64748B', fontSize: 13 },
-  ingreso: { color: '#22C55E', fontSize: 17, fontWeight: '700', marginTop: 4 },
-  gasto: { color: '#F87171', fontSize: 17, fontWeight: '700', marginTop: 4 },
-  sectionTitle: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '700',
-    marginTop: 28,
-    marginBottom: 14,
-  },
-  actionsRow: { flexDirection: 'row', gap: 10 },
-  actionCard: {
+  summaryItem: { flex: 1 },
+  summaryItemRight: { flex: 1, alignItems: 'flex-end' },
+  summaryLabel: { color: '#64748B', fontSize: 12 },
+  income: { color: '#22C55E', fontSize: 15, fontWeight: '800', marginTop: 4 },
+  expense: { color: '#F87171', fontSize: 15, fontWeight: '800', marginTop: 4 },
+  actionsRow: { flexDirection: 'row', gap: 12, marginTop: 18 },
+  actionButton: {
     flex: 1,
-    backgroundColor: '#111827',
+    minHeight: 82,
     borderRadius: 18,
-    paddingVertical: 18,
-    alignItems: 'center',
-  },
-  actionIcon: {
-    color: '#60A5FA',
-    fontSize: 24,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  incomeActionIcon: { color: '#4ADE80' },
-  actionTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
-  actionSubtitle: { color: '#64748B', fontSize: 11, marginTop: 3 },
-  monthCard: { backgroundColor: '#111827', borderRadius: 18, padding: 18 },
-  monthRow: {
+    padding: 15,
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 10,
   },
-  monthRowSpacing: { marginTop: 10 },
-  monthLabel: { color: '#CBD5E1', fontSize: 14 },
-  monthIncome: { color: '#22C55E', fontSize: 14, fontWeight: '700' },
-  monthExpense: { color: '#F87171', fontSize: 14, fontWeight: '700' },
-  monthDivider: { height: 1, backgroundColor: '#1E293B', marginVertical: 16 },
-  monthBalanceLabel: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
-  monthBalance: { color: '#FFFFFF', fontSize: 17, fontWeight: '800' },
-  monthBalanceNegative: { color: '#F87171' },
-  paymentHabitCard: {
-    backgroundColor: '#111827',
-    borderRadius: 18,
-    padding: 17,
-  },
-  paymentHabitTop: { flexDirection: 'row', alignItems: 'center' },
-  paymentHabitIconBox: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    backgroundColor: '#1E293B',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  paymentHabitIcon: { fontSize: 23 },
-  paymentHabitText: { flex: 1 },
-  paymentHabitLabel: { color: '#64748B', fontSize: 11 },
-  paymentHabitName: {
-    color: '#FFFFFF',
-    fontSize: 17,
-    fontWeight: '800',
-    marginTop: 2,
-  },
-  paymentHabitPercentage: {
-    color: '#60A5FA',
-    fontSize: 22,
-    fontWeight: '800',
-  },
-  paymentHabitDivider: {
-    height: 1,
-    backgroundColor: '#1E293B',
-    marginVertical: 14,
-  },
-  paymentHabitMetrics: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  paymentHabitMetric: { color: '#CBD5E1', fontSize: 13, fontWeight: '700' },
-  paymentHabitEmpty: {
-    color: '#64748B',
-    fontSize: 12,
-    lineHeight: 18,
-    marginTop: 5,
-  },
+  expenseButton: { backgroundColor: '#3A1720' },
+  incomeButton: { backgroundColor: '#123323' },
+  actionSign: { color: '#FFFFFF', fontSize: 26, fontWeight: '800' },
+  actionTitle: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
+  actionSubtitle: { color: '#94A3B8', fontSize: 10, marginTop: 2 },
   sharedCard: {
-    backgroundColor: '#111827',
-    borderRadius: 18,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  sharedLeft: { flexDirection: 'row', alignItems: 'center' },
-  sharedIcon: {
-    width: 46,
-    height: 46,
-    borderRadius: 14,
-    backgroundColor: '#1E293B',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  sharedIconText: { fontSize: 22 },
-  sharedTitle: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
-  sharedSubtitle: { color: '#64748B', fontSize: 12, marginTop: 3 },
-  arrow: { color: '#64748B', fontSize: 30 },
-  emptyCard: {
-    backgroundColor: '#111827',
-    borderRadius: 18,
-    padding: 24,
-    alignItems: 'center',
-    gap: 6,
-  },
-  emptyIcon: { fontSize: 32, marginBottom: 10 },
-  emptyTitle: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
-  emptySubtitle: {
-    color: '#64748B',
-    fontSize: 13,
-    textAlign: 'center',
-    marginTop: 6,
-  },
-  movementsList: { gap: 10 },
-  movementCard: {
+    marginTop: 18,
     backgroundColor: '#111827',
     borderRadius: 16,
-    padding: 14,
+    padding: 15,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  sharedTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
+  sharedText: { color: '#64748B', fontSize: 11, marginTop: 3 },
+  sharedAmount: { color: '#60A5FA', fontSize: 16, fontWeight: '800' },
+  sectionHeader: {
+    marginTop: 26,
+    marginBottom: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  sectionTitle: { color: '#FFFFFF', fontSize: 17, fontWeight: '800' },
+  link: { color: '#60A5FA', fontSize: 12, fontWeight: '700' },
+  emptyCard: {
+    backgroundColor: '#111827',
+    borderRadius: 16,
+    padding: 22,
+    alignItems: 'center',
+  },
+  emptyTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
+  emptyText: { color: '#64748B', fontSize: 12, marginTop: 5 },
+  list: { gap: 9 },
+  movementRow: {
+    backgroundColor: '#111827',
+    borderRadius: 15,
+    padding: 13,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   movementLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
-  movementIcon: {
-    width: 42,
-    height: 42,
+  iconBox: {
+    width: 40,
+    height: 40,
     borderRadius: 12,
     backgroundColor: '#1E293B',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: 11,
   },
-  movementTextWrap: { flex: 1 },
-  movementTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
-  movementMeta: { color: '#64748B', fontSize: 11, marginTop: 4 },
-  movementExpenseAmount: {
-    color: '#F87171',
-    fontSize: 14,
-    fontWeight: '700',
-    marginLeft: 10,
-  },
-  movementIncomeAmount: {
+  icon: { fontSize: 20 },
+  movementText: { flex: 1 },
+  movementTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
+  movementMeta: { color: '#64748B', fontSize: 10, marginTop: 3 },
+  movementIncome: {
     color: '#4ADE80',
-    fontSize: 14,
-    fontWeight: '700',
-    marginLeft: 10,
+    fontSize: 13,
+    fontWeight: '800',
+    marginLeft: 8,
   },
-  logoutButton: { marginTop: 28, padding: 16, alignItems: 'center' },
-  logoutText: { color: '#94A3B8', fontWeight: '700' },
+  movementExpense: {
+    color: '#F87171',
+    fontSize: 13,
+    fontWeight: '800',
+    marginLeft: 8,
+  },
 });
