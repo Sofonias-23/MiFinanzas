@@ -63,7 +63,7 @@ export default function PerfilScreen() {
   const handleReset = () => {
     Alert.alert(
       'Empezar de cero',
-      'Se borrarán tus gastos, ingresos, deudas, categorías personalizadas y métodos de pago. Tu cuenta seguirá existiendo. Esta acción no se puede deshacer.',
+      'Se borrarán solo tus datos personales: gastos personales, ingresos, deudas, categorías y métodos de pago. Los gastos compartidos y la vinculación con tu pareja se conservarán. Esta acción no se puede deshacer.',
       [
         { text: 'Cancelar', style: 'cancel' },
         {
@@ -73,7 +73,7 @@ export default function PerfilScreen() {
             try {
               setResetting(true);
               await resetFinanceData();
-              Alert.alert('Listo', 'Tus datos financieros se reiniciaron.');
+              Alert.alert('Listo', 'Tus datos personales se reiniciaron. Tus gastos compartidos y tu vinculación de pareja se conservaron.');
             } catch (error: any) {
               Alert.alert(
                 'No se pudo reiniciar',
@@ -157,7 +157,7 @@ export default function PerfilScreen() {
         <View style={styles.dangerCard}>
           <Text style={styles.dangerTitle}>⚠️ Empezar de cero</Text>
           <Text style={styles.dangerText}>
-            Borra tus movimientos, deudas y configuración financiera, pero conserva tu usuario y contraseña.
+            Borra solo tus datos personales. Los gastos compartidos y la vinculación con tu pareja se conservan.
           </Text>
           <TouchableOpacity
             style={[styles.resetButton, resetting && styles.disabled]}
