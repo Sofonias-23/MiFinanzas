@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
-import { useEffect, useMemo } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BottomNav } from '@/components/bottom-nav';
 import { useFinance } from '@/context/finance-context';
+import { supabase } from '@/lib/supabase';
 
 export default function HomeScreen() {
   const {
@@ -28,9 +29,42 @@ export default function HomeScreen() {
     totalSharedExpenses,
   } = useFinance();
 
+  const [debtSummary, setDebtSummary] = useState({ meDeben: 0, debo: 0 });
+
   useEffect(() => {
     if (!authLoading && !user) router.replace('/login');
   }, [authLoading, user]);
+
+  const loadDebtSummary = useCallback(async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('debts')
+      .select('direction, amount')
+      .eq('status', 'pendiente');
+
+    if (error) {
+      console.warn('No se pudo cargar el resumen de deudas:', error.message);
+      return;
+    }
+
+    let meDeben = 0;
+    let debo = 0;
+
+    for (const row of data ?? []) {
+      const amount = Number(row.amount);
+      if (row.direction === 'me_deben') meDeben += amount;
+      if (row.direction === 'debo') debo += amount;
+    }
+
+    setDebtSummary({ meDeben, debo });
+  }, [user]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadDebtSummary();
+    }, [loadDebtSummary])
+  );
 
   const recentMovements = useMemo(() => {
     const expenseMovements = expenses.map((expense) => {
@@ -122,6 +156,32 @@ export default function HomeScreen() {
           </View>
         </View>
 
+        <Text style={styles.sectionMiniTitle}>¿Qué quieres ver?</Text>
+
+        <View style={styles.modeRow}>
+          <TouchableOpacity
+            style={[styles.modeCard, styles.myMoneyCard]}
+            onPress={() => router.push('/movimientos?filter=personal' as any)}
+          >
+            <View style={styles.modeIcon}>
+              <Text style={styles.modeIconText}>👤</Text>
+            </View>
+            <Text style={styles.modeTitle}>Mi dinero</Text>
+            <Text style={styles.modeSubtitle}>Tus finanzas, solo tuyas</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.modeCard, styles.partnerCard]}
+            onPress={() => router.push('/pareja')}
+          >
+            <View style={styles.modeIcon}>
+              <Text style={styles.modeIconText}>👥</Text>
+            </View>
+            <Text style={styles.modeTitle}>Pareja</Text>
+            <Text style={styles.modeSubtitle}>Gastos y saldo compartido</Text>
+          </TouchableOpacity>
+        </View>
+
         <View style={styles.actionsRow}>
           <TouchableOpacity
             style={[styles.actionButton, styles.expenseButton]}
@@ -145,6 +205,27 @@ export default function HomeScreen() {
             </View>
           </TouchableOpacity>
         </View>
+
+        <TouchableOpacity style={styles.debtCard} onPress={() => router.push('/deudas')}>
+          <View style={styles.debtHeader}>
+            <View>
+              <Text style={styles.debtTitle}>🧾 Deudas</Text>
+              <Text style={styles.debtSubtitle}>Mantén claro quién debe a quién</Text>
+            </View>
+            <Text style={styles.debtArrow}>›</Text>
+          </View>
+
+          <View style={styles.debtTotals}>
+            <View>
+              <Text style={styles.debtLabel}>Me deben</Text>
+              <Text style={styles.debtGreen}>S/ {debtSummary.meDeben.toFixed(2)}</Text>
+            </View>
+            <View style={styles.debtRight}>
+              <Text style={styles.debtLabel}>Debo</Text>
+              <Text style={styles.debtRed}>S/ {debtSummary.debo.toFixed(2)}</Text>
+            </View>
+          </View>
+        </TouchableOpacity>
 
         {totalSharedExpenses > 0 && (
           <TouchableOpacity style={styles.sharedCard} onPress={() => router.push('/pareja')}>
@@ -254,12 +335,51 @@ const styles = StyleSheet.create({
   summaryLabel: { color: '#64748B', fontSize: 12 },
   income: { color: '#22C55E', fontSize: 15, fontWeight: '800', marginTop: 4 },
   expense: { color: '#F87171', fontSize: 15, fontWeight: '800', marginTop: 4 },
-  actionsRow: { flexDirection: 'row', gap: 12, marginTop: 18 },
+  sectionMiniTitle: {
+    color: '#94A3B8',
+    fontSize: 12,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.7,
+    marginTop: 22,
+    marginBottom: 10,
+  },
+  modeRow: { flexDirection: 'row', gap: 12 },
+  modeCard: {
+    flex: 1,
+    minHeight: 150,
+    borderRadius: 20,
+    padding: 16,
+    justifyContent: 'flex-end',
+  },
+  myMoneyCard: {
+    backgroundColor: '#1463D8',
+    borderWidth: 1,
+    borderColor: '#3B82F6',
+  },
+  partnerCard: {
+    backgroundColor: '#16243A',
+    borderWidth: 1,
+    borderColor: '#29405F',
+  },
+  modeIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 15,
+  },
+  modeIconText: { fontSize: 21 },
+  modeTitle: { color: '#FFFFFF', fontSize: 18, fontWeight: '900' },
+  modeSubtitle: { color: '#CBD5E1', fontSize: 10, marginTop: 4, lineHeight: 14 },
+  actionsRow: { flexDirection: 'row', gap: 12, marginTop: 14 },
   actionButton: {
     flex: 1,
-    minHeight: 82,
+    minHeight: 72,
     borderRadius: 18,
-    padding: 15,
+    padding: 14,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
@@ -267,10 +387,38 @@ const styles = StyleSheet.create({
   expenseButton: { backgroundColor: '#3A1720' },
   incomeButton: { backgroundColor: '#123323' },
   actionSign: { color: '#FFFFFF', fontSize: 26, fontWeight: '800' },
-  actionTitle: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
+  actionTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
   actionSubtitle: { color: '#94A3B8', fontSize: 10, marginTop: 2 },
+  debtCard: {
+    marginTop: 14,
+    backgroundColor: '#111827',
+    borderRadius: 18,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#1E293B',
+  },
+  debtHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  debtTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '900' },
+  debtSubtitle: { color: '#64748B', fontSize: 10, marginTop: 3 },
+  debtArrow: { color: '#64748B', fontSize: 27 },
+  debtTotals: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 14,
+    paddingTop: 13,
+    borderTopWidth: 1,
+    borderTopColor: '#1E293B',
+  },
+  debtRight: { alignItems: 'flex-end' },
+  debtLabel: { color: '#64748B', fontSize: 10 },
+  debtGreen: { color: '#4ADE80', fontSize: 15, fontWeight: '900', marginTop: 3 },
+  debtRed: { color: '#F87171', fontSize: 15, fontWeight: '900', marginTop: 3 },
   sharedCard: {
-    marginTop: 18,
+    marginTop: 14,
     backgroundColor: '#111827',
     borderRadius: 16,
     padding: 15,
