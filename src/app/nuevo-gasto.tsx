@@ -90,7 +90,7 @@ export default function NuevoGastoScreen() {
     } catch (error: any) {
       Alert.alert(
         'No se pudo guardar',
-        error?.message ?? 'No fue posible guardar el gasto en Supabase.'
+        error?.message ?? 'No fue posible guardar el gasto.'
       );
     } finally {
       setSaving(false);
@@ -115,9 +115,9 @@ export default function NuevoGastoScreen() {
           </TouchableOpacity>
 
           <Text style={styles.title}>Nuevo gasto</Text>
-          <Text style={styles.subtitle}>Se guardará en tu cuenta de MiFinanzas.</Text>
+          <Text style={styles.subtitle}>Completa solo lo necesario.</Text>
 
-          <Text style={styles.label}>Monto</Text>
+          <Text style={styles.step}>1 · ¿Cuánto gastaste?</Text>
           <TextInput
             style={styles.inputMonto}
             placeholder="S/ 0.00"
@@ -127,144 +127,120 @@ export default function NuevoGastoScreen() {
             onChangeText={setMonto}
           />
 
-          <Text style={styles.label}>Descripción</Text>
+          <Text style={styles.step}>2 · ¿En qué?</Text>
           <TextInput
             style={styles.input}
-            placeholder="Ej. Cine, supermercado, taxi..."
+            placeholder="Ej. Almuerzo, taxi, supermercado..."
             placeholderTextColor="#64748B"
             value={descripcion}
             onChangeText={setDescripcion}
           />
 
-          <View style={styles.sectionHeader}>
-            <Text style={styles.labelNoMargin}>Categoría</Text>
+          <View style={styles.stepHeader}>
+            <Text style={styles.stepNoMargin}>3 · Categoría</Text>
             <TouchableOpacity onPress={() => router.push('/categorias')}>
-              <Text style={styles.manageText}>Administrar</Text>
+              <Text style={styles.manage}>Editar</Text>
             </TouchableOpacity>
           </View>
 
           {loadingCategories ? (
-            <Text style={styles.statusText}>Cargando categorías...</Text>
-          ) : categories.length === 0 ? (
-            <TouchableOpacity
-              style={styles.emptyBox}
-              onPress={() => router.push('/categorias')}
-            >
-              <Text style={styles.emptyTitle}>No tienes categorías</Text>
-              <Text style={styles.emptyText}>Toca aquí para crear la primera.</Text>
-            </TouchableOpacity>
+            <Text style={styles.status}>Cargando...</Text>
           ) : (
-            <View style={styles.optionGrid}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.chips}
+            >
               {categories.map((item) => {
-                const selected = categoria === item.slug;
+                const active = categoria === item.slug;
                 return (
                   <TouchableOpacity
                     key={item.id}
-                    style={[styles.optionButton, selected && styles.optionButtonActive]}
+                    style={[styles.chip, active && styles.chipActive]}
                     onPress={() => setCategoria(item.slug)}
                   >
-                    <Text style={styles.optionIcon}>{item.icon}</Text>
-                    <Text
-                      style={[styles.optionText, selected && styles.optionTextActive]}
-                    >
+                    <Text style={styles.chipIcon}>{item.icon}</Text>
+                    <Text style={[styles.chipText, active && styles.chipTextActive]}>
                       {item.name}
                     </Text>
                   </TouchableOpacity>
                 );
               })}
-            </View>
+            </ScrollView>
           )}
 
-          <View style={styles.sectionHeader}>
-            <Text style={styles.labelNoMargin}>Método de pago</Text>
+          <View style={styles.stepHeader}>
+            <Text style={styles.stepNoMargin}>4 · ¿Cómo pagaste?</Text>
             <TouchableOpacity onPress={() => router.push('/metodos-pago')}>
-              <Text style={styles.manageText}>Administrar</Text>
+              <Text style={styles.manage}>Editar</Text>
             </TouchableOpacity>
           </View>
 
           {loadingPaymentMethods ? (
-            <Text style={styles.statusText}>Cargando métodos...</Text>
-          ) : paymentMethods.length === 0 ? (
-            <TouchableOpacity
-              style={styles.emptyBox}
-              onPress={() => router.push('/metodos-pago')}
-            >
-              <Text style={styles.emptyTitle}>No tienes métodos de pago</Text>
-              <Text style={styles.emptyText}>Toca aquí para crear el primero.</Text>
-            </TouchableOpacity>
+            <Text style={styles.status}>Cargando...</Text>
           ) : (
-            <View style={styles.optionGrid}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.chips}
+            >
               {paymentMethods.map((item) => {
-                const selected = metodoPago === item.slug;
+                const active = metodoPago === item.slug;
                 return (
                   <TouchableOpacity
                     key={item.id}
-                    style={[styles.optionButton, selected && styles.optionButtonActive]}
+                    style={[styles.chip, active && styles.chipActive]}
                     onPress={() => setMetodoPago(item.slug)}
                   >
-                    <Text style={styles.optionIcon}>{item.icon}</Text>
-                    <Text
-                      style={[styles.optionText, selected && styles.optionTextActive]}
-                    >
+                    <Text style={styles.chipIcon}>{item.icon}</Text>
+                    <Text style={[styles.chipText, active && styles.chipTextActive]}>
                       {item.name}
                     </Text>
                   </TouchableOpacity>
                 );
               })}
-            </View>
+            </ScrollView>
           )}
 
-          <Text style={styles.label}>Tipo de gasto</Text>
-          <View style={styles.tipoRow}>
+          <Text style={styles.step}>5 · Tipo</Text>
+          <View style={styles.typeRow}>
             <TouchableOpacity
-              style={[styles.tipoButton, tipo === 'personal' && styles.tipoActivo]}
+              style={[styles.typeButton, tipo === 'personal' && styles.typeActive]}
               onPress={() => setTipo('personal')}
             >
-              <Text style={styles.tipoIcon}>👤</Text>
-              <Text style={[styles.tipoText, tipo === 'personal' && styles.tipoTextActivo]}>
-                Personal
-              </Text>
+              <Text style={styles.typeIcon}>👤</Text>
+              <View>
+                <Text style={styles.typeTitle}>Personal</Text>
+                <Text style={styles.typeSub}>Solo tú</Text>
+              </View>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.tipoButton, tipo === 'compartido' && styles.tipoActivo]}
+              style={[styles.typeButton, tipo === 'compartido' && styles.typeActive]}
               onPress={() => setTipo('compartido')}
             >
-              <Text style={styles.tipoIcon}>👥</Text>
-              <Text
-                style={[styles.tipoText, tipo === 'compartido' && styles.tipoTextActivo]}
-              >
-                Compartido
-              </Text>
+              <Text style={styles.typeIcon}>👥</Text>
+              <View>
+                <Text style={styles.typeTitle}>Compartido</Text>
+                <Text style={styles.typeSub}>Con tu pareja</Text>
+              </View>
             </TouchableOpacity>
           </View>
 
-          {tipo === 'compartido' && (
+          {tipo === 'compartido' && isValidAmount && (
             <View style={styles.sharedBox}>
-              <Text style={styles.sharedTitle}>División</Text>
               <Text style={styles.sharedText}>
-                Se dividirá 50% / 50%. Más adelante podrás cambiar el porcentaje.
+                División 50/50 · Tu parte S/ {(amount / 2).toFixed(2)}
               </Text>
-
-              {isValidAmount && (
-                <>
-                  <Text style={styles.sharedAmount}>
-                    Tu parte: S/ {(amount / 2).toFixed(2)}
-                  </Text>
-                  <Text style={styles.sharedAmount}>
-                    Pareja: S/ {(amount / 2).toFixed(2)}
-                  </Text>
-                </>
-              )}
             </View>
           )}
 
           <TouchableOpacity
-            style={[styles.saveButton, (saving || unavailable) && styles.saveButtonDisabled]}
+            style={[styles.saveButton, (saving || unavailable) && styles.disabled]}
             onPress={guardarGasto}
             disabled={saving || unavailable}
           >
-            <Text style={styles.saveButtonText}>
+            <Text style={styles.saveText}>
               {saving ? 'Guardando...' : 'Guardar gasto'}
             </Text>
           </TouchableOpacity>
@@ -277,98 +253,88 @@ export default function NuevoGastoScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   container: { flex: 1, backgroundColor: '#0B1220' },
-  content: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 48 },
-  back: { color: '#60A5FA', fontSize: 16, marginTop: 4 },
-  title: { color: '#FFFFFF', fontSize: 30, fontWeight: '800', marginTop: 25 },
-  subtitle: { color: '#64748B', fontSize: 14, marginTop: 6, marginBottom: 30 },
-  label: {
+  content: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 44 },
+  back: { color: '#60A5FA', fontSize: 16 },
+  title: { color: '#FFFFFF', fontSize: 29, fontWeight: '800', marginTop: 22 },
+  subtitle: { color: '#64748B', fontSize: 13, marginTop: 5, marginBottom: 24 },
+  step: {
     color: '#CBD5E1',
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 8,
+    fontSize: 13,
+    fontWeight: '800',
     marginTop: 18,
+    marginBottom: 8,
   },
-  labelNoMargin: { color: '#CBD5E1', fontSize: 14, fontWeight: '600' },
+  stepNoMargin: { color: '#CBD5E1', fontSize: 13, fontWeight: '800' },
+  stepHeader: {
+    marginTop: 20,
+    marginBottom: 9,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  manage: { color: '#60A5FA', fontSize: 11, fontWeight: '800' },
   inputMonto: {
     backgroundColor: '#111827',
-    borderRadius: 18,
-    padding: 20,
+    borderRadius: 16,
+    padding: 18,
     color: '#FFFFFF',
-    fontSize: 30,
-    fontWeight: '700',
+    fontSize: 28,
+    fontWeight: '800',
   },
   input: {
     backgroundColor: '#111827',
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 15,
+    padding: 15,
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 15,
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 18,
-    marginBottom: 10,
-  },
-  manageText: { color: '#60A5FA', fontSize: 13, fontWeight: '700' },
-  statusText: { color: '#64748B', fontSize: 13 },
-  emptyBox: {
-    backgroundColor: '#111827',
-    borderRadius: 16,
-    padding: 18,
-    alignItems: 'center',
-  },
-  emptyTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
-  emptyText: { color: '#64748B', fontSize: 12, marginTop: 4 },
-  optionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  optionButton: {
-    width: '31%',
-    minHeight: 78,
+  status: { color: '#64748B', fontSize: 12 },
+  chips: { gap: 8, paddingRight: 16 },
+  chip: {
+    minHeight: 44,
     backgroundColor: '#111827',
     borderRadius: 14,
+    paddingHorizontal: 13,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 6,
     borderWidth: 1,
     borderColor: '#1E293B',
-    paddingHorizontal: 6,
-    paddingVertical: 10,
   },
-  optionButtonActive: { borderColor: '#3B82F6', backgroundColor: '#172554' },
-  optionIcon: { fontSize: 22, marginBottom: 5 },
-  optionText: {
-    color: '#94A3B8',
-    fontSize: 11,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  optionTextActive: { color: '#FFFFFF' },
-  tipoRow: { flexDirection: 'row', gap: 12 },
-  tipoButton: {
+  chipActive: { backgroundColor: '#172554', borderColor: '#3B82F6' },
+  chipIcon: { fontSize: 17 },
+  chipText: { color: '#94A3B8', fontSize: 12, fontWeight: '700' },
+  chipTextActive: { color: '#FFFFFF' },
+  typeRow: { flexDirection: 'row', gap: 10 },
+  typeButton: {
     flex: 1,
     backgroundColor: '#111827',
-    borderRadius: 16,
-    padding: 18,
-    alignItems: 'center',
+    borderRadius: 15,
+    padding: 14,
     borderWidth: 1,
     borderColor: '#1E293B',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 9,
   },
-  tipoActivo: { borderColor: '#3B82F6', backgroundColor: '#172554' },
-  tipoIcon: { fontSize: 26, marginBottom: 8 },
-  tipoText: { color: '#94A3B8', fontSize: 15, fontWeight: '600' },
-  tipoTextActivo: { color: '#FFFFFF' },
-  sharedBox: { backgroundColor: '#111827', borderRadius: 16, padding: 16, marginTop: 20 },
-  sharedTitle: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
-  sharedText: { color: '#64748B', marginTop: 4, marginBottom: 12 },
-  sharedAmount: { color: '#CBD5E1', fontSize: 14, marginTop: 4 },
+  typeActive: { backgroundColor: '#172554', borderColor: '#3B82F6' },
+  typeIcon: { fontSize: 22 },
+  typeTitle: { color: '#FFFFFF', fontSize: 13, fontWeight: '800' },
+  typeSub: { color: '#64748B', fontSize: 9, marginTop: 2 },
+  sharedBox: {
+    marginTop: 10,
+    backgroundColor: '#111827',
+    borderRadius: 13,
+    padding: 12,
+  },
+  sharedText: { color: '#94A3B8', fontSize: 11, textAlign: 'center' },
   saveButton: {
     backgroundColor: '#2563EB',
-    borderRadius: 16,
-    padding: 18,
+    borderRadius: 15,
+    paddingVertical: 16,
     alignItems: 'center',
-    marginTop: 30,
-    marginBottom: 10,
+    marginTop: 26,
   },
-  saveButtonDisabled: { opacity: 0.6 },
-  saveButtonText: { color: '#FFFFFF', fontSize: 17, fontWeight: '700' },
+  saveText: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
+  disabled: { opacity: 0.6 },
 });
