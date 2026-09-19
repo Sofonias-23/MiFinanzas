@@ -278,29 +278,33 @@ export default function PresupuestosScreen() {
           .eq('id', editingId);
 
         if (error) throw error;
-      } else {
-        const payload =
-          scope === 'personal'
-            ? {
-                scope,
-                user_id: user.id,
-                household_id: null,
-                category,
-                amount: parsedAmount,
-                month: currentMonthKey(),
-                created_by: user.id,
-              }
-            : {
-                scope,
-                user_id: null,
-                household_id: householdId,
-                category,
-                amount: parsedAmount,
-                month: currentMonthKey(),
-                created_by: user.id,
-              };
+      } else if (scope === 'personal') {
+        const { error } = await supabase.from('budgets').insert({
+          scope: 'personal',
+          user_id: user.id,
+          household_id: null,
+          category,
+          amount: parsedAmount,
+          month: currentMonthKey(),
+          created_by: user.id,
+        });
 
-        const { error } = await supabase.from('budgets').insert(payload);
+        if (error) throw error;
+      } else {
+        if (!householdId) {
+          throw new Error('Primero vincula a tu pareja.');
+        }
+
+        const { error } = await supabase.from('budgets').insert({
+          scope: 'pareja',
+          user_id: null,
+          household_id: householdId,
+          category,
+          amount: parsedAmount,
+          month: currentMonthKey(),
+          created_by: user.id,
+        });
+
         if (error) throw error;
       }
 
