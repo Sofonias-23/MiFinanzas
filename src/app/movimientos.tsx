@@ -1,5 +1,5 @@
-import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -29,6 +29,8 @@ export default function MovimientosScreen() {
     incomes,
     categories,
     paymentMethods,
+    refreshExpenses,
+    refreshIncomes,
   } = useFinance();
 
   const params = useLocalSearchParams<{ filter?: string | string[] }>();
@@ -42,6 +44,13 @@ export default function MovimientosScreen() {
   useEffect(() => {
     setFilter(normalizeFilter(params.filter));
   }, [params.filter]);
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshExpenses();
+      refreshIncomes();
+    }, [refreshExpenses, refreshIncomes])
+  );
 
   const movements = useMemo(() => {
     const query = search.trim().toLowerCase();
