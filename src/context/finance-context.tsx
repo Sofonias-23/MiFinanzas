@@ -57,6 +57,8 @@ type NewExpense = {
   category: ExpenseCategory;
   paymentMethod: string;
   payerId?: string;
+  myShare?: number;
+  partnerShare?: number;
 };
 
 type NewIncome = {
@@ -344,12 +346,28 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
 
       const shared = expense.type === 'compartido';
       const groupId = shared ? await ensureHousehold() : null;
+
+      const defaultMyShare = Math.round((expense.amount / 2) * 100) / 100;
+      const requestedMyShare =
+        shared && Number.isFinite(expense.myShare)
+          ? Math.max(0, Math.min(expense.amount, Number(expense.myShare)))
+          : defaultMyShare;
+
       const myShare = shared
-        ? Math.round((expense.amount / 2) * 100) / 100
+        ? Math.round(requestedMyShare * 100) / 100
         : expense.amount;
+
       const partnerShare = shared
-        ? Math.round((expense.amount - myShare) * 100) / 100
+        ? Math.round(
+            (Number.isFinite(expense.partnerShare)
+              ? Number(expense.partnerShare)
+              : expense.amount - myShare) * 100
+          ) / 100
         : 0;
+
+      if (shared && Math.abs(myShare + partnerShare - expense.amount) > 0.01) {
+        throw new Error('La división del gasto debe sumar el total.');
+      }
 
       const { data, error } = await supabase
         .from('expenses')
