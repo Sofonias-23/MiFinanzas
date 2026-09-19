@@ -239,6 +239,19 @@ export default function ParejaScreen() {
               <Text style={styles.budgetShortcutArrow}>›</Text>
             </TouchableOpacity>
 
+            <TouchableOpacity
+              style={styles.statsShortcut}
+              onPress={() => router.push('/estadisticas?scope=pareja' as any)}
+            >
+              <View>
+                <Text style={styles.statsShortcutTitle}>📈 Estadísticas de pareja</Text>
+                <Text style={styles.statsShortcutText}>
+                  Vean categorías, evolución, quién pagó y el balance actual.
+                </Text>
+              </View>
+              <Text style={styles.statsShortcutArrow}>›</Text>
+            </TouchableOpacity>
+
             {settlements.length > 0 ? (
               <>
                 <View style={styles.sectionHeader}>
@@ -542,6 +555,20 @@ const styles = StyleSheet.create({
   budgetShortcutTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '900' },
   budgetShortcutText: { color: '#C9A8B9', fontSize: 10, marginTop: 4, maxWidth: '90%' },
   budgetShortcutArrow: { color: '#F472B6', fontSize: 28 },
+  statsShortcut: {
+    marginTop: 10,
+    backgroundColor: '#0E1A2A',
+    borderRadius: 17,
+    padding: 15,
+    borderWidth: 1,
+    borderColor: '#1B2B40',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  statsShortcutTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '900' },
+  statsShortcutText: { color: '#94A3B8', fontSize: 10, marginTop: 4, maxWidth: '90%' },
+  statsShortcutArrow: { color: '#F472B6', fontSize: 28 },
   sectionHeader: {
     marginTop: 24,
     marginBottom: 10,
