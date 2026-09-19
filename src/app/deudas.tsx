@@ -27,10 +27,16 @@ type Debt = {
   created_at: string;
 };
 
+type PartnerStatus = {
+  partner_name: string | null;
+  member_count: number;
+};
+
 export default function DeudasScreen() {
-  const { user, authLoading } = useFinance();
+  const { user, authLoading, partnerBalance, refreshExpenses } = useFinance();
 
   const [debts, setDebts] = useState<Debt[]>([]);
+  const [partnerName, setPartnerName] = useState('tu pareja');
   const [direction, setDirection] = useState<Direction>('me_deben');
   const [showForm, setShowForm] = useState(false);
   const [person, setPerson] = useState('');
@@ -63,10 +69,22 @@ export default function DeudasScreen() {
     );
   }, [user]);
 
+  const loadPartner = useCallback(async () => {
+    if (!user) return;
+
+    const { data } = await supabase.rpc('get_partner_status');
+    const status = (data?.[0] ?? null) as PartnerStatus | null;
+    if (status?.member_count && status.member_count >= 2) {
+      setPartnerName(status.partner_name || 'tu pareja');
+    }
+  }, [user]);
+
   useFocusEffect(
     useCallback(() => {
       loadDebts();
-    }, [loadDebts])
+      loadPartner();
+      refreshExpenses();
+    }, [loadDebts, loadPartner, refreshExpenses])
   );
 
   useEffect(() => {
@@ -106,6 +124,11 @@ export default function DeudasScreen() {
         .reduce((total, debt) => total + debt.amount, 0),
     [pending]
   );
+
+  const partnerMeDebe = Math.max(partnerBalance, 0);
+  const partnerDebo = Math.max(-partnerBalance, 0);
+  const totalMeDeben = meDeben + partnerMeDebe;
+  const totalDebo = debo + partnerDebo;
 
   const visibleDebts = useMemo(
     () => debts.filter((debt) => debt.direction === direction),
@@ -225,13 +248,30 @@ export default function DeudasScreen() {
         <View style={styles.summaryRow}>
           <View style={[styles.summaryCard, styles.receivableCard]}>
             <Text style={styles.summaryLabel}>Me deben</Text>
-            <Text style={styles.receivableAmount}>S/ {meDeben.toFixed(2)}</Text>
+            <Text style={styles.receivableAmount}>S/ {totalMeDeben.toFixed(2)}</Text>
           </View>
           <View style={[styles.summaryCard, styles.owedCard]}>
             <Text style={styles.summaryLabel}>Debo</Text>
-            <Text style={styles.owedAmount}>S/ {debo.toFixed(2)}</Text>
+            <Text style={styles.owedAmount}>S/ {totalDebo.toFixed(2)}</Text>
           </View>
         </View>
+
+        <TouchableOpacity style={styles.partnerBalanceCard} onPress={() => router.push('/pareja')}>
+          <View>
+            <Text style={styles.partnerBalanceLabel}>Balance con {partnerName}</Text>
+            <Text style={styles.partnerBalanceText}>
+              {partnerBalance > 0.005
+                ? `${partnerName} te debe S/ ${partnerBalance.toFixed(2)}`
+                : partnerBalance < -0.005
+                ? `Debes a ${partnerName} S/ ${Math.abs(partnerBalance).toFixed(2)}`
+                : 'Están al día'}
+            </Text>
+            <Text style={styles.partnerBalanceHint}>
+              Se calcula automáticamente con los gastos compartidos y quién pagó.
+            </Text>
+          </View>
+          <Text style={styles.partnerBalanceArrow}>›</Text>
+        </TouchableOpacity>
 
         {showForm && (
           <View style={styles.formCard}>
@@ -427,6 +467,21 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   summaryRow: { flexDirection: 'row', gap: 12, marginTop: 20 },
+  partnerBalanceCard: {
+    marginTop: 12,
+    backgroundColor: '#111827',
+    borderRadius: 17,
+    padding: 15,
+    borderWidth: 1,
+    borderColor: '#1E293B',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  partnerBalanceLabel: { color: '#94A3B8', fontSize: 10, fontWeight: '700' },
+  partnerBalanceText: { color: '#FFFFFF', fontSize: 15, fontWeight: '900', marginTop: 4 },
+  partnerBalanceHint: { color: '#64748B', fontSize: 9, marginTop: 4 },
+  partnerBalanceArrow: { color: '#64748B', fontSize: 27, marginLeft: 10 },
   summaryCard: { flex: 1, borderRadius: 18, padding: 17 },
   receivableCard: { backgroundColor: '#102B26' },
   owedCard: { backgroundColor: '#32171D' },
