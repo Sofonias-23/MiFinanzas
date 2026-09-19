@@ -56,6 +56,7 @@ export default function MiDineroScreen() {
 
       return {
         id: `expense-${expense.id}`,
+        expenseId: expense.id,
         kind: 'expense' as const,
         description: expense.description,
         amount: expense.amount,
@@ -70,6 +71,7 @@ export default function MiDineroScreen() {
 
     const incomeMovements = incomes.map((income) => ({
       id: `income-${income.id}`,
+      expenseId: null,
       kind: 'income' as const,
       description: income.description,
       amount: income.amount,
@@ -196,32 +198,56 @@ export default function MiDineroScreen() {
           </View>
         ) : (
           <View style={styles.list}>
-            {recentMovements.map((movement) => (
-              <View key={movement.id} style={styles.row}>
-                <View style={styles.rowLeft}>
-                  <View style={styles.iconBox}>
-                    <Text style={styles.icon}>{movement.icon}</Text>
+            {recentMovements.map((movement) => {
+              const rowContent = (
+                <>
+                  <View style={styles.rowLeft}>
+                    <View style={styles.iconBox}>
+                      <Text style={styles.icon}>{movement.icon}</Text>
+                    </View>
+                    <View style={styles.rowText}>
+                      <Text style={styles.rowTitle} numberOfLines={1}>
+                        {movement.description}
+                      </Text>
+                      <Text style={styles.rowMeta} numberOfLines={1}>
+                        {movement.meta}
+                      </Text>
+                    </View>
                   </View>
-                  <View style={styles.rowText}>
-                    <Text style={styles.rowTitle} numberOfLines={1}>
-                      {movement.description}
+                  <View style={styles.rowAmountWrap}>
+                    <Text
+                      style={
+                        movement.kind === 'income'
+                          ? styles.amountIncome
+                          : styles.amountExpense
+                      }
+                    >
+                      {movement.kind === 'income' ? '+' : '-'} S/ {movement.amount.toFixed(2)}
                     </Text>
-                    <Text style={styles.rowMeta} numberOfLines={1}>
-                      {movement.meta}
-                    </Text>
+                    {movement.kind === 'expense' ? (
+                      <Text style={styles.rowArrow}>›</Text>
+                    ) : null}
                   </View>
-                </View>
-                <Text
-                  style={
-                    movement.kind === 'income'
-                      ? styles.amountIncome
-                      : styles.amountExpense
+                </>
+              );
+
+              return movement.kind === 'expense' && movement.expenseId ? (
+                <TouchableOpacity
+                  key={movement.id}
+                  style={styles.row}
+                  activeOpacity={0.82}
+                  onPress={() =>
+                    router.push(`/detalle-gasto?id=${movement.expenseId}` as any)
                   }
                 >
-                  {movement.kind === 'income' ? '+' : '-'} S/ {movement.amount.toFixed(2)}
-                </Text>
-              </View>
-            ))}
+                  {rowContent}
+                </TouchableOpacity>
+              ) : (
+                <View key={movement.id} style={styles.row}>
+                  {rowContent}
+                </View>
+              );
+            })}
           </View>
         )}
       </ScrollView>
@@ -333,6 +359,8 @@ const styles = StyleSheet.create({
   rowText: { flex: 1 },
   rowTitle: { color: '#FFFFFF', fontSize: 13, fontWeight: '800' },
   rowMeta: { color: '#64748B', fontSize: 9, marginTop: 3 },
-  amountIncome: { color: '#4ADE80', fontSize: 12, fontWeight: '900', marginLeft: 8 },
-  amountExpense: { color: '#F87171', fontSize: 12, fontWeight: '900', marginLeft: 8 },
+  rowAmountWrap: { flexDirection: 'row', alignItems: 'center', marginLeft: 8 },
+  amountIncome: { color: '#4ADE80', fontSize: 12, fontWeight: '900' },
+  amountExpense: { color: '#F87171', fontSize: 12, fontWeight: '900' },
+  rowArrow: { color: '#64748B', fontSize: 21, marginLeft: 7 },
 });
