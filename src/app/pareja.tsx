@@ -226,6 +226,19 @@ export default function ParejaScreen() {
               </TouchableOpacity>
             </View>
 
+            <TouchableOpacity
+              style={styles.budgetShortcut}
+              onPress={() => router.push('/presupuestos?scope=pareja' as any)}
+            >
+              <View>
+                <Text style={styles.budgetShortcutTitle}>📊 Presupuesto de pareja</Text>
+                <Text style={styles.budgetShortcutText}>
+                  Definan límites mensuales por categoría y vean el avance juntos.
+                </Text>
+              </View>
+              <Text style={styles.budgetShortcutArrow}>›</Text>
+            </TouchableOpacity>
+
             {settlements.length > 0 ? (
               <>
                 <View style={styles.sectionHeader}>
@@ -515,6 +528,20 @@ const styles = StyleSheet.create({
   newExpenseCard: { alignItems: 'center', backgroundColor: '#172554' },
   newExpenseIcon: { color: '#93C5FD', fontSize: 24, fontWeight: '800' },
   newExpenseText: { color: '#FFFFFF', fontSize: 12, fontWeight: '800', marginTop: 2 },
+  budgetShortcut: {
+    marginTop: 14,
+    backgroundColor: '#34172A',
+    borderRadius: 17,
+    padding: 15,
+    borderWidth: 1,
+    borderColor: '#5C294B',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  budgetShortcutTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '900' },
+  budgetShortcutText: { color: '#C9A8B9', fontSize: 10, marginTop: 4, maxWidth: '90%' },
+  budgetShortcutArrow: { color: '#F472B6', fontSize: 28 },
   sectionHeader: {
     marginTop: 24,
     marginBottom: 10,
