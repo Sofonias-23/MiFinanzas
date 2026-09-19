@@ -316,15 +316,17 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
 
   const ensureHousehold = useCallback(async () => {
     if (!user) throw new Error('Debes iniciar sesión.');
-    if (householdId) return householdId;
 
+    // La pertenencia a Pareja puede cambiar mientras la app está abierta.
+    // Consultamos siempre a Supabase para evitar usar un householdId antiguo
+    // después de vincular dos cuentas.
     const { data, error } = await supabase.rpc('ensure_my_household');
     if (error) throw error;
 
     const id = data as string;
     setHouseholdId(id);
     return id;
-  }, [householdId, user]);
+  }, [user]);
 
   const addExpense = useCallback(
     async (expense: NewExpense) => {
