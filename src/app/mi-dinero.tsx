@@ -165,6 +165,19 @@ export default function MiDineroScreen() {
           <Text style={styles.budgetShortcutArrow}>›</Text>
         </TouchableOpacity>
 
+        <TouchableOpacity
+          style={styles.statsShortcut}
+          onPress={() => router.push('/estadisticas?scope=personal' as any)}
+        >
+          <View>
+            <Text style={styles.statsShortcutTitle}>📈 Estadísticas personales</Text>
+            <Text style={styles.statsShortcutText}>
+              Revisa categorías, evolución mensual y hábitos de pago.
+            </Text>
+          </View>
+          <Text style={styles.statsShortcutArrow}>›</Text>
+        </TouchableOpacity>
+
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Movimientos personales</Text>
           <TouchableOpacity onPress={() => router.push('/movimientos?filter=personal' as any)}>
@@ -271,6 +284,20 @@ const styles = StyleSheet.create({
   budgetShortcutTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '900' },
   budgetShortcutText: { color: '#94A3B8', fontSize: 10, marginTop: 4, maxWidth: '90%' },
   budgetShortcutArrow: { color: '#60A5FA', fontSize: 28 },
+  statsShortcut: {
+    marginTop: 10,
+    backgroundColor: '#0E1A2A',
+    borderRadius: 17,
+    padding: 15,
+    borderWidth: 1,
+    borderColor: '#1B2B40',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  statsShortcutTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '900' },
+  statsShortcutText: { color: '#64748B', fontSize: 10, marginTop: 4, maxWidth: '90%' },
+  statsShortcutArrow: { color: '#60A5FA', fontSize: 28 },
   sectionHeader: {
     marginTop: 25,
     marginBottom: 10,
