@@ -311,7 +311,14 @@ export default function ParejaScreen() {
                       : expense.partnerShare;
 
                   return (
-                    <View key={expense.id} style={styles.expenseRow}>
+                    <TouchableOpacity
+                      key={expense.id}
+                      style={styles.expenseRow}
+                      activeOpacity={0.82}
+                      onPress={() =>
+                        router.push(`/detalle-gasto?id=${expense.id}` as any)
+                      }
+                    >
                       <View style={styles.expenseText}>
                         <Text style={styles.expenseTitle}>{expense.description}</Text>
                         <Text style={styles.expenseMeta}>
@@ -321,8 +328,11 @@ export default function ParejaScreen() {
                           {new Date(expense.createdAt).toLocaleDateString('es-PE')}
                         </Text>
                       </View>
-                      <Text style={styles.expenseAmount}>S/ {expense.amount.toFixed(2)}</Text>
-                    </View>
+                      <View style={styles.expenseAmountWrap}>
+                        <Text style={styles.expenseAmount}>S/ {expense.amount.toFixed(2)}</Text>
+                        <Text style={styles.expenseArrow}>›</Text>
+                      </View>
+                    </TouchableOpacity>
                   );
                 })}
               </View>
@@ -594,7 +604,9 @@ const styles = StyleSheet.create({
   expenseTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '800' },
   expenseMeta: { color: '#94A3B8', fontSize: 10, marginTop: 3 },
   expenseDate: { color: '#475569', fontSize: 9, marginTop: 2 },
+  expenseAmountWrap: { flexDirection: 'row', alignItems: 'center' },
   expenseAmount: { color: '#CBD5E1', fontSize: 13, fontWeight: '900' },
+  expenseArrow: { color: '#64748B', fontSize: 22, marginLeft: 7 },
   settlementRow: {
     backgroundColor: '#111827',
     borderRadius: 15,
