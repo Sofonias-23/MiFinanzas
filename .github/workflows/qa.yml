@@ -11,7 +11,7 @@ permissions:
 jobs:
   qa:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
@@ -24,7 +24,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: TypeScript
         run: npx tsc --noEmit
@@ -32,5 +32,8 @@ jobs:
       - name: Expo Doctor
         run: npx expo-doctor
 
-      - name: Web production bundle
-        run: npx expo export --platform web --output-dir dist
+      - name: iOS production bundle
+        run: npx expo export --platform ios --output-dir dist-ios
+
+      - name: Android production bundle
+        run: npx expo export --platform android --output-dir dist-android
