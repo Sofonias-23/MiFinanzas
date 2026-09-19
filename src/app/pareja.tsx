@@ -1,5 +1,5 @@
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Share,
@@ -27,7 +27,9 @@ export default function ParejaScreen() {
   const {
     user,
     authLoading,
+    expenses,
     totalSharedExpenses,
+    partnerBalance,
     refreshExpenses,
   } = useFinance();
 
@@ -57,7 +59,8 @@ export default function ParejaScreen() {
   useFocusEffect(
     useCallback(() => {
       loadStatus();
-    }, [loadStatus])
+      refreshExpenses();
+    }, [loadStatus, refreshExpenses])
   );
 
   const generateInvite = async () => {
@@ -116,9 +119,26 @@ export default function ParejaScreen() {
     });
   };
 
+  const partnerName = status?.partner_name ?? 'tu pareja';
+  const recentShared = useMemo(
+    () =>
+      expenses
+        .filter((expense) => expense.type === 'compartido')
+        .slice(0, 5),
+    [expenses]
+  );
+
   if (authLoading || !user) return null;
 
   const linked = (status?.member_count ?? 0) >= 2;
+  const balanceAbs = Math.abs(partnerBalance);
+
+  const balanceText =
+    partnerBalance > 0.005
+      ? `${partnerName} te debe`
+      : partnerBalance < -0.005
+      ? `Debes a ${partnerName}`
+      : 'Están al día';
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -133,7 +153,7 @@ export default function ParejaScreen() {
 
         <Text style={styles.title}>Pareja</Text>
         <Text style={styles.subtitle}>
-          Tus gastos personales siguen siendo privados. Solo se comparten los movimientos que marques como “Compartido”.
+          Este espacio contiene solo sus gastos compartidos. Tus gastos personales siguen siendo privados.
         </Text>
 
         {linked ? (
@@ -142,24 +162,91 @@ export default function ParejaScreen() {
               <View style={styles.peopleIcon}>
                 <Text style={styles.peopleIconText}>👥</Text>
               </View>
-              <Text style={styles.linkedLabel}>Vinculación activa</Text>
+              <Text style={styles.linkedLabel}>Espacio compartido activo</Text>
               <Text style={styles.partnerName}>
-                Tú + {status?.partner_name ?? 'tu pareja'}
+                Tú + {partnerName}
               </Text>
               <Text style={styles.linkedText}>
-                Ambos pueden ver los gastos compartidos. Los gastos e ingresos personales siguen siendo privados.
+                Todo lo marcado como “Compartido” aparece para ambos.
               </Text>
             </View>
 
-            <View style={styles.sharedCard}>
-              <Text style={styles.sharedLabel}>Gastos compartidos</Text>
-              <Text style={styles.sharedAmount}>
-                S/ {totalSharedExpenses.toFixed(2)}
+            <View
+              style={[
+                styles.balanceCard,
+                partnerBalance < -0.005
+                  ? styles.balanceOwed
+                  : partnerBalance > 0.005
+                  ? styles.balanceReceivable
+                  : styles.balanceNeutral,
+              ]}
+            >
+              <Text style={styles.balanceLabel}>Balance entre ustedes</Text>
+              <Text style={styles.balanceTitle}>{balanceText}</Text>
+              <Text
+                style={[
+                  styles.balanceAmount,
+                  partnerBalance < -0.005
+                    ? styles.balanceAmountRed
+                    : partnerBalance > 0.005
+                    ? styles.balanceAmountGreen
+                    : styles.balanceAmountNeutral,
+                ]}
+              >
+                S/ {balanceAbs.toFixed(2)}
               </Text>
-              <TouchableOpacity onPress={() => router.push('/movimientos')}>
-                <Text style={styles.sharedLink}>Ver movimientos →</Text>
+              <Text style={styles.balanceHint}>
+                Se calcula automáticamente según quién pagó cada gasto y la división 50/50.
+              </Text>
+            </View>
+
+            <View style={styles.statsRow}>
+              <View style={styles.statCard}>
+                <Text style={styles.sharedLabel}>Total compartido</Text>
+                <Text style={styles.statAmount}>S/ {totalSharedExpenses.toFixed(2)}</Text>
+              </View>
+              <TouchableOpacity
+                style={[styles.statCard, styles.newExpenseCard]}
+                onPress={() => router.push('/nuevo-gasto?type=compartido' as any)}
+              >
+                <Text style={styles.newExpenseIcon}>＋</Text>
+                <Text style={styles.newExpenseText}>Nuevo gasto</Text>
               </TouchableOpacity>
             </View>
+
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Últimos compartidos</Text>
+              <TouchableOpacity
+                onPress={() => router.push('/movimientos?filter=compartido' as any)}
+              >
+                <Text style={styles.sharedLink}>Ver todos</Text>
+              </TouchableOpacity>
+            </View>
+
+            {recentShared.length === 0 ? (
+              <View style={styles.emptyCard}>
+                <Text style={styles.emptyTitle}>Todavía no hay gastos compartidos</Text>
+                <Text style={styles.emptyText}>Registren el primero desde “Nuevo gasto”.</Text>
+              </View>
+            ) : (
+              <View style={styles.list}>
+                {recentShared.map((expense) => {
+                  const payer =
+                    expense.payerId === user.id ? 'Tú' : partnerName;
+                  return (
+                    <View key={expense.id} style={styles.expenseRow}>
+                      <View style={styles.expenseText}>
+                        <Text style={styles.expenseTitle}>{expense.description}</Text>
+                        <Text style={styles.expenseMeta}>
+                          Pagó: {payer} · {new Date(expense.createdAt).toLocaleDateString('es-PE')}
+                        </Text>
+                      </View>
+                      <Text style={styles.expenseAmount}>S/ {expense.amount.toFixed(2)}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
           </>
         ) : (
           <>
@@ -336,13 +423,59 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 9,
   },
-  sharedCard: {
-    backgroundColor: '#111827',
-    borderRadius: 18,
+  balanceCard: {
+    borderRadius: 20,
     padding: 18,
     marginTop: 14,
+    borderWidth: 1,
+  },
+  balanceOwed: { backgroundColor: '#32171D', borderColor: '#5A232D' },
+  balanceReceivable: { backgroundColor: '#102B26', borderColor: '#1E4A3D' },
+  balanceNeutral: { backgroundColor: '#111827', borderColor: '#1E293B' },
+  balanceLabel: { color: '#94A3B8', fontSize: 11, fontWeight: '700' },
+  balanceTitle: { color: '#FFFFFF', fontSize: 17, fontWeight: '900', marginTop: 6 },
+  balanceAmount: { fontSize: 30, fontWeight: '900', marginTop: 4 },
+  balanceAmountRed: { color: '#F87171' },
+  balanceAmountGreen: { color: '#4ADE80' },
+  balanceAmountNeutral: { color: '#CBD5E1' },
+  balanceHint: { color: '#64748B', fontSize: 10, lineHeight: 15, marginTop: 8 },
+  statsRow: { flexDirection: 'row', gap: 10, marginTop: 14 },
+  statCard: {
+    flex: 1,
+    backgroundColor: '#111827',
+    borderRadius: 18,
+    padding: 16,
+    minHeight: 88,
+    justifyContent: 'center',
   },
   sharedLabel: { color: '#64748B', fontSize: 11 },
-  sharedAmount: { color: '#FFFFFF', fontSize: 28, fontWeight: '800', marginTop: 5 },
-  sharedLink: { color: '#60A5FA', fontSize: 12, fontWeight: '700', marginTop: 12 },
+  statAmount: { color: '#FFFFFF', fontSize: 20, fontWeight: '900', marginTop: 5 },
+  newExpenseCard: { alignItems: 'center', backgroundColor: '#172554' },
+  newExpenseIcon: { color: '#93C5FD', fontSize: 24, fontWeight: '800' },
+  newExpenseText: { color: '#FFFFFF', fontSize: 12, fontWeight: '800', marginTop: 2 },
+  sectionHeader: {
+    marginTop: 24,
+    marginBottom: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  sectionTitle: { color: '#FFFFFF', fontSize: 16, fontWeight: '900' },
+  sharedLink: { color: '#60A5FA', fontSize: 11, fontWeight: '800' },
+  emptyCard: { backgroundColor: '#111827', borderRadius: 16, padding: 20 },
+  emptyTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '800' },
+  emptyText: { color: '#64748B', fontSize: 11, marginTop: 4 },
+  list: { gap: 9 },
+  expenseRow: {
+    backgroundColor: '#111827',
+    borderRadius: 15,
+    padding: 14,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  expenseText: { flex: 1, marginRight: 10 },
+  expenseTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '800' },
+  expenseMeta: { color: '#64748B', fontSize: 10, marginTop: 3 },
+  expenseAmount: { color: '#CBD5E1', fontSize: 13, fontWeight: '900' },
 });
