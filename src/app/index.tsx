@@ -1,7 +1,8 @@
-import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { router } from 'expo-router';
+import { useEffect, useRef } from 'react';
 import {
   ActivityIndicator,
+  Animated,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -9,50 +10,34 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { BottomNav } from '@/components/bottom-nav';
 import { useFinance } from '@/context/finance-context';
-import { supabase } from '@/lib/supabase';
 
 export default function HomeScreen() {
-  const {
-    user,
-    authLoading,
-    partnerBalance,
-    refreshExpenses,
-  } = useFinance();
+  const { user, authLoading } = useFinance();
 
-  const [manualDebt, setManualDebt] = useState({ meDeben: 0, debo: 0 });
+  const intro = useRef(new Animated.Value(0)).current;
+  const cards = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.sequence([
+      Animated.timing(intro, {
+        toValue: 1,
+        duration: 260,
+        useNativeDriver: true,
+      }),
+      Animated.spring(cards, {
+        toValue: 1,
+        damping: 14,
+        stiffness: 145,
+        mass: 0.8,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [intro, cards]);
 
   useEffect(() => {
     if (!authLoading && !user) router.replace('/login');
   }, [authLoading, user]);
-
-  const loadDebtSummary = useCallback(async () => {
-    if (!user) return;
-
-    const { data } = await supabase
-      .from('debts')
-      .select('direction, amount')
-      .eq('status', 'pendiente');
-
-    let meDeben = 0;
-    let debo = 0;
-
-    for (const row of data ?? []) {
-      const amount = Number(row.amount);
-      if (row.direction === 'me_deben') meDeben += amount;
-      if (row.direction === 'debo') debo += amount;
-    }
-
-    setManualDebt({ meDeben, debo });
-  }, [user]);
-
-  useFocusEffect(
-    useCallback(() => {
-      refreshExpenses();
-      loadDebtSummary();
-    }, [refreshExpenses, loadDebtSummary])
-  );
 
   if (authLoading || !user) {
     return (
@@ -63,160 +48,194 @@ export default function HomeScreen() {
     );
   }
 
-  const displayName =
-    user.user_metadata?.display_name || user.email?.split('@')[0] || 'Usuario';
-
-  const totalMeDeben = manualDebt.meDeben + Math.max(partnerBalance, 0);
-  const totalDebo = manualDebt.debo + Math.max(-partnerBalance, 0);
-
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={styles.content}>
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.brand}>MiFinanzas</Text>
-            <Text style={styles.hello}>Hola, {displayName}</Text>
+        <Animated.View
+          style={{
+            opacity: intro,
+            transform: [
+              {
+                translateY: intro.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [12, 0],
+                }),
+              },
+            ],
+          }}
+        >
+          <Text style={styles.brand}>MiFinanzas</Text>
+          <Text style={styles.tagline}>Tu dinero, en equilibrio</Text>
+
+          <View style={styles.heroIcon}>
+            <Text style={styles.wallet}>👛</Text>
+            <Text style={styles.coin}>🪙</Text>
+            <Text style={styles.heart}>♥</Text>
           </View>
-          <TouchableOpacity style={styles.profileButton} onPress={() => router.push('/perfil')}>
-            <Text style={styles.profileButtonText}>
-              {displayName.slice(0, 1).toUpperCase()}
-            </Text>
+
+          <Text style={styles.question}>¿Qué quieres ver hoy?</Text>
+        </Animated.View>
+
+        <Animated.View
+          style={[
+            styles.cardsRow,
+            {
+              opacity: cards,
+              transform: [
+                {
+                  translateY: cards.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [18, 0],
+                  }),
+                },
+                {
+                  scale: cards.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.96, 1],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          <TouchableOpacity
+            activeOpacity={0.86}
+            style={[styles.spaceCard, styles.personalCard]}
+            onPress={() => router.push('/mi-dinero')}
+          >
+            <View style={styles.iconCircle}>
+              <Text style={styles.spaceIcon}>👤</Text>
+            </View>
+            <View>
+              <Text style={styles.spaceTitle}>Mi dinero</Text>
+              <Text style={styles.spaceSubtitle}>Solo tus finanzas personales</Text>
+            </View>
+            <Text style={styles.arrow}>›</Text>
           </TouchableOpacity>
-        </View>
 
-        <Text style={styles.question}>¿Qué espacio quieres abrir?</Text>
-        <Text style={styles.helper}>
-          Tus finanzas personales y las de pareja permanecen separadas.
-        </Text>
+          <TouchableOpacity
+            activeOpacity={0.86}
+            style={[styles.spaceCard, styles.coupleCard]}
+            onPress={() => router.push('/pareja')}
+          >
+            <View style={styles.iconCircle}>
+              <Text style={styles.spaceIcon}>👥</Text>
+            </View>
+            <View>
+              <Text style={styles.spaceTitle}>Pareja</Text>
+              <Text style={styles.spaceSubtitle}>Finanzas compartidas con tu pareja</Text>
+            </View>
+            <Text style={styles.arrow}>›</Text>
+          </TouchableOpacity>
+        </Animated.View>
 
-        <TouchableOpacity
-          style={[styles.spaceCard, styles.personalCard]}
-          onPress={() => router.push('/mi-dinero')}
-        >
-          <View style={styles.spaceIcon}>
-            <Text style={styles.spaceIconText}>👤</Text>
-          </View>
-          <View style={styles.spaceContent}>
-            <Text style={styles.spaceTitle}>Mi dinero</Text>
-            <Text style={styles.spaceSubtitle}>
-              Ingresos, gastos personales y saldo solo para ti.
-            </Text>
-          </View>
-          <Text style={styles.arrow}>›</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.spaceCard, styles.coupleCard]}
-          onPress={() => router.push('/pareja')}
-        >
-          <View style={styles.spaceIcon}>
-            <Text style={styles.spaceIconText}>👥</Text>
-          </View>
-          <View style={styles.spaceContent}>
-            <Text style={styles.spaceTitle}>Pareja</Text>
-            <Text style={styles.spaceSubtitle}>
-              Gastos compartidos, quién pagó y balance entre ambos.
-            </Text>
-          </View>
-          <Text style={styles.arrow}>›</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.debtCard} onPress={() => router.push('/deudas')}>
-          <View>
-            <Text style={styles.debtTitle}>🧾 Deudas</Text>
-            <Text style={styles.debtSubtitle}>Personales + balance de pareja</Text>
-          </View>
-          <View style={styles.debtAmounts}>
-            <Text style={styles.debtGreen}>Me deben S/ {totalMeDeben.toFixed(2)}</Text>
-            <Text style={styles.debtRed}>Debo S/ {totalDebo.toFixed(2)}</Text>
-          </View>
-        </TouchableOpacity>
-
-        <Text style={styles.privacy}>
-          🔒 Lo personal no se comparte. En Pareja solo aparecen los movimientos marcados como compartidos.
-        </Text>
+        <Text style={styles.footerText}>“Juntos por un mejor futuro”</Text>
       </View>
-
-      <BottomNav active="inicio" />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0B1220' },
+  container: { flex: 1, backgroundColor: '#07111F' },
   loading: {
     flex: 1,
-    backgroundColor: '#0B1220',
+    backgroundColor: '#07111F',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
   },
   loadingText: { color: '#94A3B8' },
-  content: { flex: 1, padding: 20 },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 34,
-  },
-  brand: { color: '#FFFFFF', fontSize: 24, fontWeight: '900' },
-  hello: { color: '#64748B', fontSize: 12, marginTop: 3 },
-  profileButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: '#1D4ED8',
-    alignItems: 'center',
+  content: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 42,
+    paddingBottom: 28,
     justifyContent: 'center',
   },
-  profileButtonText: { color: '#FFFFFF', fontSize: 17, fontWeight: '900' },
-  question: { color: '#FFFFFF', fontSize: 26, fontWeight: '900' },
-  helper: { color: '#64748B', fontSize: 12, lineHeight: 18, marginTop: 6, marginBottom: 20 },
-  spaceCard: {
-    minHeight: 150,
-    borderRadius: 23,
-    padding: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 14,
-    borderWidth: 1,
-  },
-  personalCard: { backgroundColor: '#1459C7', borderColor: '#3B82F6' },
-  coupleCard: { backgroundColor: '#16243A', borderColor: '#2E4666' },
-  spaceIcon: {
-    width: 58,
-    height: 58,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 15,
-  },
-  spaceIconText: { fontSize: 28 },
-  spaceContent: { flex: 1 },
-  spaceTitle: { color: '#FFFFFF', fontSize: 21, fontWeight: '900' },
-  spaceSubtitle: { color: '#CBD5E1', fontSize: 11, lineHeight: 16, marginTop: 5 },
-  arrow: { color: '#CBD5E1', fontSize: 34, marginLeft: 8 },
-  debtCard: {
-    backgroundColor: '#111827',
-    borderRadius: 18,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#1E293B',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  debtTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '900' },
-  debtSubtitle: { color: '#64748B', fontSize: 10, marginTop: 3 },
-  debtAmounts: { alignItems: 'flex-end', gap: 3 },
-  debtGreen: { color: '#4ADE80', fontSize: 11, fontWeight: '800' },
-  debtRed: { color: '#F87171', fontSize: 11, fontWeight: '800' },
-  privacy: {
-    color: '#64748B',
-    fontSize: 10,
-    lineHeight: 15,
-    marginTop: 18,
+  brand: {
+    color: '#FFFFFF',
+    fontSize: 31,
+    fontWeight: '900',
     textAlign: 'center',
+    letterSpacing: -0.7,
+  },
+  tagline: {
+    color: '#94A3B8',
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 5,
+  },
+  heroIcon: {
+    height: 145,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+    position: 'relative',
+  },
+  wallet: { fontSize: 82 },
+  coin: { position: 'absolute', fontSize: 34, top: 17, left: '31%' },
+  heart: {
+    position: 'absolute',
+    fontSize: 52,
+    color: '#F43F75',
+    right: '28%',
+    bottom: 14,
+  },
+  question: {
+    color: '#FFFFFF',
+    fontSize: 22,
+    fontWeight: '900',
+    marginTop: 6,
+    marginBottom: 18,
+  },
+  cardsRow: { flexDirection: 'row', gap: 12 },
+  spaceCard: {
+    flex: 1,
+    minHeight: 205,
+    borderRadius: 23,
+    padding: 16,
+    justifyContent: 'space-between',
+    borderWidth: 1,
+  },
+  personalCard: {
+    backgroundColor: '#1677FF',
+    borderColor: '#4A9AFF',
+  },
+  coupleCard: {
+    backgroundColor: '#D9366F',
+    borderColor: '#F05C8E',
+  },
+  iconCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  spaceIcon: { fontSize: 27 },
+  spaceTitle: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: '900',
+  },
+  spaceSubtitle: {
+    color: 'rgba(255,255,255,0.82)',
+    fontSize: 11,
+    lineHeight: 16,
+    marginTop: 5,
+  },
+  arrow: {
+    color: '#FFFFFF',
+    fontSize: 34,
+    alignSelf: 'flex-end',
+    lineHeight: 34,
+  },
+  footerText: {
+    color: '#64748B',
+    fontSize: 11,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    marginTop: 42,
   },
 });
