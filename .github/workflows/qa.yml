@@ -37,3 +37,6 @@ jobs:
 
       - name: Android production bundle
         run: npx expo export --platform android --output-dir dist-android
+
+      - name: Web production bundle
+        run: npx expo export --platform web --output-dir dist-web
