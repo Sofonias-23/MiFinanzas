@@ -24,6 +24,7 @@ export default function RootLayout() {
         <Stack.Screen name="saldar-deuda" options={{ presentation: 'card' }} />
         <Stack.Screen name="presupuestos" options={{ presentation: 'card' }} />
         <Stack.Screen name="nuevo-gasto" options={{ presentation: 'card' }} />
+        <Stack.Screen name="detalle-gasto" options={{ presentation: 'card' }} />
         <Stack.Screen name="nuevo-ingreso" options={{ presentation: 'card' }} />
         <Stack.Screen name="categorias" options={{ presentation: 'card' }} />
         <Stack.Screen name="metodos-pago" options={{ presentation: 'card' }} />
