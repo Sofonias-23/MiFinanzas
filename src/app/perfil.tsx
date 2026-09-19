@@ -22,6 +22,13 @@ type PartnerStatus = {
   invite_code: string | null;
 };
 
+type ProfilePreferences = {
+  display_name: string | null;
+  currency: string;
+  budget_alerts_enabled: boolean;
+  partner_activity_enabled: boolean;
+};
+
 export default function PerfilScreen() {
   const {
     user,
@@ -31,39 +38,54 @@ export default function PerfilScreen() {
   } = useFinance();
 
   const [partnerStatus, setPartnerStatus] = useState<PartnerStatus | null>(null);
+  const [preferences, setPreferences] = useState<ProfilePreferences | null>(null);
   const [resetting, setResetting] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) router.replace('/login');
   }, [authLoading, user]);
 
-  const loadPartnerStatus = useCallback(async () => {
+  const loadData = useCallback(async () => {
     if (!user) return;
 
-    const { data, error } = await supabase.rpc('get_partner_status');
-    if (error) {
-      console.warn('No se pudo cargar el estado de pareja:', error.message);
-      return;
+    const [partnerResult, profileResult] = await Promise.all([
+      supabase.rpc('get_partner_status'),
+      supabase
+        .from('profiles')
+        .select('display_name, currency, budget_alerts_enabled, partner_activity_enabled')
+        .eq('id', user.id)
+        .single(),
+    ]);
+
+    if (!partnerResult.error) {
+      setPartnerStatus((partnerResult.data?.[0] ?? null) as PartnerStatus | null);
     }
 
-    setPartnerStatus((data?.[0] ?? null) as PartnerStatus | null);
+    if (!profileResult.error) {
+      setPreferences(profileResult.data as ProfilePreferences);
+    }
   }, [user]);
 
   useFocusEffect(
     useCallback(() => {
-      loadPartnerStatus();
-    }, [loadPartnerStatus])
+      loadData();
+    }, [loadData])
   );
 
   if (authLoading || !user) return null;
 
   const displayName =
-    user.user_metadata?.display_name || user.email?.split('@')[0] || 'Usuario';
+    preferences?.display_name ||
+    user.user_metadata?.display_name ||
+    user.email?.split('@')[0] ||
+    'Usuario';
+
+  const linked = (partnerStatus?.member_count ?? 0) >= 2;
 
   const handleReset = () => {
     Alert.alert(
       'Empezar de cero',
-      'Se borrarán solo tus datos personales: gastos personales, ingresos, deudas, categorías y métodos de pago. Los gastos compartidos y la vinculación con tu pareja se conservarán. Esta acción no se puede deshacer.',
+      'Se borrarán solo tus datos personales: gastos personales, ingresos, deudas, presupuestos personales, categorías y métodos de pago. Los gastos compartidos, liquidaciones, presupuestos de pareja y la vinculación con tu pareja se conservarán. Esta acción no se puede deshacer.',
       [
         { text: 'Cancelar', style: 'cancel' },
         {
@@ -73,7 +95,10 @@ export default function PerfilScreen() {
             try {
               setResetting(true);
               await resetFinanceData();
-              Alert.alert('Listo', 'Tus datos personales se reiniciaron. Tus gastos compartidos y tu vinculación de pareja se conservaron.');
+              Alert.alert(
+                'Datos personales reiniciados',
+                'Tu información personal quedó limpia. El espacio de pareja se conservó.'
+              );
             } catch (error: any) {
               Alert.alert(
                 'No se pudo reiniciar',
@@ -88,12 +113,30 @@ export default function PerfilScreen() {
     );
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    router.replace('/login');
+  const handleSignOut = () => {
+    Alert.alert(
+      'Cerrar sesión',
+      '¿Quieres salir de MiFinanzas en este dispositivo?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Cerrar sesión',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await signOut();
+              router.replace('/login');
+            } catch (error: any) {
+              Alert.alert(
+                'No se pudo cerrar sesión',
+                error?.message ?? 'Inténtalo nuevamente.'
+              );
+            }
+          },
+        },
+      ]
+    );
   };
-
-  const linked = (partnerStatus?.member_count ?? 0) >= 2;
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -102,42 +145,64 @@ export default function PerfilScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>Mi cuenta</Text>
+        <Text style={styles.title}>Perfil</Text>
+        <Text style={styles.subtitle}>Cuenta, privacidad y organización.</Text>
 
-        <View style={styles.profileCard}>
+        <TouchableOpacity
+          activeOpacity={0.86}
+          style={styles.profileCard}
+          onPress={() => router.push('/ajustes')}
+        >
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{displayName.slice(0, 1).toUpperCase()}</Text>
+            <Text style={styles.avatarText}>
+              {displayName.slice(0, 1).toUpperCase()}
+            </Text>
           </View>
+
           <View style={styles.profileText}>
             <Text style={styles.name}>{displayName}</Text>
             <Text style={styles.email}>{user.email}</Text>
+            <Text style={styles.profileMeta}>
+              {preferences?.currency ?? 'PEN'} · Editar cuenta
+            </Text>
           </View>
-        </View>
 
-        <Text style={styles.sectionTitle}>Configuración</Text>
+          <Text style={styles.arrow}>›</Text>
+        </TouchableOpacity>
 
+        <Text style={styles.sectionTitle}>Finanzas</Text>
         <View style={styles.menuCard}>
+          <MenuRow
+            icon="📊"
+            title="Presupuestos"
+            subtitle="Límites personales y compartidos"
+            onPress={() => router.push('/presupuestos')}
+          />
+          <Divider />
           <MenuRow
             icon="🏷️"
             title="Categorías"
-            subtitle="Organiza tus gastos"
+            subtitle="Organiza en qué gastas"
             onPress={() => router.push('/categorias')}
           />
           <Divider />
           <MenuRow
             icon="💳"
             title="Métodos de pago"
-            subtitle="Yape, efectivo, tarjetas..."
+            subtitle="Yape, Plin, efectivo, tarjetas..."
             onPress={() => router.push('/metodos-pago')}
           />
           <Divider />
           <MenuRow
             icon="🧾"
             title="Deudas"
-            subtitle="Lo que te deben y lo que debes"
+            subtitle="Deudas privadas e historial de liquidaciones"
             onPress={() => router.push('/deudas')}
           />
-          <Divider />
+        </View>
+
+        <Text style={styles.sectionTitle}>Compartido</Text>
+        <View style={styles.menuCard}>
           <MenuRow
             icon="👥"
             title="Pareja"
@@ -149,30 +214,56 @@ export default function PerfilScreen() {
                 : 'No vinculada'
             }
             onPress={() => router.push('/pareja')}
+            accent={linked ? 'green' : undefined}
           />
         </View>
 
-        <Text style={styles.sectionTitle}>Tus datos</Text>
+        <Text style={styles.sectionTitle}>Preferencias y privacidad</Text>
+        <View style={styles.menuCard}>
+          <MenuRow
+            icon="⚙️"
+            title="Cuenta y preferencias"
+            subtitle="Nombre, moneda, avisos y privacidad"
+            onPress={() => router.push('/ajustes')}
+          />
+          <Divider />
+          <View style={styles.infoRow}>
+            <Text style={styles.infoIcon}>🔒</Text>
+            <View style={styles.infoText}>
+              <Text style={styles.infoTitle}>Tus datos personales son privados</Text>
+              <Text style={styles.infoSubtitle}>
+                Solo se comparte aquello que registras expresamente dentro de Pareja.
+              </Text>
+            </View>
+          </View>
+        </View>
 
+        <Text style={styles.sectionTitle}>Tus datos</Text>
         <View style={styles.dangerCard}>
-          <Text style={styles.dangerTitle}>⚠️ Empezar de cero</Text>
+          <Text style={styles.dangerTitle}>Empezar de cero</Text>
           <Text style={styles.dangerText}>
-            Borra solo tus datos personales. Los gastos compartidos y la vinculación con tu pareja se conservan.
+            Borra solo tu información personal. El historial y la configuración compartida con tu pareja se mantienen.
           </Text>
+
           <TouchableOpacity
             style={[styles.resetButton, resetting && styles.disabled]}
             onPress={handleReset}
             disabled={resetting}
           >
             <Text style={styles.resetText}>
-              {resetting ? 'Borrando...' : 'Reiniciar mis datos'}
+              {resetting ? 'Reiniciando...' : 'Reiniciar mis datos personales'}
             </Text>
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.logoutButton} onPress={handleSignOut}>
+        <TouchableOpacity
+          style={styles.logoutButton}
+          onPress={handleSignOut}
+        >
           <Text style={styles.logoutText}>Cerrar sesión</Text>
         </TouchableOpacity>
+
+        <Text style={styles.version}>MiFinanzas · desarrollo</Text>
       </ScrollView>
 
       <BottomNav active="perfil" />
@@ -185,19 +276,30 @@ function MenuRow({
   title,
   subtitle,
   onPress,
+  accent,
 }: {
   icon: string;
   title: string;
   subtitle: string;
   onPress: () => void;
+  accent?: 'green';
 }) {
   return (
     <TouchableOpacity style={styles.menuRow} onPress={onPress}>
       <View style={styles.menuLeft}>
-        <Text style={styles.menuIcon}>{icon}</Text>
+        <View style={styles.menuIconBox}>
+          <Text style={styles.menuIcon}>{icon}</Text>
+        </View>
         <View style={styles.menuText}>
           <Text style={styles.menuTitle}>{title}</Text>
-          <Text style={styles.menuSubtitle}>{subtitle}</Text>
+          <Text
+            style={[
+              styles.menuSubtitle,
+              accent === 'green' && styles.menuSubtitleGreen,
+            ]}
+          >
+            {subtitle}
+          </Text>
         </View>
       </View>
       <Text style={styles.arrow}>›</Text>
@@ -211,79 +313,130 @@ function Divider() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  container: { flex: 1, backgroundColor: '#0B1220' },
-  content: { padding: 20, paddingBottom: 34 },
-  title: { color: '#FFFFFF', fontSize: 28, fontWeight: '800', marginBottom: 18 },
+  container: { flex: 1, backgroundColor: '#07111F' },
+  content: { padding: 20, paddingBottom: 38 },
+
+  title: { color: '#FFFFFF', fontSize: 30, fontWeight: '900' },
+  subtitle: { color: '#64748B', fontSize: 12, marginTop: 4 },
+
   profileCard: {
-    backgroundColor: '#111827',
-    borderRadius: 18,
+    marginTop: 18,
+    backgroundColor: '#102B55',
+    borderRadius: 20,
     padding: 16,
+    borderWidth: 1,
+    borderColor: '#1E4E91',
     flexDirection: 'row',
     alignItems: 'center',
   },
   avatar: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
-    backgroundColor: '#1D4ED8',
+    width: 55,
+    height: 55,
+    borderRadius: 18,
+    backgroundColor: '#1677FF',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 13,
   },
-  avatarText: { color: '#FFFFFF', fontSize: 21, fontWeight: '800' },
+  avatarText: { color: '#FFFFFF', fontSize: 22, fontWeight: '900' },
   profileText: { flex: 1 },
-  name: { color: '#FFFFFF', fontSize: 17, fontWeight: '800' },
-  email: { color: '#64748B', fontSize: 12, marginTop: 3 },
+  name: { color: '#FFFFFF', fontSize: 17, fontWeight: '900' },
+  email: { color: '#94A3B8', fontSize: 10, marginTop: 3 },
+  profileMeta: { color: '#60A5FA', fontSize: 9, fontWeight: '800', marginTop: 5 },
+
   sectionTitle: {
     color: '#94A3B8',
-    fontSize: 12,
-    fontWeight: '800',
+    fontSize: 10,
+    fontWeight: '900',
     textTransform: 'uppercase',
-    letterSpacing: 0.7,
+    letterSpacing: 0.8,
     marginTop: 24,
-    marginBottom: 9,
+    marginBottom: 8,
   },
-  menuCard: { backgroundColor: '#111827', borderRadius: 17, overflow: 'hidden' },
+
+  menuCard: {
+    backgroundColor: '#0E1A2A',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#1B2B40',
+    overflow: 'hidden',
+  },
   menuRow: {
-    minHeight: 68,
-    paddingHorizontal: 15,
+    minHeight: 70,
+    paddingHorizontal: 14,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   menuLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
-  menuIcon: { fontSize: 21, width: 34 },
+  menuIconBox: {
+    width: 39,
+    height: 39,
+    borderRadius: 12,
+    backgroundColor: '#16263A',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  menuIcon: { fontSize: 19 },
   menuText: { flex: 1 },
-  menuTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
-  menuSubtitle: { color: '#64748B', fontSize: 10, marginTop: 2 },
-  arrow: { color: '#64748B', fontSize: 25 },
-  divider: { height: 1, backgroundColor: '#1E293B', marginLeft: 49 },
+  menuTitle: { color: '#FFFFFF', fontSize: 13, fontWeight: '900' },
+  menuSubtitle: { color: '#64748B', fontSize: 9, lineHeight: 14, marginTop: 3 },
+  menuSubtitleGreen: { color: '#4ADE80' },
+  arrow: { color: '#64748B', fontSize: 28, marginLeft: 8 },
+  divider: { height: 1, backgroundColor: '#1B2B40', marginLeft: 63 },
+
+  infoRow: {
+    minHeight: 74,
+    paddingHorizontal: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  infoIcon: { fontSize: 21, width: 39 },
+  infoText: { flex: 1 },
+  infoTitle: { color: '#FFFFFF', fontSize: 12, fontWeight: '900' },
+  infoSubtitle: { color: '#64748B', fontSize: 9, lineHeight: 14, marginTop: 3 },
+
   dangerCard: {
     backgroundColor: '#241318',
-    borderRadius: 17,
+    borderRadius: 18,
     padding: 16,
     borderWidth: 1,
     borderColor: '#4A1D27',
   },
-  dangerTitle: { color: '#FCA5A5', fontSize: 15, fontWeight: '800' },
-  dangerText: { color: '#94A3B8', fontSize: 11, lineHeight: 17, marginTop: 6 },
+  dangerTitle: { color: '#FCA5A5', fontSize: 14, fontWeight: '900' },
+  dangerText: {
+    color: '#94A3B8',
+    fontSize: 10,
+    lineHeight: 16,
+    marginTop: 5,
+  },
   resetButton: {
-    marginTop: 14,
+    marginTop: 13,
     borderRadius: 13,
     paddingVertical: 12,
     alignItems: 'center',
+    backgroundColor: '#3A171C',
     borderWidth: 1,
     borderColor: '#7F1D1D',
-    backgroundColor: '#3A171C',
   },
-  resetText: { color: '#FCA5A5', fontSize: 13, fontWeight: '800' },
-  disabled: { opacity: 0.6 },
+  resetText: { color: '#FCA5A5', fontSize: 11, fontWeight: '900' },
+  disabled: { opacity: 0.5 },
+
   logoutButton: {
-    marginTop: 18,
+    marginTop: 17,
+    backgroundColor: '#0E1A2A',
     borderRadius: 14,
-    backgroundColor: '#111827',
+    borderWidth: 1,
+    borderColor: '#1B2B40',
     paddingVertical: 14,
     alignItems: 'center',
   },
-  logoutText: { color: '#CBD5E1', fontSize: 13, fontWeight: '800' },
+  logoutText: { color: '#CBD5E1', fontSize: 12, fontWeight: '900' },
+  version: {
+    color: '#475569',
+    fontSize: 9,
+    textAlign: 'center',
+    marginTop: 16,
+  },
 });
