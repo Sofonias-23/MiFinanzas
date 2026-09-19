@@ -50,6 +50,17 @@ export type Income = {
   createdAt: string;
 };
 
+export type PartnerSettlement = {
+  id: string;
+  householdId: string;
+  payerId: string;
+  receiverId: string;
+  amount: number;
+  paymentMethod: string;
+  note: string | null;
+  createdAt: string;
+};
+
 type NewExpense = {
   amount: number;
   description: string;
@@ -73,6 +84,7 @@ type FinanceContextValue = {
   incomes: Income[];
   categories: Category[];
   paymentMethods: PaymentMethod[];
+  settlements: PartnerSettlement[];
   loadingExpenses: boolean;
   loadingIncomes: boolean;
   loadingCategories: boolean;
@@ -91,6 +103,7 @@ type FinanceContextValue = {
   refreshIncomes: () => Promise<void>;
   refreshCategories: () => Promise<void>;
   refreshPaymentMethods: () => Promise<void>;
+  refreshSettlements: () => Promise<void>;
   totalIncome: number;
   totalMyExpenses: number;
   totalSharedExpenses: number;
@@ -121,6 +134,19 @@ function mapIncome(row: any): Income {
     id: row.id,
     amount: Number(row.amount),
     description: row.description,
+    createdAt: row.created_at,
+  };
+}
+
+function mapSettlement(row: any): PartnerSettlement {
+  return {
+    id: row.id,
+    householdId: row.household_id,
+    payerId: row.payer_id,
+    receiverId: row.receiver_id,
+    amount: Number(row.amount),
+    paymentMethod: row.payment_method ?? 'efectivo',
+    note: row.note ?? null,
     createdAt: row.created_at,
   };
 }
@@ -162,6 +188,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   const [incomes, setIncomes] = useState<Income[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [settlements, setSettlements] = useState<PartnerSettlement[]>([]);
   const [loadingExpenses, setLoadingExpenses] = useState(false);
   const [loadingIncomes, setLoadingIncomes] = useState(false);
   const [loadingCategories, setLoadingCategories] = useState(false);
@@ -252,6 +279,25 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     setPaymentMethods((data ?? []).map(mapPaymentMethod));
   }, [user]);
 
+  const refreshSettlements = useCallback(async () => {
+    if (!user) {
+      setSettlements([]);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('partner_settlements')
+      .select('id, household_id, payer_id, receiver_id, amount, payment_method, note, created_at')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.warn('No se pudieron cargar las liquidaciones:', error.message);
+      return;
+    }
+
+    setSettlements((data ?? []).map(mapSettlement));
+  }, [user]);
+
   useEffect(() => {
     let mounted = true;
 
@@ -269,6 +315,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         setIncomes([]);
         setCategories([]);
         setPaymentMethods([]);
+        setSettlements([]);
         setHouseholdId(null);
       }
     });
@@ -286,6 +333,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     refreshIncomes();
     refreshCategories();
     refreshPaymentMethods();
+    refreshSettlements();
 
     supabase
       .from('household_members')
@@ -319,12 +367,17 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         { event: '*', schema: 'public', table: 'payment_methods' },
         () => refreshPaymentMethods()
       )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'partner_settlements' },
+        () => refreshSettlements()
+      )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, refreshExpenses, refreshIncomes, refreshCategories, refreshPaymentMethods]);
+  }, [user, refreshExpenses, refreshIncomes, refreshCategories, refreshPaymentMethods, refreshSettlements]);
 
   const ensureHousehold = useCallback(async () => {
     if (!user) throw new Error('Debes iniciar sesión.');
@@ -595,10 +648,11 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   );
 
   // Positivo: tu pareja te debe. Negativo: tú le debes a tu pareja.
+  // Las liquidaciones reducen el saldo sin crear un gasto nuevo.
   const partnerBalance = useMemo(() => {
     if (!user) return 0;
 
-    return expenses
+    const expenseBalance = expenses
       .filter((expense) => expense.type === 'compartido')
       .reduce((balance, expense) => {
         const myCurrentShare =
@@ -612,7 +666,15 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
 
         return balance - myCurrentShare;
       }, 0);
-  }, [expenses, user]);
+
+    const settlementBalance = settlements.reduce((balance, settlement) => {
+      if (settlement.payerId === user.id) return balance + settlement.amount;
+      if (settlement.receiverId === user.id) return balance - settlement.amount;
+      return balance;
+    }, 0);
+
+    return Math.round((expenseBalance + settlementBalance) * 100) / 100;
+  }, [expenses, settlements, user]);
 
   return (
     <FinanceContext.Provider
@@ -623,6 +685,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         incomes,
         categories,
         paymentMethods,
+        settlements,
         loadingExpenses,
         loadingIncomes,
         loadingCategories,
@@ -641,6 +704,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         refreshIncomes,
         refreshCategories,
         refreshPaymentMethods,
+        refreshSettlements,
         totalIncome,
         totalMyExpenses,
         totalSharedExpenses,
