@@ -18,6 +18,7 @@ export default function RootLayout() {
         <Stack.Screen name="movimientos" />
         <Stack.Screen name="estadisticas" />
         <Stack.Screen name="perfil" />
+        <Stack.Screen name="ajustes" options={{ presentation: 'card' }} />
         <Stack.Screen name="pareja" options={{ presentation: 'card' }} />
         <Stack.Screen name="deudas" options={{ presentation: 'card' }} />
         <Stack.Screen name="saldar-deuda" options={{ presentation: 'card' }} />
