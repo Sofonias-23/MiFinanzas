@@ -629,15 +629,22 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     [incomes]
   );
 
-  const totalMyExpenses = useMemo(
-    () =>
-      expenses.reduce(
-        (total, expense) =>
-          total + (expense.type === 'compartido' ? expense.amount / 2 : expense.amount),
-        0
-      ),
-    [expenses]
-  );
+  const totalMyExpenses = useMemo(() => {
+    if (!user) return 0;
+
+    return expenses.reduce((total, expense) => {
+      if (expense.type === 'personal') {
+        return total + expense.amount;
+      }
+
+      const myShare =
+        expense.createdBy === user.id
+          ? expense.myShare
+          : expense.partnerShare;
+
+      return total + myShare;
+    }, 0);
+  }, [expenses, user]);
 
   const totalSharedExpenses = useMemo(
     () =>
