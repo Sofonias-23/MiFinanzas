@@ -152,6 +152,19 @@ export default function MiDineroScreen() {
           </TouchableOpacity>
         </View>
 
+        <TouchableOpacity
+          style={styles.budgetShortcut}
+          onPress={() => router.push('/presupuestos?scope=personal' as any)}
+        >
+          <View>
+            <Text style={styles.budgetShortcutTitle}>📊 Presupuesto personal</Text>
+            <Text style={styles.budgetShortcutText}>
+              Define límites mensuales por categoría y controla tu avance.
+            </Text>
+          </View>
+          <Text style={styles.budgetShortcutArrow}>›</Text>
+        </TouchableOpacity>
+
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Movimientos personales</Text>
           <TouchableOpacity onPress={() => router.push('/movimientos?filter=personal' as any)}>
@@ -244,6 +257,20 @@ const styles = StyleSheet.create({
   incomeAction: { backgroundColor: '#123323' },
   actionIcon: { color: '#FFFFFF', fontSize: 24, fontWeight: '800' },
   actionText: { color: '#FFFFFF', fontSize: 14, fontWeight: '900' },
+  budgetShortcut: {
+    marginTop: 14,
+    backgroundColor: '#132E5B',
+    borderRadius: 17,
+    padding: 15,
+    borderWidth: 1,
+    borderColor: '#23446E',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  budgetShortcutTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '900' },
+  budgetShortcutText: { color: '#94A3B8', fontSize: 10, marginTop: 4, maxWidth: '90%' },
+  budgetShortcutArrow: { color: '#60A5FA', fontSize: 28 },
   sectionHeader: {
     marginTop: 25,
     marginBottom: 10,
