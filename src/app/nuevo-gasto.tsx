@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -14,6 +14,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ExpenseCategory, useFinance } from '@/context/finance-context';
+import { supabase } from '@/lib/supabase';
+
+type PartnerStatus = {
+  household_id: string | null;
+  partner_name: string | null;
+  member_count: number;
+};
 
 export default function NuevoGastoScreen() {
   const {
@@ -26,16 +33,62 @@ export default function NuevoGastoScreen() {
     loadingPaymentMethods,
   } = useFinance();
 
+  const params = useLocalSearchParams<{ type?: string }>();
+
   const [monto, setMonto] = useState('');
   const [descripcion, setDescripcion] = useState('');
-  const [tipo, setTipo] = useState<'personal' | 'compartido'>('personal');
+  const [tipo, setTipo] = useState<'personal' | 'compartido'>(
+    params.type === 'compartido' ? 'compartido' : 'personal'
+  );
   const [categoria, setCategoria] = useState<ExpenseCategory>('');
   const [metodoPago, setMetodoPago] = useState('');
   const [saving, setSaving] = useState(false);
+  const [partnerName, setPartnerName] = useState('Mi pareja');
+  const [partnerId, setPartnerId] = useState<string | null>(null);
+  const [payerId, setPayerId] = useState<string>('');
 
   useEffect(() => {
     if (!authLoading && !user) router.replace('/login');
   }, [authLoading, user]);
+
+  useEffect(() => {
+    if (user && !payerId) setPayerId(user.id);
+  }, [user, payerId]);
+
+  useEffect(() => {
+    if (params.type === 'compartido') setTipo('compartido');
+  }, [params.type]);
+
+  const loadPartner = useCallback(async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase.rpc('get_partner_status');
+    if (error) return;
+
+    const status = (data?.[0] ?? null) as PartnerStatus | null;
+    if (!status || status.member_count < 2 || !status.household_id) {
+      setPartnerId(null);
+      return;
+    }
+
+    setPartnerName(status.partner_name || 'Mi pareja');
+
+    const { data: member } = await supabase
+      .from('household_members')
+      .select('user_id')
+      .eq('household_id', status.household_id)
+      .neq('user_id', user.id)
+      .limit(1)
+      .maybeSingle();
+
+    setPartnerId(member?.user_id ?? null);
+  }, [user]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadPartner();
+    }, [loadPartner])
+  );
 
   useEffect(() => {
     if (categories.length > 0 && !categories.some((item) => item.slug === categoria)) {
@@ -53,10 +106,18 @@ export default function NuevoGastoScreen() {
     }
   }, [paymentMethods, metodoPago]);
 
+  useEffect(() => {
+    if (tipo === 'personal' && user) {
+      setPayerId(user.id);
+    }
+  }, [tipo, user]);
+
   const amount = Number(monto.replace(',', '.'));
   const isValidAmount = Number.isFinite(amount) && amount > 0;
 
   const guardarGasto = async () => {
+    if (!user) return;
+
     if (!isValidAmount) {
       Alert.alert('Monto inválido', 'Ingresa un monto mayor a 0.');
       return;
@@ -85,6 +146,7 @@ export default function NuevoGastoScreen() {
         type: tipo,
         category: categoria,
         paymentMethod: metodoPago,
+        payerId: tipo === 'compartido' ? payerId || user.id : user.id,
       });
       router.back();
     } catch (error: any) {
@@ -170,7 +232,7 @@ export default function NuevoGastoScreen() {
           )}
 
           <View style={styles.stepHeader}>
-            <Text style={styles.stepNoMargin}>4 · ¿Cómo pagaste?</Text>
+            <Text style={styles.stepNoMargin}>4 · ¿Cómo pagaron?</Text>
             <TouchableOpacity onPress={() => router.push('/metodos-pago')}>
               <Text style={styles.manage}>Editar</Text>
             </TouchableOpacity>
@@ -227,12 +289,48 @@ export default function NuevoGastoScreen() {
             </TouchableOpacity>
           </View>
 
-          {tipo === 'compartido' && isValidAmount && (
-            <View style={styles.sharedBox}>
-              <Text style={styles.sharedText}>
-                División 50/50 · Tu parte S/ {(amount / 2).toFixed(2)}
-              </Text>
-            </View>
+          {tipo === 'compartido' && (
+            <>
+              <Text style={styles.step}>6 · ¿Quién pagó?</Text>
+              <View style={styles.typeRow}>
+                <TouchableOpacity
+                  style={[styles.typeButton, payerId === user?.id && styles.typeActive]}
+                  onPress={() => user && setPayerId(user.id)}
+                >
+                  <Text style={styles.typeIcon}>👤</Text>
+                  <View>
+                    <Text style={styles.typeTitle}>Yo</Text>
+                    <Text style={styles.typeSub}>Pagaste tú</Text>
+                  </View>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.typeButton,
+                    payerId === partnerId && styles.typeActive,
+                    !partnerId && styles.disabled,
+                  ]}
+                  onPress={() => partnerId && setPayerId(partnerId)}
+                  disabled={!partnerId}
+                >
+                  <Text style={styles.typeIcon}>👥</Text>
+                  <View>
+                    <Text style={styles.typeTitle}>{partnerName}</Text>
+                    <Text style={styles.typeSub}>
+                      {partnerId ? 'Pagó tu pareja' : 'Primero vincula tu pareja'}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+
+              {isValidAmount && (
+                <View style={styles.sharedBox}>
+                  <Text style={styles.sharedText}>
+                    División 50/50 · A cada uno le corresponde S/ {(amount / 2).toFixed(2)}
+                  </Text>
+                </View>
+              )}
+            </>
           )}
 
           <TouchableOpacity
@@ -336,5 +434,5 @@ const styles = StyleSheet.create({
     marginTop: 26,
   },
   saveText: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
-  disabled: { opacity: 0.6 },
+  disabled: { opacity: 0.45 },
 });
