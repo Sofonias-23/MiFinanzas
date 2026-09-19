@@ -30,7 +30,9 @@ export default function ParejaScreen() {
     expenses,
     totalSharedExpenses,
     partnerBalance,
+    settlements,
     refreshExpenses,
+    refreshSettlements,
   } = useFinance();
 
   const [status, setStatus] = useState<PartnerStatus | null>(null);
@@ -60,7 +62,8 @@ export default function ParejaScreen() {
     useCallback(() => {
       loadStatus();
       refreshExpenses();
-    }, [loadStatus, refreshExpenses])
+      refreshSettlements();
+    }, [loadStatus, refreshExpenses, refreshSettlements])
   );
 
   const generateInvite = async () => {
@@ -198,6 +201,15 @@ export default function ParejaScreen() {
               <Text style={styles.balanceHint}>
                 Se calcula automáticamente según quién pagó y cuánto le corresponde a cada uno.
               </Text>
+
+              {balanceAbs >= 0.01 ? (
+                <TouchableOpacity
+                  style={styles.settleButton}
+                  onPress={() => router.push('/saldar-deuda')}
+                >
+                  <Text style={styles.settleButtonText}>Saldar deuda</Text>
+                </TouchableOpacity>
+              ) : null}
             </View>
 
             <View style={styles.statsRow}>
@@ -213,6 +225,40 @@ export default function ParejaScreen() {
                 <Text style={styles.newExpenseText}>Nuevo gasto</Text>
               </TouchableOpacity>
             </View>
+
+            {settlements.length > 0 ? (
+              <>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>Últimos pagos entre ustedes</Text>
+                  <TouchableOpacity onPress={() => router.push('/deudas')}>
+                    <Text style={styles.sharedLink}>Ver historial</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.list}>
+                  {settlements.slice(0, 3).map((settlement) => {
+                    const iPaid = settlement.payerId === user.id;
+                    return (
+                      <View key={settlement.id} style={styles.settlementRow}>
+                        <View style={styles.expenseText}>
+                          <Text style={styles.expenseTitle}>
+                            {iPaid
+                              ? `Pagaste a ${partnerName}`
+                              : `${partnerName} te pagó`}
+                          </Text>
+                          <Text style={styles.expenseMeta}>
+                            {settlement.paymentMethod} · {new Date(settlement.createdAt).toLocaleDateString('es-PE')}
+                          </Text>
+                        </View>
+                        <Text style={styles.settlementAmount}>
+                          S/ {settlement.amount.toFixed(2)}
+                        </Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              </>
+            ) : null}
 
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Últimos compartidos</Text>
@@ -447,6 +493,14 @@ const styles = StyleSheet.create({
   balanceAmountGreen: { color: '#4ADE80' },
   balanceAmountNeutral: { color: '#CBD5E1' },
   balanceHint: { color: '#64748B', fontSize: 10, lineHeight: 15, marginTop: 8 },
+  settleButton: {
+    marginTop: 14,
+    backgroundColor: '#F43F75',
+    borderRadius: 13,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  settleButtonText: { color: '#FFFFFF', fontSize: 12, fontWeight: '900' },
   statsRow: { flexDirection: 'row', gap: 10, marginTop: 14 },
   statCard: {
     flex: 1,
@@ -487,4 +541,13 @@ const styles = StyleSheet.create({
   expenseMeta: { color: '#94A3B8', fontSize: 10, marginTop: 3 },
   expenseDate: { color: '#475569', fontSize: 9, marginTop: 2 },
   expenseAmount: { color: '#CBD5E1', fontSize: 13, fontWeight: '900' },
+  settlementRow: {
+    backgroundColor: '#111827',
+    borderRadius: 15,
+    padding: 14,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  settlementAmount: { color: '#60A5FA', fontSize: 13, fontWeight: '900' },
 });
