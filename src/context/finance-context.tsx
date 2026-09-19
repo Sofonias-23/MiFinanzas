@@ -37,6 +37,10 @@ export type Expense = {
   paymentMethod: string;
   createdAt: string;
   householdId?: string | null;
+  createdBy: string;
+  payerId: string;
+  myShare: number;
+  partnerShare: number;
 };
 
 export type Income = {
@@ -52,6 +56,7 @@ type NewExpense = {
   type: ExpenseType;
   category: ExpenseCategory;
   paymentMethod: string;
+  payerId?: string;
 };
 
 type NewIncome = {
@@ -87,6 +92,7 @@ type FinanceContextValue = {
   totalIncome: number;
   totalMyExpenses: number;
   totalSharedExpenses: number;
+  partnerBalance: number;
 };
 
 const FinanceContext = createContext<FinanceContextValue | undefined>(undefined);
@@ -101,6 +107,10 @@ function mapExpense(row: any): Expense {
     paymentMethod: row.payment_method ?? 'sin-especificar',
     createdAt: row.created_at,
     householdId: row.household_id,
+    createdBy: row.created_by,
+    payerId: row.payer_id,
+    myShare: Number(row.my_share ?? 0),
+    partnerShare: Number(row.partner_share ?? 0),
   };
 }
 
@@ -165,7 +175,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     setLoadingExpenses(true);
     const { data, error } = await supabase
       .from('expenses')
-      .select('id, amount, description, type, category, payment_method, created_at, household_id')
+      .select('id, amount, description, type, category, payment_method, created_at, household_id, created_by, payer_id, my_share, partner_share')
       .order('created_at', { ascending: false });
     setLoadingExpenses(false);
 
@@ -341,7 +351,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         .from('expenses')
         .insert({
           created_by: user.id,
-          payer_id: user.id,
+          payer_id: shared ? expense.payerId ?? user.id : user.id,
           household_id: groupId,
           description: expense.description.trim(),
           amount: expense.amount,
@@ -351,7 +361,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
           my_share: myShare,
           partner_share: partnerShare,
         })
-        .select('id, amount, description, type, category, payment_method, created_at, household_id')
+        .select('id, amount, description, type, category, payment_method, created_at, household_id, created_by, payer_id, my_share, partner_share')
         .single();
 
       if (error) throw error;
@@ -562,6 +572,26 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     [expenses]
   );
 
+  // Positivo: tu pareja te debe. Negativo: tú le debes a tu pareja.
+  const partnerBalance = useMemo(() => {
+    if (!user) return 0;
+
+    return expenses
+      .filter((expense) => expense.type === 'compartido')
+      .reduce((balance, expense) => {
+        const myCurrentShare =
+          expense.createdBy === user.id
+            ? expense.myShare
+            : expense.partnerShare;
+
+        if (expense.payerId === user.id) {
+          return balance + (expense.amount - myCurrentShare);
+        }
+
+        return balance - myCurrentShare;
+      }, 0);
+  }, [expenses, user]);
+
   return (
     <FinanceContext.Provider
       value={{
@@ -592,6 +622,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         totalIncome,
         totalMyExpenses,
         totalSharedExpenses,
+        partnerBalance,
       }}
     >
       {children}
