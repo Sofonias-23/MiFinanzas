@@ -196,7 +196,7 @@ export default function ParejaScreen() {
                 S/ {balanceAbs.toFixed(2)}
               </Text>
               <Text style={styles.balanceHint}>
-                Se calcula automáticamente según quién pagó cada gasto y la división 50/50.
+                Se calcula automáticamente según quién pagó y cuánto le corresponde a cada uno.
               </Text>
             </View>
 
@@ -233,12 +233,20 @@ export default function ParejaScreen() {
                 {recentShared.map((expense) => {
                   const payer =
                     expense.payerId === user.id ? 'Tú' : partnerName;
+                  const myPart =
+                    expense.createdBy === user.id
+                      ? expense.myShare
+                      : expense.partnerShare;
+
                   return (
                     <View key={expense.id} style={styles.expenseRow}>
                       <View style={styles.expenseText}>
                         <Text style={styles.expenseTitle}>{expense.description}</Text>
                         <Text style={styles.expenseMeta}>
-                          Pagó: {payer} · {new Date(expense.createdAt).toLocaleDateString('es-PE')}
+                          Pagó {payer} · Tu parte S/ {myPart.toFixed(2)}
+                        </Text>
+                        <Text style={styles.expenseDate}>
+                          {new Date(expense.createdAt).toLocaleDateString('es-PE')}
                         </Text>
                       </View>
                       <Text style={styles.expenseAmount}>S/ {expense.amount.toFixed(2)}</Text>
@@ -476,6 +484,7 @@ const styles = StyleSheet.create({
   },
   expenseText: { flex: 1, marginRight: 10 },
   expenseTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '800' },
-  expenseMeta: { color: '#64748B', fontSize: 10, marginTop: 3 },
+  expenseMeta: { color: '#94A3B8', fontSize: 10, marginTop: 3 },
+  expenseDate: { color: '#475569', fontSize: 9, marginTop: 2 },
   expenseAmount: { color: '#CBD5E1', fontSize: 13, fontWeight: '900' },
 });
