@@ -14,6 +14,7 @@ export default function RootLayout() {
       >
         <Stack.Screen name="login" />
         <Stack.Screen name="index" />
+        <Stack.Screen name="mi-dinero" options={{ presentation: 'card' }} />
         <Stack.Screen name="movimientos" />
         <Stack.Screen name="estadisticas" />
         <Stack.Screen name="perfil" />
