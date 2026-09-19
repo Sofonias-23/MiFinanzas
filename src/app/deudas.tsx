@@ -33,7 +33,14 @@ type PartnerStatus = {
 };
 
 export default function DeudasScreen() {
-  const { user, authLoading, partnerBalance, refreshExpenses } = useFinance();
+  const {
+    user,
+    authLoading,
+    partnerBalance,
+    settlements,
+    refreshExpenses,
+    refreshSettlements,
+  } = useFinance();
 
   const [debts, setDebts] = useState<Debt[]>([]);
   const [partnerName, setPartnerName] = useState('tu pareja');
@@ -84,7 +91,8 @@ export default function DeudasScreen() {
       loadDebts();
       loadPartner();
       refreshExpenses();
-    }, [loadDebts, loadPartner, refreshExpenses])
+      refreshSettlements();
+    }, [loadDebts, loadPartner, refreshExpenses, refreshSettlements])
   );
 
   useEffect(() => {
@@ -256,7 +264,14 @@ export default function DeudasScreen() {
           </View>
         </View>
 
-        <TouchableOpacity style={styles.partnerBalanceCard} onPress={() => router.push('/pareja')}>
+        <TouchableOpacity
+          style={styles.partnerBalanceCard}
+          onPress={() =>
+            Math.abs(partnerBalance) >= 0.01
+              ? router.push('/saldar-deuda')
+              : router.push('/pareja')
+          }
+        >
           <View>
             <Text style={styles.partnerBalanceLabel}>Balance con {partnerName}</Text>
             <Text style={styles.partnerBalanceText}>
@@ -267,11 +282,45 @@ export default function DeudasScreen() {
                 : 'Están al día'}
             </Text>
             <Text style={styles.partnerBalanceHint}>
-              Se calcula automáticamente con los gastos compartidos y quién pagó.
+              Se calcula automáticamente con gastos compartidos y pagos registrados.
             </Text>
+            {Math.abs(partnerBalance) >= 0.01 ? (
+              <Text style={styles.settleHint}>Toca para saldar →</Text>
+            ) : null}
           </View>
           <Text style={styles.partnerBalanceArrow}>›</Text>
         </TouchableOpacity>
+
+        {settlements.length > 0 ? (
+          <View style={styles.historySection}>
+            <Text style={styles.historyTitle}>Historial de liquidaciones</Text>
+            <View style={styles.list}>
+              {settlements.map((settlement) => {
+                const iPaid = settlement.payerId === user.id;
+                return (
+                  <View key={settlement.id} style={styles.settlementCard}>
+                    <View style={styles.debtMain}>
+                      <Text style={styles.person}>
+                        {iPaid
+                          ? `Pagaste a ${partnerName}`
+                          : `${partnerName} te pagó`}
+                      </Text>
+                      <Text style={styles.date}>
+                        {new Date(settlement.createdAt).toLocaleDateString('es-PE')} · {settlement.paymentMethod}
+                      </Text>
+                      {settlement.note ? (
+                        <Text style={styles.note}>{settlement.note}</Text>
+                      ) : null}
+                    </View>
+                    <Text style={styles.settlementAmount}>
+                      S/ {settlement.amount.toFixed(2)}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        ) : null}
 
         {showForm && (
           <View style={styles.formCard}>
@@ -481,7 +530,19 @@ const styles = StyleSheet.create({
   partnerBalanceLabel: { color: '#94A3B8', fontSize: 10, fontWeight: '700' },
   partnerBalanceText: { color: '#FFFFFF', fontSize: 15, fontWeight: '900', marginTop: 4 },
   partnerBalanceHint: { color: '#64748B', fontSize: 9, marginTop: 4 },
+  settleHint: { color: '#F472B6', fontSize: 10, fontWeight: '800', marginTop: 6 },
   partnerBalanceArrow: { color: '#64748B', fontSize: 27, marginLeft: 10 },
+  historySection: { marginTop: 20 },
+  historyTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '900', marginBottom: 10 },
+  settlementCard: {
+    backgroundColor: '#111827',
+    borderRadius: 16,
+    padding: 14,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  settlementAmount: { color: '#60A5FA', fontSize: 13, fontWeight: '900', marginLeft: 10 },
   summaryCard: { flex: 1, borderRadius: 18, padding: 17 },
   receivableCard: { backgroundColor: '#102B26' },
   owedCard: { backgroundColor: '#32171D' },
