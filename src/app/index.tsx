@@ -27,6 +27,8 @@ export default function HomeScreen() {
     totalIncome,
     totalMyExpenses,
     totalSharedExpenses,
+    refreshExpenses,
+    refreshIncomes,
   } = useFinance();
 
   const [debtSummary, setDebtSummary] = useState({ meDeben: 0, debo: 0 });
@@ -63,7 +65,9 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       loadDebtSummary();
-    }, [loadDebtSummary])
+      refreshExpenses();
+      refreshIncomes();
+    }, [loadDebtSummary, refreshExpenses, refreshIncomes])
   );
 
   const recentMovements = useMemo(() => {
