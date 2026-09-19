@@ -344,8 +344,12 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
 
       const shared = expense.type === 'compartido';
       const groupId = shared ? await ensureHousehold() : null;
-      const myShare = shared ? expense.amount / 2 : expense.amount;
-      const partnerShare = shared ? expense.amount / 2 : 0;
+      const myShare = shared
+        ? Math.round((expense.amount / 2) * 100) / 100
+        : expense.amount;
+      const partnerShare = shared
+        ? Math.round((expense.amount - myShare) * 100) / 100
+        : 0;
 
       const { data, error } = await supabase
         .from('expenses')
