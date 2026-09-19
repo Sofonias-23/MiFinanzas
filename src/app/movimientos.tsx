@@ -63,12 +63,18 @@ export default function MovimientosScreen() {
         return true;
       })
       .map((expense) => {
-        const myPart = expense.type === 'compartido' ? expense.amount / 2 : expense.amount;
+        const myPart =
+          expense.type === 'compartido'
+            ? expense.createdBy === user?.id
+              ? expense.myShare
+              : expense.partnerShare
+            : expense.amount;
         const category = categories.find((item) => item.slug === expense.category);
         const payment = paymentMethods.find((item) => item.slug === expense.paymentMethod);
 
         return {
           id: `expense-${expense.id}`,
+          expenseId: expense.id,
           kind: 'expense' as const,
           description: expense.description,
           amount: myPart,
@@ -91,6 +97,7 @@ export default function MovimientosScreen() {
             )
             .map((income) => ({
               id: `income-${income.id}`,
+              expenseId: null,
               kind: 'income' as const,
               description: income.description,
               amount: income.amount,
@@ -103,7 +110,7 @@ export default function MovimientosScreen() {
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
-  }, [expenses, incomes, categories, paymentMethods, filter, search]);
+  }, [expenses, incomes, categories, paymentMethods, filter, search, user]);
 
   if (authLoading || !user) return null;
 
@@ -161,36 +168,60 @@ export default function MovimientosScreen() {
           </View>
         ) : (
           <View style={styles.list}>
-            {movements.map((movement) => (
-              <View key={movement.id} style={styles.row}>
-                <View style={styles.left}>
-                  <View style={styles.iconBox}>
-                    <Text style={styles.icon}>{movement.icon}</Text>
+            {movements.map((movement) => {
+              const content = (
+                <>
+                  <View style={styles.left}>
+                    <View style={styles.iconBox}>
+                      <Text style={styles.icon}>{movement.icon}</Text>
+                    </View>
+                    <View style={styles.textWrap}>
+                      <Text style={styles.name} numberOfLines={1}>
+                        {movement.description}
+                      </Text>
+                      <Text style={styles.meta} numberOfLines={1}>
+                        {movement.meta}
+                      </Text>
+                      <Text style={styles.date}>
+                        {new Date(movement.createdAt).toLocaleDateString('es-PE')}
+                      </Text>
+                    </View>
                   </View>
-                  <View style={styles.textWrap}>
-                    <Text style={styles.name} numberOfLines={1}>
-                      {movement.description}
-                    </Text>
-                    <Text style={styles.meta} numberOfLines={1}>
-                      {movement.meta}
-                    </Text>
-                    <Text style={styles.date}>
-                      {new Date(movement.createdAt).toLocaleDateString('es-PE')}
-                    </Text>
-                  </View>
-                </View>
 
-                <Text
-                  style={
-                    movement.kind === 'income'
-                      ? styles.incomeAmount
-                      : styles.expenseAmount
+                  <View style={styles.amountWrap}>
+                    <Text
+                      style={
+                        movement.kind === 'income'
+                          ? styles.incomeAmount
+                          : styles.expenseAmount
+                      }
+                    >
+                      {movement.kind === 'income' ? '+' : '-'} S/ {movement.amount.toFixed(2)}
+                    </Text>
+                    {movement.kind === 'expense' ? (
+                      <Text style={styles.rowArrow}>›</Text>
+                    ) : null}
+                  </View>
+                </>
+              );
+
+              return movement.kind === 'expense' && movement.expenseId ? (
+                <TouchableOpacity
+                  key={movement.id}
+                  style={styles.row}
+                  activeOpacity={0.82}
+                  onPress={() =>
+                    router.push(`/detalle-gasto?id=${movement.expenseId}` as any)
                   }
                 >
-                  {movement.kind === 'income' ? '+' : '-'} S/ {movement.amount.toFixed(2)}
-                </Text>
-              </View>
-            ))}
+                  {content}
+                </TouchableOpacity>
+              ) : (
+                <View key={movement.id} style={styles.row}>
+                  {content}
+                </View>
+              );
+            })}
           </View>
         )}
       </ScrollView>
@@ -264,8 +295,10 @@ const styles = StyleSheet.create({
   name: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
   meta: { color: '#64748B', fontSize: 10, marginTop: 3 },
   date: { color: '#475569', fontSize: 9, marginTop: 2 },
-  incomeAmount: { color: '#4ADE80', fontSize: 13, fontWeight: '800', marginLeft: 8 },
-  expenseAmount: { color: '#F87171', fontSize: 13, fontWeight: '800', marginLeft: 8 },
+  amountWrap: { flexDirection: 'row', alignItems: 'center', marginLeft: 8 },
+  incomeAmount: { color: '#4ADE80', fontSize: 13, fontWeight: '800' },
+  expenseAmount: { color: '#F87171', fontSize: 13, fontWeight: '800' },
+  rowArrow: { color: '#64748B', fontSize: 22, marginLeft: 7 },
   empty: {
     marginTop: 40,
     backgroundColor: '#111827',
