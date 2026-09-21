@@ -40,6 +40,14 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <View pointerEvents="none" style={styles.scenery}>
+        <View style={styles.moon} />
+        <View style={[styles.mountain, styles.mountainBack]} />
+        <View style={[styles.mountain, styles.mountainFront]} />
+        <View style={styles.glowBlue} />
+        <View style={styles.glowPink} />
+      </View>
+
       <Animated.View
         style={[
           styles.content,
@@ -103,6 +111,17 @@ export default function HomeScreen() {
           </Text>
         </View>
 
+        <View style={styles.promiseRow}>
+          <View style={styles.promiseItem}>
+            <Text style={styles.promiseIcon}>⚡</Text>
+            <Text style={styles.promiseText}>Simple y rápido</Text>
+          </View>
+          <View style={styles.promiseItem}>
+            <Text style={styles.promiseIcon}>👥</Text>
+            <Text style={styles.promiseText}>Todo en un lugar</Text>
+          </View>
+        </View>
+
         <Text style={styles.footer}>Pequeñas decisiones, grandes planes ♡</Text>
       </Animated.View>
     </SafeAreaView>
@@ -111,6 +130,59 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#07111F' },
+  scenery: {
+    ...StyleSheet.absoluteFillObject,
+    overflow: 'hidden',
+  },
+  moon: {
+    position: 'absolute',
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: '#0B2C4F',
+    opacity: 0.32,
+    right: -20,
+    top: 60,
+  },
+  mountain: {
+    position: 'absolute',
+    width: 360,
+    height: 210,
+    backgroundColor: '#0A243B',
+    transform: [{ rotate: '45deg' }],
+    borderRadius: 28,
+  },
+  mountainBack: {
+    left: -120,
+    bottom: -110,
+    opacity: 0.72,
+  },
+  mountainFront: {
+    right: -150,
+    bottom: -80,
+    backgroundColor: '#091C30',
+    opacity: 0.92,
+  },
+  glowBlue: {
+    position: 'absolute',
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: '#0F6BEF',
+    opacity: 0.08,
+    left: -70,
+    top: 100,
+  },
+  glowPink: {
+    position: 'absolute',
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: '#F43F75',
+    opacity: 0.06,
+    right: -80,
+    bottom: 150,
+  },
   loading: {
     flex: 1,
     backgroundColor: '#07111F',
@@ -203,6 +275,23 @@ const styles = StyleSheet.create({
   },
   privacyIcon: { fontSize: 16 },
   privacyText: { color: '#64748B', fontSize: 8, lineHeight: 13, marginLeft: 8, flex: 1 },
+  promiseRow: {
+    marginTop: 10,
+    flexDirection: 'row',
+    gap: 8,
+  },
+  promiseItem: {
+    flex: 1,
+    backgroundColor: 'rgba(14,26,42,0.88)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#1B2B40',
+    paddingVertical: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  promiseIcon: { fontSize: 14 },
+  promiseText: { color: '#94A3B8', fontSize: 7.5, fontWeight: '800', marginTop: 3 },
   footer: {
     color: '#64748B',
     fontSize: 10,
