@@ -33,6 +33,13 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "MiFinanzas necesita acceso a tus fotos para elegir tu foto de perfil.",
+          "cameraPermission": "MiFinanzas necesita acceso a la cámara para tomar tu foto de perfil."
+        }
       ]
     ],
     "experiments": {
