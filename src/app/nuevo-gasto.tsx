@@ -373,14 +373,19 @@ export default function NuevoGastoScreen() {
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            <TouchableOpacity onPress={() => router.back()}>
-              <Text style={styles.back}>‹ Volver</Text>
-            </TouchableOpacity>
+            <View style={styles.headerRow}>
+              <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                <AppIcon name="back" size={17} color="#23A7FF" />
+              </TouchableOpacity>
+              <Text style={styles.headerTitle}>Nuevo gasto</Text>
+              <View style={styles.headerSpacer} />
+            </View>
 
-            <Text style={styles.title}>
-              {tipo === 'compartido' ? 'Nuevo gasto compartido' : 'Nuevo gasto'}
+            <Text style={styles.subtitle}>
+              {tipo === 'compartido'
+                ? 'Gasto compartido · registra todo en pocos pasos.'
+                : 'Registra todo en pocos pasos.'}
             </Text>
-            <Text style={styles.subtitle}>Rápido, claro y sin pasos innecesarios.</Text>
 
             <Text style={styles.step}>1 · ¿Cuánto?</Text>
             <TextInput
@@ -479,7 +484,7 @@ export default function NuevoGastoScreen() {
                 style={[styles.typeButton, tipo === 'personal' && styles.typeActive]}
                 onPress={() => setTipo('personal')}
               >
-                <Text style={styles.typeIcon}>👤</Text>
+                <AppIcon name="profile" size={21} color="#CBD5E1" />
                 <View>
                   <Text style={styles.typeTitle}>Personal</Text>
                   <Text style={styles.typeSub}>Solo tú</Text>
@@ -490,7 +495,7 @@ export default function NuevoGastoScreen() {
                 style={[styles.typeButton, tipo === 'compartido' && styles.typeActivePink]}
                 onPress={() => setTipo('compartido')}
               >
-                <Text style={styles.typeIcon}>👥</Text>
+                <AppIcon name="people" size={21} color="#F472B6" />
                 <View>
                   <Text style={styles.typeTitle}>Compartido</Text>
                   <Text style={styles.typeSub}>Con tu pareja</Text>
@@ -506,7 +511,7 @@ export default function NuevoGastoScreen() {
                     style={[styles.typeButton, payerId === user?.id && styles.typeActive]}
                     onPress={() => user && setPayerId(user.id)}
                   >
-                    <Text style={styles.typeIcon}>👤</Text>
+                    <AppIcon name="profile" size={21} color="#23A7FF" />
                     <View>
                       <Text style={styles.typeTitle}>Yo</Text>
                       <Text style={styles.typeSub}>Pagaste tú</Text>
@@ -522,7 +527,7 @@ export default function NuevoGastoScreen() {
                     onPress={() => partnerId && setPayerId(partnerId)}
                     disabled={!partnerId}
                   >
-                    <Text style={styles.typeIcon}>💗</Text>
+                    <AppIcon name="profile" size={21} color="#F472B6" />
                     <View style={styles.partnerTextWrap}>
                       <Text style={styles.typeTitle} numberOfLines={1}>{partnerName}</Text>
                       <Text style={styles.typeSub}>
@@ -690,9 +695,24 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   container: { flex: 1, backgroundColor: '#07111F' },
   content: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 44 },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  backButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 11,
+    backgroundColor: '#0E1A2A',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: { color: '#FFFFFF', fontSize: 17, fontWeight: '900' },
+  headerSpacer: { width: 34 },
   back: { color: '#60A5FA', fontSize: 16, fontWeight: '800' },
   title: { color: '#FFFFFF', fontSize: 29, fontWeight: '900', marginTop: 22 },
-  subtitle: { color: '#64748B', fontSize: 13, marginTop: 5, marginBottom: 20 },
+  subtitle: { color: '#64748B', fontSize: 10, marginTop: 8, marginBottom: 12, textAlign: 'center' },
   step: {
     color: '#CBD5E1',
     fontSize: 13,
@@ -789,7 +809,6 @@ const styles = StyleSheet.create({
   },
   typeActive: { backgroundColor: '#132E5B', borderColor: '#3B82F6' },
   typeActivePink: { backgroundColor: '#3A1830', borderColor: '#EC4899' },
-  typeIcon: { fontSize: 22 },
   typeTitle: { color: '#FFFFFF', fontSize: 13, fontWeight: '900' },
   typeSub: { color: '#64748B', fontSize: 9, marginTop: 2 },
   partnerTextWrap: { flex: 1 },
