@@ -1,115 +1,105 @@
 import { router } from 'expo-router';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-type TabKey = 'inicio' | 'movimientos' | 'estadisticas' | 'perfil';
+import { AppIcon, AppIconName } from '@/components/app-icon';
 
-const ITEMS: { key: TabKey; label: string; icon: string; route: string }[] = [
-  { key: 'inicio', label: 'Inicio', icon: '⌂', route: '/mi-dinero' },
-  { key: 'movimientos', label: 'Movimientos', icon: '▤', route: '/movimientos' },
-  { key: 'estadisticas', label: 'Estadísticas', icon: '▥', route: '/estadisticas' },
-  { key: 'perfil', label: 'Perfil', icon: '●', route: '/perfil' },
+type TabKey = 'inicio' | 'movimientos' | 'estadisticas' | 'perfil';
+type Mode = 'personal' | 'pareja';
+
+type NavItem = {
+  key: TabKey;
+  label: string;
+  icon: AppIconName;
+  route: string;
+};
+
+const PERSONAL_ITEMS: NavItem[] = [
+  { key: 'inicio', label: 'Inicio', icon: 'home', route: '/mi-dinero' },
+  { key: 'movimientos', label: 'Categorías', icon: 'categories', route: '/categorias' },
+  { key: 'estadisticas', label: 'Estadísticas', icon: 'stats', route: '/estadisticas?scope=personal' },
+  { key: 'perfil', label: 'Perfil', icon: 'profile', route: '/perfil' },
 ];
 
-export function BottomNav({ active }: { active: TabKey }) {
+const COUPLE_ITEMS: NavItem[] = [
+  { key: 'inicio', label: 'Inicio', icon: 'home', route: '/pareja' },
+  { key: 'movimientos', label: 'Gastos', icon: 'expenses', route: '/movimientos?filter=compartido' },
+  { key: 'estadisticas', label: 'Estadísticas', icon: 'stats', route: '/estadisticas?scope=pareja' },
+  { key: 'perfil', label: 'Deudas', icon: 'debts', route: '/deudas' },
+];
+
+export function BottomNav({
+  active,
+  mode = 'personal',
+}: {
+  active: TabKey;
+  mode?: Mode;
+}) {
+  const items = mode === 'pareja' ? COUPLE_ITEMS : PERSONAL_ITEMS;
+  const activeColor = mode === 'pareja' ? '#F43F75' : '#23A7FF';
+
   return (
     <View style={styles.container}>
-      {ITEMS.slice(0, 2).map((item) => (
-        <NavItem key={item.key} item={item} selected={item.key === active} />
-      ))}
-
-      <TouchableOpacity
-        activeOpacity={0.85}
-        style={styles.quickButtonWrap}
-        onPress={() => router.push('/nuevo-gasto')}
-      >
-        <View style={styles.quickButton}>
-          <Text style={styles.quickPlus}>＋</Text>
-        </View>
-        <Text style={styles.quickLabel}>Registrar</Text>
-      </TouchableOpacity>
-
-      {ITEMS.slice(2).map((item) => (
-        <NavItem key={item.key} item={item} selected={item.key === active} />
-      ))}
+      {items.map((item) => {
+        const selected = item.key === active;
+        return (
+          <TouchableOpacity
+            key={item.key}
+            style={styles.item}
+            activeOpacity={0.8}
+            onPress={() => {
+              if (!selected) router.replace(item.route as any);
+            }}
+          >
+            <View
+              style={[
+                styles.iconWrap,
+                selected && { backgroundColor: activeColor + '22' },
+              ]}
+            >
+              <AppIcon
+                name={item.icon}
+                size={20}
+                color={selected ? activeColor : '#64748B'}
+              />
+            </View>
+            <Text style={[styles.label, selected && { color: activeColor }]}>
+              {item.label}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
     </View>
-  );
-}
-
-function NavItem({
-  item,
-  selected,
-}: {
-  item: (typeof ITEMS)[number];
-  selected: boolean;
-}) {
-  return (
-    <TouchableOpacity
-      style={styles.item}
-      onPress={() => {
-        if (!selected) router.replace(item.route as any);
-      }}
-    >
-      <Text style={[styles.icon, selected && styles.iconActive]}>{item.icon}</Text>
-      <Text style={[styles.label, selected && styles.labelActive]}>{item.label}</Text>
-    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
-    backgroundColor: '#0C1626',
+    alignItems: 'center',
+    backgroundColor: '#081421',
     borderTopWidth: 1,
-    borderTopColor: '#1B2B40',
-    paddingTop: 7,
-    paddingBottom: 7,
-    paddingHorizontal: 4,
+    borderTopColor: '#17304A',
+    paddingTop: 6,
+    paddingBottom: 8,
+    paddingHorizontal: 6,
   },
   item: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 46,
-    gap: 2,
+    minHeight: 48,
   },
-  icon: {
-    color: '#64748B',
-    fontSize: 20,
-    fontWeight: '900',
+  iconWrap: {
+    width: 30,
+    height: 27,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  iconActive: { color: '#2F8CFF' },
   label: {
     color: '#64748B',
     fontSize: 8,
     fontWeight: '800',
-  },
-  labelActive: { color: '#60A5FA' },
-  quickButtonWrap: {
-    width: 66,
-    alignItems: 'center',
-    marginTop: -26,
-  },
-  quickButton: {
-    width: 54,
-    height: 54,
-    borderRadius: 18,
-    backgroundColor: '#1677FF',
-    borderWidth: 4,
-    borderColor: '#0C1626',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  quickPlus: {
-    color: '#FFFFFF',
-    fontSize: 30,
-    lineHeight: 34,
-    fontWeight: '500',
-  },
-  quickLabel: {
-    color: '#60A5FA',
-    fontSize: 8,
-    fontWeight: '900',
     marginTop: 2,
   },
 });
