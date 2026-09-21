@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppIcon } from '@/components/app-icon';
 import { useFinance } from '@/context/finance-context';
 import { supabase } from '@/lib/supabase';
 
@@ -201,8 +202,8 @@ export default function ChatGastoScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.back}>‹</Text>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <AppIcon name="back" size={17} color="#23A7FF" />
           </TouchableOpacity>
           <View style={styles.headerCenter}>
             <Text style={styles.headerTitle}>Chat del gasto</Text>
@@ -213,8 +214,30 @@ export default function ChatGastoScreen() {
           </TouchableOpacity>
         </View>
 
+        <View style={styles.peopleHeader}>
+          <View style={styles.personBlock}>
+            <View style={[styles.personAvatar, styles.personAvatarBlue]}>
+              <AppIcon name="profile" size={22} color="#FFFFFF" />
+            </View>
+            <Text style={styles.personName}>Sofonías</Text>
+          </View>
+
+          <AppIcon name="heart" size={22} color="#F43F75" />
+
+          <View style={styles.personBlock}>
+            <View style={[styles.personAvatar, styles.personAvatarPink]}>
+              <AppIcon name="profile" size={22} color="#FFFFFF" />
+            </View>
+            <Text style={styles.personName}>{partnerName}</Text>
+          </View>
+        </View>
+
+        <Text style={styles.chatContext}>Gastos · Planes · Todo aquí</Text>
+
         <View style={styles.expenseCard}>
-          <View style={styles.expenseIcon}><Text style={styles.expenseIconText}>🧾</Text></View>
+          <View style={styles.expenseIcon}>
+            <AppIcon name="receipt" size={18} color="#F43F75" />
+          </View>
           <View style={styles.expenseInfo}>
             <Text style={styles.expenseTitle}>{expense.description}</Text>
             <Text style={styles.expenseMeta}>S/ {expense.amount.toFixed(2)} · Pagó {payer}</Text>
@@ -296,7 +319,11 @@ export default function ChatGastoScreen() {
             disabled={!text.trim() || sending}
             onPress={() => send()}
           >
-            <Text style={styles.sendText}>{sending ? '…' : '➤'}</Text>
+            {sending ? (
+              <Text style={styles.sendText}>…</Text>
+            ) : (
+              <AppIcon name="send" size={18} color="#FFFFFF" />
+            )}
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -315,11 +342,42 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#1B2B40',
   },
-  back: { color: '#60A5FA', fontSize: 29, width: 42 },
+  backButton: {
+    width: 42,
+    height: 42,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+  },
   headerCenter: { flex: 1, alignItems: 'center' },
   headerTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '900' },
   headerSub: { color: '#64748B', fontSize: 8, marginTop: 2 },
   detailLink: { color: '#60A5FA', fontSize: 9, fontWeight: '900', width: 42, textAlign: 'right' },
+  peopleHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 18,
+    marginTop: 12,
+  },
+  personBlock: { alignItems: 'center' },
+  personAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#D9E7F5',
+  },
+  personAvatarBlue: { backgroundColor: '#1677FF' },
+  personAvatarPink: { backgroundColor: '#D9366F' },
+  personName: { color: '#FFFFFF', fontSize: 9, fontWeight: '900', marginTop: 4 },
+  chatContext: {
+    color: '#64748B',
+    fontSize: 8,
+    textAlign: 'center',
+    marginTop: 4,
+  },
   expenseCard: {
     margin: 14,
     marginBottom: 7,
@@ -332,7 +390,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   expenseIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#34172A', alignItems: 'center', justifyContent: 'center' },
-  expenseIconText: { fontSize: 19 },
   expenseInfo: { flex: 1, marginLeft: 10 },
   expenseTitle: { color: '#FFFFFF', fontSize: 12, fontWeight: '900' },
   expenseMeta: { color: '#94A3B8', fontSize: 8, marginTop: 3 },
