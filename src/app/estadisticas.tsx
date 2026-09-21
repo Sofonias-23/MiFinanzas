@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppIcon, AppIconName } from '@/components/app-icon';
 import { BottomNav } from '@/components/bottom-nav';
 import { useFinance } from '@/context/finance-context';
 import { supabase } from '@/lib/supabase';
@@ -192,8 +193,18 @@ export default function EstadisticasScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>Estadísticas</Text>
-        <Text style={styles.subtitle}>Lo importante, sin números complicados.</Text>
+        <View style={styles.titleRow}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <AppIcon name="back" size={17} color="#23A7FF" />
+          </TouchableOpacity>
+          <View>
+            <Text style={styles.title}>Estadísticas</Text>
+            <Text style={styles.subtitle}>Lo importante, sin números complicados.</Text>
+          </View>
+        </View>
 
         <View style={styles.tabs}>
           <TouchableOpacity
@@ -376,7 +387,19 @@ export default function EstadisticasScreen() {
           ) : (
             paymentStats.map((item) => (
               <View key={item.slug} style={styles.paymentCard}>
-                <Text style={styles.paymentIcon}>{item.icon}</Text>
+                <AppIcon
+                  name={
+                    (item.slug === 'efectivo'
+                      ? 'cash'
+                      : item.slug === 'transferencia'
+                      ? 'bank'
+                      : item.slug === 'debito' || item.slug === 'credito'
+                      ? 'card'
+                      : 'wallet') as AppIconName
+                  }
+                  size={20}
+                  color={scope === 'pareja' ? '#F43F75' : '#23A7FF'}
+                />
                 <Text style={styles.paymentName} numberOfLines={1}>{item.name}</Text>
                 <Text style={styles.paymentPct}>{Math.round(item.percent)}%</Text>
               </View>
@@ -446,7 +469,10 @@ export default function EstadisticasScreen() {
         </TouchableOpacity>
       </ScrollView>
 
-      <BottomNav active="estadisticas" />
+      <BottomNav
+        active="estadisticas"
+        mode={scope === 'pareja' ? 'pareja' : 'personal'}
+      />
     </SafeAreaView>
   );
 }
@@ -455,7 +481,16 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   container: { flex: 1, backgroundColor: '#07111F' },
   content: { padding: 18, paddingBottom: 34 },
-  title: { color: '#FFFFFF', fontSize: 27, fontWeight: '900' },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 9 },
+  backButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 11,
+    backgroundColor: '#0E1A2A',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  title: { color: '#FFFFFF', fontSize: 24, fontWeight: '900' },
   subtitle: { color: '#64748B', fontSize: 10, marginTop: 4 },
   tabs: { flexDirection: 'row', backgroundColor: '#0E1A2A', borderRadius: 14, padding: 4, marginTop: 16 },
   tab: { flex: 1, minHeight: 38, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
@@ -534,7 +569,6 @@ const styles = StyleSheet.create({
   insightSub: { color: '#A5B4FC', fontSize: 8, marginTop: 3 },
   paymentGrid: { flexDirection: 'row', gap: 7 },
   paymentCard: { flex: 1, minHeight: 86, backgroundColor: '#0E1A2A', borderRadius: 14, borderWidth: 1, borderColor: '#1B2B40', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
-  paymentIcon: { fontSize: 20 },
   paymentName: { color: '#CBD5E1', fontSize: 8, fontWeight: '800', marginTop: 5, maxWidth: '95%' },
   paymentPct: { color: '#60A5FA', fontSize: 11, fontWeight: '900', marginTop: 3 },
   emptyPayment: { flex: 1, backgroundColor: '#0E1A2A', borderRadius: 14, padding: 16 },
