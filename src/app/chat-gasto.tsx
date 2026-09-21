@@ -14,7 +14,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppIcon } from '@/components/app-icon';
+import { ProfileAvatar } from '@/components/profile-avatar';
 import { useFinance } from '@/context/finance-context';
+import { getAvatarUrl, getProfiles } from '@/lib/avatar';
 import { supabase } from '@/lib/supabase';
 
 type CommentRow = {
@@ -31,6 +33,7 @@ type ReactionRow = {
 };
 
 type PartnerStatus = {
+  household_id: string | null;
   partner_name: string | null;
   member_count: number;
 };
@@ -49,6 +52,9 @@ export default function ChatGastoScreen() {
   );
 
   const [partnerName, setPartnerName] = useState('Tu pareja');
+  const [myName, setMyName] = useState('Tú');
+  const [myAvatarUrl, setMyAvatarUrl] = useState<string | null>(null);
+  const [partnerAvatarUrl, setPartnerAvatarUrl] = useState<string | null>(null);
   const [comments, setComments] = useState<CommentRow[]>([]);
   const [reactions, setReactions] = useState<ReactionRow[]>([]);
   const [text, setText] = useState('');
@@ -60,10 +66,40 @@ export default function ChatGastoScreen() {
 
   const loadPartner = useCallback(async () => {
     if (!user) return;
+
     const { data } = await supabase.rpc('get_partner_status');
     const status = (data?.[0] ?? null) as PartnerStatus | null;
-    if (status?.member_count && status.member_count >= 2) {
-      setPartnerName(status.partner_name || 'Tu pareja');
+
+    try {
+      const ownProfiles = await getProfiles([user.id]);
+      const own = ownProfiles[0];
+      setMyName(
+        own?.display_name ||
+          user.user_metadata?.display_name ||
+          user.email?.split('@')[0] ||
+          'Tú'
+      );
+      setMyAvatarUrl(await getAvatarUrl(own?.avatar_path));
+
+      if (status?.member_count && status.member_count >= 2 && status.household_id) {
+        setPartnerName(status.partner_name || 'Tu pareja');
+
+        const { data: member } = await supabase
+          .from('household_members')
+          .select('user_id')
+          .eq('household_id', status.household_id)
+          .neq('user_id', user.id)
+          .limit(1)
+          .maybeSingle();
+
+        if (member?.user_id) {
+          const partnerProfiles = await getProfiles([member.user_id]);
+          setPartnerAvatarUrl(await getAvatarUrl(partnerProfiles[0]?.avatar_path));
+        }
+      }
+    } catch {
+      setMyAvatarUrl(null);
+      setPartnerAvatarUrl(null);
     }
   }, [user]);
 
@@ -216,18 +252,24 @@ export default function ChatGastoScreen() {
 
         <View style={styles.peopleHeader}>
           <View style={styles.personBlock}>
-            <View style={[styles.personAvatar, styles.personAvatarBlue]}>
-              <AppIcon name="profile" size={22} color="#FFFFFF" />
-            </View>
-            <Text style={styles.personName}>Sofonías</Text>
+            <ProfileAvatar
+              uri={myAvatarUrl}
+              size={48}
+              color="#1677FF"
+              style={styles.personAvatarBlue}
+            />
+            <Text style={styles.personName}>{myName}</Text>
           </View>
 
           <AppIcon name="heart" size={22} color="#F43F75" />
 
           <View style={styles.personBlock}>
-            <View style={[styles.personAvatar, styles.personAvatarPink]}>
-              <AppIcon name="profile" size={22} color="#FFFFFF" />
-            </View>
+            <ProfileAvatar
+              uri={partnerAvatarUrl}
+              size={48}
+              color="#D9366F"
+              style={styles.personAvatarPink}
+            />
             <Text style={styles.personName}>{partnerName}</Text>
           </View>
         </View>
@@ -360,17 +402,8 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   personBlock: { alignItems: 'center' },
-  personAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#D9E7F5',
-  },
-  personAvatarBlue: { backgroundColor: '#1677FF' },
-  personAvatarPink: { backgroundColor: '#D9366F' },
+  personAvatarBlue: { borderWidth: 2, borderColor: '#60A5FA' },
+  personAvatarPink: { borderWidth: 2, borderColor: '#F472B6' },
   personName: { color: '#FFFFFF', fontSize: 9, fontWeight: '900', marginTop: 4 },
   chatContext: {
     color: '#64748B',
