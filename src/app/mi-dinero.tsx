@@ -12,7 +12,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppIcon } from '@/components/app-icon';
 import { BottomNav } from '@/components/bottom-nav';
+import { ProfileAvatar } from '@/components/profile-avatar';
 import { useFinance } from '@/context/finance-context';
+import { getAvatarUrl, getProfiles } from '@/lib/avatar';
 import { categoryIconName } from '@/lib/icon-map';
 import { supabase } from '@/lib/supabase';
 
@@ -47,6 +49,7 @@ export default function MiDineroScreen() {
   } = useFinance();
 
   const [budgets, setBudgets] = useState<BudgetRow[]>([]);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) router.replace('/login');
@@ -66,12 +69,23 @@ export default function MiDineroScreen() {
     })));
   }, [user]);
 
+  const loadAvatar = useCallback(async () => {
+    if (!user) return;
+    try {
+      const profiles = await getProfiles([user.id]);
+      setAvatarUrl(await getAvatarUrl(profiles[0]?.avatar_path));
+    } catch {
+      setAvatarUrl(null);
+    }
+  }, [user]);
+
   useFocusEffect(
     useCallback(() => {
       refreshExpenses();
       refreshIncomes();
       loadBudgets();
-    }, [refreshExpenses, refreshIncomes, loadBudgets])
+      loadAvatar();
+    }, [refreshExpenses, refreshIncomes, loadBudgets, loadAvatar])
   );
 
   const personalExpenses = useMemo(
@@ -172,9 +186,12 @@ export default function MiDineroScreen() {
       >
         <View style={styles.topRow}>
           <View style={styles.headerLeft}>
-            <View style={styles.headerIcon}>
-              <AppIcon name="profile" size={18} color="#FFFFFF" />
-            </View>
+            <ProfileAvatar
+              uri={avatarUrl}
+              size={34}
+              color="#1677FF"
+              style={styles.headerIcon}
+            />
             <View>
               <Text style={styles.headerTitle}>Mi dinero</Text>
               <Text style={styles.hello}>Hola, {displayName}</Text>
@@ -322,12 +339,8 @@ const styles = StyleSheet.create({
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   headerIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 11,
-    backgroundColor: '#1677FF',
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#60A5FA',
   },
   headerTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '900' },
   hello: { color: '#94A3B8', fontSize: 9, marginTop: 2 },
