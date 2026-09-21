@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppIcon } from '@/components/app-icon';
 import { BottomNav } from '@/components/bottom-nav';
 import { useFinance } from '@/context/finance-context';
+import { categoryIconName } from '@/lib/icon-map';
 import { supabase } from '@/lib/supabase';
 
 type PartnerStatus = {
@@ -359,6 +360,13 @@ export default function ParejaScreen() {
                         style={styles.expenseMain}
                         onPress={() => router.push(`/detalle-gasto?id=${expense.id}` as any)}
                       >
+                        <View style={styles.expenseCategoryIcon}>
+                          <AppIcon
+                            name={categoryIconName(expense.category)}
+                            size={18}
+                            color="#F472B6"
+                          />
+                        </View>
                         <View style={styles.expenseText}>
                           <Text style={styles.expenseTitle}>{expense.description}</Text>
                           <Text style={styles.expenseMeta}>
@@ -581,6 +589,15 @@ const styles = StyleSheet.create({
   list: { gap: 8 },
   expenseRow: { backgroundColor: '#0E1A2A', borderRadius: 15, borderWidth: 1, borderColor: '#1B2B40', overflow: 'hidden' },
   expenseMain: { padding: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  expenseCategoryIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: '#34172A',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 9,
+  },
   expenseText: { flex: 1, paddingRight: 10 },
   expenseTitle: { color: '#FFFFFF', fontSize: 12, fontWeight: '900' },
   expenseMeta: { color: '#94A3B8', fontSize: 8, marginTop: 3 },
