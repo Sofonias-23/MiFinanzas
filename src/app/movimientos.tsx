@@ -226,7 +226,10 @@ export default function MovimientosScreen() {
         )}
       </ScrollView>
 
-      <BottomNav active="movimientos" />
+      <BottomNav
+        active="movimientos"
+        mode={filter === 'compartido' ? 'pareja' : 'personal'}
+      />
     </SafeAreaView>
   );
 }
