@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { PaymentBrandIcon } from '@/components/payment-brand-icon';
 import { useFinance } from '@/context/finance-context';
 
 const ICONS = ['💵', '📱', '📲', '💳', '🏦', '💰', '🪙', '🧾', '🏧', '💸', '❔'];
@@ -140,9 +141,11 @@ export default function MetodosPagoScreen() {
             {paymentMethods.map((method) => (
               <View key={method.id} style={styles.methodRow}>
                 <View style={styles.methodLeft}>
-                  <View style={styles.methodIconBox}>
-                    <Text style={styles.methodIcon}>{method.icon}</Text>
-                  </View>
+                  <PaymentBrandIcon
+                    slug={method.slug}
+                    size={42}
+                    style={styles.methodIconBox}
+                  />
                   <Text style={styles.methodName}>{method.name}</Text>
                 </View>
 
@@ -223,16 +226,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   methodLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
-  methodIconBox: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    backgroundColor: '#1E293B',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  methodIcon: { fontSize: 21 },
+  methodIconBox: { marginRight: 12 },
   methodName: { color: '#FFFFFF', fontSize: 15, fontWeight: '700', flex: 1 },
   deleteButton: { paddingVertical: 8, paddingHorizontal: 10 },
   deleteText: { color: '#F87171', fontSize: 13, fontWeight: '700' },
