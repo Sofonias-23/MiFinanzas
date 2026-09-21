@@ -29,7 +29,7 @@ export function PaymentBrandIcon({
           style,
         ]}
       >
-        <Text style={[styles.brandLetter, { fontSize: Math.round(size * 0.48) }]}>Y</Text>
+        <Text style={[styles.brandWord, { fontSize: Math.max(9, Math.round(size * 0.22)) }]}>Yape</Text>
       </View>
     );
   }
@@ -49,7 +49,7 @@ export function PaymentBrandIcon({
           style,
         ]}
       >
-        <Text style={[styles.brandLetter, { fontSize: Math.round(size * 0.48) }]}>P</Text>
+        <Text style={[styles.brandWord, { fontSize: Math.max(9, Math.round(size * 0.22)) }]}>Plin</Text>
       </View>
     );
   }
@@ -92,9 +92,9 @@ const styles = StyleSheet.create({
     borderColor: '#23A7FF',
     borderWidth: 2,
   },
-  brandLetter: {
+  brandWord: {
     color: '#FFFFFF',
     fontWeight: '900',
-    lineHeight: 24,
+    letterSpacing: -0.3,
   },
 });
