@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppIcon } from '@/components/app-icon';
 import { useFinance } from '@/context/finance-context';
 import { supabase } from '@/lib/supabase';
 
@@ -174,8 +175,8 @@ export default function SaldarDeudaScreen() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            <TouchableOpacity onPress={() => router.back()}>
-              <Text style={styles.back}>‹ Volver</Text>
+            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+              <AppIcon name="back" size={17} color="#23A7FF" />
             </TouchableOpacity>
 
             <Text style={styles.title}>Saldar deuda</Text>
@@ -228,7 +229,19 @@ export default function SaldarDeudaScreen() {
                         style={[styles.method, active && styles.methodActive]}
                         onPress={() => setMethod(item.slug)}
                       >
-                        <Text style={styles.methodIcon}>{item.icon}</Text>
+                        <AppIcon
+                          name={
+                            item.slug === 'efectivo'
+                              ? 'cash'
+                              : item.slug === 'transferencia'
+                              ? 'bank'
+                              : item.slug === 'debito' || item.slug === 'credito'
+                              ? 'card'
+                              : 'wallet'
+                          }
+                          size={18}
+                          color={active ? '#23A7FF' : '#CBD5E1'}
+                        />
                         <Text style={[styles.methodText, active && styles.methodTextActive]}>
                           {item.name}
                         </Text>
@@ -277,6 +290,14 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#07111F' },
   content: { padding: 20, paddingBottom: 40 },
   back: { color: '#60A5FA', fontSize: 16, fontWeight: '800' },
+  backButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 11,
+    backgroundColor: '#0E1A2A',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   title: { color: '#FFFFFF', fontSize: 30, fontWeight: '900', marginTop: 22 },
   subtitle: {
     color: '#64748B',
@@ -324,7 +345,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   methodActive: { backgroundColor: '#132E5B', borderColor: '#3B82F6' },
-  methodIcon: { fontSize: 18 },
   methodText: { color: '#94A3B8', fontSize: 12, fontWeight: '800' },
   methodTextActive: { color: '#FFFFFF' },
   noteInput: {
