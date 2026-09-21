@@ -418,36 +418,38 @@ export default function NuevoGastoScreen() {
             )}
 
             <View style={styles.stepHeader}>
-              <Text style={styles.stepNoMargin}>4 · Método de pago</Text>
+              <Text style={styles.stepNoMargin}>4 · ¿Cómo pagaste?</Text>
               <TouchableOpacity onPress={() => router.push('/metodos-pago')}>
-                <Text style={styles.manage}>Editar</Text>
+                <Text style={styles.manage}>Administrar</Text>
               </TouchableOpacity>
             </View>
 
             {loadingPaymentMethods ? (
               <Text style={styles.status}>Cargando...</Text>
             ) : (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.chips}
-              >
-                {paymentMethods.map((item) => {
+              <View style={styles.paymentGrid}>
+                {paymentMethods.slice(0, 6).map((item) => {
                   const active = metodoPago === item.slug;
                   return (
                     <TouchableOpacity
                       key={item.id}
-                      style={[styles.chip, active && styles.chipActive]}
+                      style={[styles.paymentCard, active && styles.paymentCardActive]}
                       onPress={() => setMetodoPago(item.slug)}
                     >
-                      <Text style={styles.chipIcon}>{item.icon}</Text>
-                      <Text style={[styles.chipText, active && styles.chipTextActive]}>
+                      <Text style={styles.paymentIcon}>{item.icon}</Text>
+                      <Text
+                        style={[
+                          styles.paymentName,
+                          active && styles.paymentNameActive,
+                        ]}
+                        numberOfLines={1}
+                      >
                         {item.name}
                       </Text>
                     </TouchableOpacity>
                   );
                 })}
-              </ScrollView>
+              </View>
             )}
 
             <Text style={styles.step}>5 · Tipo</Text>
@@ -722,6 +724,36 @@ const styles = StyleSheet.create({
   chipIcon: { fontSize: 17 },
   chipText: { color: '#94A3B8', fontSize: 12, fontWeight: '700' },
   chipTextActive: { color: '#FFFFFF' },
+  paymentGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  paymentCard: {
+    width: '31.5%',
+    minHeight: 76,
+    backgroundColor: '#0E1A2A',
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: '#1B2B40',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
+  },
+  paymentCardActive: {
+    backgroundColor: '#132E5B',
+    borderColor: '#3B82F6',
+    borderWidth: 2,
+  },
+  paymentIcon: { fontSize: 23 },
+  paymentName: {
+    color: '#94A3B8',
+    fontSize: 9,
+    fontWeight: '800',
+    marginTop: 6,
+    maxWidth: '95%',
+  },
+  paymentNameActive: { color: '#FFFFFF' },
   typeRow: { flexDirection: 'row', gap: 10 },
   typeButton: {
     flex: 1,
