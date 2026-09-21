@@ -9,7 +9,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AppIcon, AppIconName } from '@/components/app-icon';
+import { AppIcon } from '@/components/app-icon';
+import { PaymentBrandIcon } from '@/components/payment-brand-icon';
 import { BottomNav } from '@/components/bottom-nav';
 import { useFinance } from '@/context/finance-context';
 import { supabase } from '@/lib/supabase';
@@ -387,18 +388,9 @@ export default function EstadisticasScreen() {
           ) : (
             paymentStats.map((item) => (
               <View key={item.slug} style={styles.paymentCard}>
-                <AppIcon
-                  name={
-                    (item.slug === 'efectivo'
-                      ? 'cash'
-                      : item.slug === 'transferencia'
-                      ? 'bank'
-                      : item.slug === 'debito' || item.slug === 'credito'
-                      ? 'card'
-                      : 'wallet') as AppIconName
-                  }
-                  size={20}
-                  color={scope === 'pareja' ? '#F43F75' : '#23A7FF'}
+                <PaymentBrandIcon
+                  slug={item.slug}
+                  size={40}
                 />
                 <Text style={styles.paymentName} numberOfLines={1}>{item.name}</Text>
                 <Text style={styles.paymentPct}>{Math.round(item.percent)}%</Text>
