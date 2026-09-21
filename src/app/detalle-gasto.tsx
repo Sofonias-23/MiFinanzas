@@ -577,7 +577,25 @@ export default function DetalleGastoScreen() {
                       </Text>
                     </View>
 
-                    <Text style={styles.sectionTitle}>Reacciones</Text>
+                    <TouchableOpacity
+                      style={styles.chatShortcut}
+                      onPress={() => router.push(`/chat-gasto?id=${expense.id}` as any)}
+                    >
+                      <View style={styles.chatShortcutIcon}>
+                        <Text style={styles.chatShortcutIconText}>💬</Text>
+                      </View>
+                      <View style={styles.chatShortcutText}>
+                        <Text style={styles.chatShortcutTitle}>Chat del gasto</Text>
+                        <Text style={styles.chatShortcutSub}>
+                          {comments.length > 0
+                            ? `${comments.length} ${comments.length === 1 ? 'mensaje' : 'mensajes'} · toca para conversar`
+                            : 'Hablen de este gasto en un solo lugar'}
+                        </Text>
+                      </View>
+                      <Text style={styles.chatShortcutArrow}>›</Text>
+                    </TouchableOpacity>
+
+                    <Text style={styles.sectionTitle}>Reacciones rápidas</Text>
                     <View style={styles.reactionsCard}>
                       {REACTIONS.map((emoji) => {
                         const active = myReaction === emoji;
@@ -954,6 +972,29 @@ const styles = StyleSheet.create({
   myPartAmount: { color: '#60A5FA', fontSize: 20, fontWeight: '900', marginTop: 4 },
   myPartHint: { color: '#64748B', fontSize: 9, marginTop: 3 },
 
+  chatShortcut: {
+    marginTop: 14,
+    backgroundColor: '#3A1830',
+    borderRadius: 17,
+    padding: 13,
+    borderWidth: 1,
+    borderColor: '#7A2F62',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  chatShortcutIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 13,
+    backgroundColor: '#EC4899',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chatShortcutIconText: { fontSize: 19 },
+  chatShortcutText: { flex: 1, marginLeft: 10 },
+  chatShortcutTitle: { color: '#FFFFFF', fontSize: 12, fontWeight: '900' },
+  chatShortcutSub: { color: '#C9A8B9', fontSize: 8, marginTop: 3 },
+  chatShortcutArrow: { color: '#F472B6', fontSize: 24 },
   reactionsCard: {
     flexDirection: 'row',
     gap: 8,
