@@ -14,7 +14,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppIcon } from '@/components/app-icon';
 import { BottomNav } from '@/components/bottom-nav';
+import { ProfileAvatar } from '@/components/profile-avatar';
 import { useFinance } from '@/context/finance-context';
+import { getAvatarUrl, getProfiles } from '@/lib/avatar';
 import { categoryIconName } from '@/lib/icon-map';
 import { supabase } from '@/lib/supabase';
 
@@ -47,6 +49,8 @@ export default function ParejaScreen() {
   const [code, setCode] = useState('');
   const [inviteCode, setInviteCode] = useState('');
   const [busy, setBusy] = useState(false);
+  const [myAvatarUrl, setMyAvatarUrl] = useState<string | null>(null);
+  const [partnerAvatarUrl, setPartnerAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) router.replace('/login');
@@ -62,6 +66,33 @@ export default function ParejaScreen() {
     const next = (data?.[0] ?? null) as PartnerStatus | null;
     setStatus(next);
     setInviteCode(next?.invite_code ?? '');
+
+    try {
+      const ownProfiles = await getProfiles([user.id]);
+      const own = ownProfiles.find((item) => item.id === user.id);
+      setMyAvatarUrl(await getAvatarUrl(own?.avatar_path));
+
+      if (next?.household_id && (next.member_count ?? 0) >= 2) {
+        const { data: member } = await supabase
+          .from('household_members')
+          .select('user_id')
+          .eq('household_id', next.household_id)
+          .neq('user_id', user.id)
+          .limit(1)
+          .maybeSingle();
+
+        if (member?.user_id) {
+          const partnerProfiles = await getProfiles([member.user_id]);
+          const partner = partnerProfiles[0];
+          setPartnerAvatarUrl(await getAvatarUrl(partner?.avatar_path));
+        }
+      } else {
+        setPartnerAvatarUrl(null);
+      }
+    } catch {
+      setMyAvatarUrl(null);
+      setPartnerAvatarUrl(null);
+    }
   }, [user]);
 
   useFocusEffect(
@@ -209,16 +240,22 @@ export default function ParejaScreen() {
           <>
             <View style={styles.peopleCard}>
               <View style={styles.person}>
-                <View style={[styles.avatar, styles.avatarBlue]}>
-                  <AppIcon name="profile" size={24} color="#FFFFFF" />
-                </View>
+                <ProfileAvatar
+                  uri={myAvatarUrl}
+                  size={50}
+                  color="#1677FF"
+                  style={styles.avatarBorderBlue}
+                />
                 <Text style={styles.personName}>{myName}</Text>
               </View>
               <AppIcon name="heart" size={20} color="#F43F75" />
               <View style={styles.person}>
-                <View style={[styles.avatar, styles.avatarPink]}>
-                  <AppIcon name="profile" size={24} color="#FFFFFF" />
-                </View>
+                <ProfileAvatar
+                  uri={partnerAvatarUrl}
+                  size={50}
+                  color="#D9366F"
+                  style={styles.avatarBorderPink}
+                />
                 <Text style={styles.personName}>{partnerName}</Text>
               </View>
             </View>
@@ -496,9 +533,8 @@ const styles = StyleSheet.create({
   gear: { width: 36, height: 36, borderRadius: 11, backgroundColor: '#0E1A2A', alignItems: 'center', justifyContent: 'center' },
   peopleCard: { marginTop: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 18, paddingVertical: 13 },
   person: { alignItems: 'center' },
-  avatar: { width: 50, height: 50, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  avatarBlue: { backgroundColor: '#1677FF' },
-  avatarPink: { backgroundColor: '#D9366F' },
+  avatarBorderBlue: { borderWidth: 2, borderColor: '#60A5FA' },
+  avatarBorderPink: { borderWidth: 2, borderColor: '#F472B6' },
   personName: { color: '#CBD5E1', fontSize: 10, fontWeight: '900', marginTop: 5, maxWidth: 90 },
   sharedBalanceCard: {
     backgroundColor: '#0E1A2A',
