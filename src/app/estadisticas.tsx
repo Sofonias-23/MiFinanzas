@@ -20,6 +20,8 @@ type PartnerStatus = {
   member_count: number;
 };
 
+const CHART_COLORS = ['#23A7FF', '#F43F75', '#FFB454', '#8B5CF6', '#54D6C5'];
+
 function isCurrentMonth(value: string) {
   const date = new Date(value);
   const now = new Date();
@@ -165,6 +167,24 @@ export default function EstadisticasScreen() {
 
   const topCategory = categoryStats[0];
 
+  const donutSegments = useMemo(() => {
+    const segmentCount = 24;
+    const result: string[] = [];
+    let cursor = 0;
+    const normalized = categoryStats.slice(0, 5).map((item, index) => ({
+      limit: cursor += item.percent,
+      color: CHART_COLORS[index] ?? '#64748B',
+    }));
+
+    for (let i = 0; i < segmentCount; i += 1) {
+      const percent = ((i + 0.5) / segmentCount) * 100;
+      const match = normalized.find((item) => percent <= item.limit);
+      result.push(match?.color ?? '#213147');
+    }
+
+    return result;
+  }, [categoryStats]);
+
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <ScrollView
@@ -198,7 +218,42 @@ export default function EstadisticasScreen() {
           <Text style={styles.heroLabel}>
             {scope === 'personal' ? `Gastaste en ${monthName}` : `Gastaron juntos en ${monthName}`}
           </Text>
-          <Text style={styles.heroAmount}>S/ {totalSpent.toFixed(2)}</Text>
+
+          <View style={styles.heroMain}>
+            <View style={styles.donut}>
+              {donutSegments.map((color, index) => {
+                const angle = (360 / donutSegments.length) * index;
+                return (
+                  <View
+                    key={`${color}-${index}`}
+                    style={[
+                      styles.donutSegment,
+                      {
+                        backgroundColor: color,
+                        transform: [
+                          { rotate: `${angle}deg` },
+                          { translateY: -39 },
+                        ],
+                      },
+                    ]}
+                  />
+                );
+              })}
+              <View style={styles.donutHole}>
+                <Text style={styles.donutAmount}>S/ {totalSpent.toFixed(0)}</Text>
+                <Text style={styles.donutLabel}>Total</Text>
+              </View>
+            </View>
+
+            <View style={styles.heroAmountWrap}>
+              <Text style={styles.heroAmount}>S/ {totalSpent.toFixed(2)}</Text>
+              <Text style={styles.heroAmountHint}>
+                {topCategory
+                  ? `Mayor gasto: ${topCategory.icon} ${topCategory.name}`
+                  : 'Aún sin movimientos'}
+              </Text>
+            </View>
+          </View>
 
           {scope === 'personal' ? (
             <View style={styles.heroBottom}>
@@ -285,8 +340,10 @@ export default function EstadisticasScreen() {
                   <View
                     style={[
                       styles.fill,
-                      scope === 'pareja' && styles.fillPink,
-                      { width: `${Math.min(100, item.percent)}%` },
+                      {
+                        width: `${Math.min(100, item.percent)}%`,
+                        backgroundColor: CHART_COLORS[index] ?? '#3B82F6',
+                      },
                     ]}
                   />
                 </View>
@@ -409,7 +466,38 @@ const styles = StyleSheet.create({
   hero: { marginTop: 14, backgroundColor: '#102B55', borderRadius: 21, padding: 18, borderWidth: 1, borderColor: '#1E4E91' },
   heroPink: { backgroundColor: '#34172A', borderColor: '#5C294B' },
   heroLabel: { color: '#94A3B8', fontSize: 10, fontWeight: '800', textTransform: 'capitalize' },
-  heroAmount: { color: '#FFFFFF', fontSize: 34, fontWeight: '900', marginTop: 4 },
+  heroMain: { flexDirection: 'row', alignItems: 'center', marginTop: 12, gap: 16 },
+  donut: {
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  donutSegment: {
+    position: 'absolute',
+    width: 12,
+    height: 18,
+    borderRadius: 6,
+    left: 49,
+    top: 46,
+  },
+  donutHole: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: '#0B1726',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#20324A',
+  },
+  donutAmount: { color: '#FFFFFF', fontSize: 15, fontWeight: '900' },
+  donutLabel: { color: '#94A3B8', fontSize: 8, marginTop: 1 },
+  heroAmountWrap: { flex: 1 },
+  heroAmount: { color: '#FFFFFF', fontSize: 26, fontWeight: '900' },
+  heroAmountHint: { color: '#94A3B8', fontSize: 8, lineHeight: 13, marginTop: 5 },
   heroBottom: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)' },
   smallLabel: { color: '#94A3B8', fontSize: 8 },
   right: { alignItems: 'flex-end' },
