@@ -231,9 +231,19 @@ export default function ParejaScreen() {
               <Text style={styles.headerSub}>Finanzas compartidas</Text>
             </View>
           </View>
-          <TouchableOpacity style={styles.gear} onPress={() => router.push('/perfil')}>
-            <AppIcon name="settings" size={20} color="#CBD5E1" />
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              style={styles.homeButton}
+              onPress={() => router.replace('/mi-dinero')}
+              accessibilityLabel="Volver al inicio principal"
+            >
+              <AppIcon name="home" size={19} color="#23A7FF" />
+              <Text style={styles.homeButtonText}>Inicio</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.gear} onPress={() => router.push('/perfil')}>
+              <AppIcon name="settings" size={20} color="#CBD5E1" />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {linked ? (
@@ -530,6 +540,20 @@ const styles = StyleSheet.create({
   },
   headerTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '900' },
   headerSub: { color: '#64748B', fontSize: 8, marginTop: 2 },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  homeButton: {
+    minHeight: 36,
+    borderRadius: 11,
+    backgroundColor: '#0E1A2A',
+    borderWidth: 1,
+    borderColor: '#173A6D',
+    paddingHorizontal: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+  },
+  homeButtonText: { color: '#60A5FA', fontSize: 9, fontWeight: '900' },
   gear: { width: 36, height: 36, borderRadius: 11, backgroundColor: '#0E1A2A', alignItems: 'center', justifyContent: 'center' },
   peopleCard: { marginTop: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 18, paddingVertical: 13 },
   person: { alignItems: 'center' },
