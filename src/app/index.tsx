@@ -14,26 +14,16 @@ import { useFinance } from '@/context/finance-context';
 
 export default function HomeScreen() {
   const { user, authLoading } = useFinance();
-
   const intro = useRef(new Animated.Value(0)).current;
-  const cards = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.sequence([
-      Animated.timing(intro, {
-        toValue: 1,
-        duration: 260,
-        useNativeDriver: true,
-      }),
-      Animated.spring(cards, {
-        toValue: 1,
-        damping: 14,
-        stiffness: 145,
-        mass: 0.8,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [intro, cards]);
+    Animated.spring(intro, {
+      toValue: 1,
+      damping: 15,
+      stiffness: 145,
+      useNativeDriver: true,
+    }).start();
+  }, [intro]);
 
   useEffect(() => {
     if (!authLoading && !user) router.replace('/login');
@@ -50,9 +40,10 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <View style={styles.content}>
-        <Animated.View
-          style={{
+      <Animated.View
+        style={[
+          styles.content,
+          {
             opacity: intro,
             transform: [
               {
@@ -62,75 +53,58 @@ export default function HomeScreen() {
                 }),
               },
             ],
-          }}
-        >
-          <Text style={styles.brand}>MiFinanzas</Text>
-          <Text style={styles.tagline}>Tu dinero, en equilibrio</Text>
+          },
+        ]}
+      >
+        <View style={styles.logo}>
+          <Text style={styles.logoIcon}>▥</Text>
+        </View>
 
-          <View style={styles.heroIcon}>
-            <Text style={styles.wallet}>👛</Text>
-            <Text style={styles.coin}>🪙</Text>
-            <Text style={styles.heart}>♥</Text>
+        <Text style={styles.brand}>MiFinanzas</Text>
+        <Text style={styles.tagline}>Tu dinero, en armonía</Text>
+
+        <Text style={styles.question}>¿Qué quieres ver?</Text>
+        <Text style={styles.helper}>Puedes cambiar de espacio cuando quieras.</Text>
+
+        <TouchableOpacity
+          activeOpacity={0.86}
+          style={[styles.spaceCard, styles.personalCard]}
+          onPress={() => router.push('/mi-dinero')}
+        >
+          <View style={[styles.iconCircle, styles.iconBlue]}>
+            <Text style={styles.spaceIcon}>👤</Text>
           </View>
+          <View style={styles.cardText}>
+            <Text style={styles.spaceTitle}>Mi dinero</Text>
+            <Text style={styles.spaceSubtitle}>Mis gastos, ingresos y metas. Solo para mí.</Text>
+          </View>
+          <Text style={styles.arrow}>›</Text>
+        </TouchableOpacity>
 
-          <Text style={styles.question}>¿Qué quieres ver hoy?</Text>
-        </Animated.View>
-
-        <Animated.View
-          style={[
-            styles.cardsRow,
-            {
-              opacity: cards,
-              transform: [
-                {
-                  translateY: cards.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [18, 0],
-                  }),
-                },
-                {
-                  scale: cards.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0.96, 1],
-                  }),
-                },
-              ],
-            },
-          ]}
+        <TouchableOpacity
+          activeOpacity={0.86}
+          style={[styles.spaceCard, styles.coupleCard]}
+          onPress={() => router.push('/pareja')}
         >
-          <TouchableOpacity
-            activeOpacity={0.86}
-            style={[styles.spaceCard, styles.personalCard]}
-            onPress={() => router.push('/mi-dinero')}
-          >
-            <View style={styles.iconCircle}>
-              <Text style={styles.spaceIcon}>👤</Text>
-            </View>
-            <View>
-              <Text style={styles.spaceTitle}>Mi dinero</Text>
-              <Text style={styles.spaceSubtitle}>Solo tus finanzas personales</Text>
-            </View>
-            <Text style={styles.arrow}>›</Text>
-          </TouchableOpacity>
+          <View style={[styles.iconCircle, styles.iconPink]}>
+            <Text style={styles.spaceIcon}>♥</Text>
+          </View>
+          <View style={styles.cardText}>
+            <Text style={styles.spaceTitle}>Pareja</Text>
+            <Text style={styles.spaceSubtitle}>Gastos compartidos para llegar más lejos.</Text>
+          </View>
+          <Text style={styles.arrow}>›</Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            activeOpacity={0.86}
-            style={[styles.spaceCard, styles.coupleCard]}
-            onPress={() => router.push('/pareja')}
-          >
-            <View style={styles.iconCircle}>
-              <Text style={styles.spaceIcon}>👥</Text>
-            </View>
-            <View>
-              <Text style={styles.spaceTitle}>Pareja</Text>
-              <Text style={styles.spaceSubtitle}>Finanzas compartidas con tu pareja</Text>
-            </View>
-            <Text style={styles.arrow}>›</Text>
-          </TouchableOpacity>
-        </Animated.View>
+        <View style={styles.privacy}>
+          <Text style={styles.privacyIcon}>🔒</Text>
+          <Text style={styles.privacyText}>
+            Tus finanzas personales siguen privadas aunque uses el espacio de pareja.
+          </Text>
+        </View>
 
-        <Text style={styles.footerText}>“Juntos por un mejor futuro”</Text>
-      </View>
+        <Text style={styles.footer}>Pequeñas decisiones, grandes planes ♡</Text>
+      </Animated.View>
     </SafeAreaView>
   );
 }
@@ -152,90 +126,88 @@ const styles = StyleSheet.create({
     paddingBottom: 28,
     justifyContent: 'center',
   },
+  logo: {
+    width: 64,
+    height: 64,
+    borderRadius: 20,
+    alignSelf: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#1677FF',
+    shadowColor: '#1677FF',
+    shadowOpacity: 0.25,
+    shadowRadius: 18,
+  },
+  logoIcon: { color: '#FFFFFF', fontSize: 30, fontWeight: '900' },
   brand: {
     color: '#FFFFFF',
     fontSize: 31,
     fontWeight: '900',
     textAlign: 'center',
     letterSpacing: -0.7,
+    marginTop: 14,
   },
   tagline: {
     color: '#94A3B8',
     fontSize: 12,
     textAlign: 'center',
-    marginTop: 5,
-  },
-  heroIcon: {
-    height: 145,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 20,
-    position: 'relative',
-  },
-  wallet: { fontSize: 82 },
-  coin: { position: 'absolute', fontSize: 34, top: 17, left: '31%' },
-  heart: {
-    position: 'absolute',
-    fontSize: 52,
-    color: '#F43F75',
-    right: '28%',
-    bottom: 14,
+    marginTop: 4,
   },
   question: {
     color: '#FFFFFF',
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '900',
-    marginTop: 6,
-    marginBottom: 18,
+    marginTop: 35,
   },
-  cardsRow: { flexDirection: 'row', gap: 12 },
+  helper: { color: '#64748B', fontSize: 10, marginTop: 4, marginBottom: 13 },
   spaceCard: {
-    flex: 1,
-    minHeight: 205,
-    borderRadius: 23,
-    padding: 16,
-    justifyContent: 'space-between',
+    minHeight: 115,
+    borderRadius: 22,
+    padding: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1,
+    marginBottom: 11,
   },
   personalCard: {
-    backgroundColor: '#1677FF',
-    borderColor: '#4A9AFF',
+    backgroundColor: '#102B55',
+    borderColor: '#1E65AA',
   },
   coupleCard: {
-    backgroundColor: '#D9366F',
-    borderColor: '#F05C8E',
+    backgroundColor: '#34172A',
+    borderColor: '#7A2F62',
   },
   iconCircle: {
-    width: 52,
-    height: 52,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    width: 58,
+    height: 58,
+    borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  spaceIcon: { fontSize: 27 },
-  spaceTitle: {
-    color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: '900',
-  },
-  spaceSubtitle: {
-    color: 'rgba(255,255,255,0.82)',
-    fontSize: 11,
-    lineHeight: 16,
+  iconBlue: { backgroundColor: '#1677FF' },
+  iconPink: { backgroundColor: '#D9366F' },
+  spaceIcon: { color: '#FFFFFF', fontSize: 27 },
+  cardText: { flex: 1, marginLeft: 13 },
+  spaceTitle: { color: '#FFFFFF', fontSize: 18, fontWeight: '900' },
+  spaceSubtitle: { color: '#94A3B8', fontSize: 9, lineHeight: 14, marginTop: 4 },
+  arrow: { color: '#FFFFFF', fontSize: 30, marginLeft: 7 },
+  privacy: {
     marginTop: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#0E1A2A',
+    borderRadius: 14,
+    padding: 11,
+    borderWidth: 1,
+    borderColor: '#1B2B40',
   },
-  arrow: {
-    color: '#FFFFFF',
-    fontSize: 34,
-    alignSelf: 'flex-end',
-    lineHeight: 34,
-  },
-  footerText: {
+  privacyIcon: { fontSize: 16 },
+  privacyText: { color: '#64748B', fontSize: 8, lineHeight: 13, marginLeft: 8, flex: 1 },
+  footer: {
     color: '#64748B',
-    fontSize: 11,
+    fontSize: 10,
     fontStyle: 'italic',
     textAlign: 'center',
-    marginTop: 42,
+    marginTop: 27,
   },
 });
