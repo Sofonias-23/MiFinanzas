@@ -1,8 +1,7 @@
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
-  Animated,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -15,23 +14,15 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AppIcon, AppIconName } from '@/components/app-icon';
+import { AppIcon } from '@/components/app-icon';
 import { ExpenseCategory, useFinance } from '@/context/finance-context';
+import { categoryIconName, paymentIconName } from '@/lib/icon-map';
 import { supabase } from '@/lib/supabase';
 
 type PartnerStatus = {
   household_id: string | null;
   partner_name: string | null;
   member_count: number;
-};
-
-type SplitMode = 'half' | 'exact' | 'percentage' | 'custom';
-
-const splitLabels: Record<SplitMode, string> = {
-  half: 'Mitad y mitad (50/50)',
-  exact: 'Cantidad exacta',
-  percentage: 'Porcentaje',
-  custom: 'Personalizado',
 };
 
 export default function NuevoGastoScreen() {
@@ -46,8 +37,6 @@ export default function NuevoGastoScreen() {
   } = useFinance();
 
   const params = useLocalSearchParams<{ type?: string }>();
-  const enter = useRef(new Animated.Value(0)).current;
-
   const [monto, setMonto] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [tipo, setTipo] = useState<'personal' | 'compartido'>(
@@ -55,26 +44,11 @@ export default function NuevoGastoScreen() {
   );
   const [categoria, setCategoria] = useState<ExpenseCategory>('');
   const [metodoPago, setMetodoPago] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [partnerName, setPartnerName] = useState('Mi pareja');
+  const [payerId, setPayerId] = useState('');
+  const [partnerName, setPartnerName] = useState('Jhane');
   const [partnerId, setPartnerId] = useState<string | null>(null);
-  const [payerId, setPayerId] = useState<string>('');
-
-  const [splitModal, setSplitModal] = useState(false);
-  const [splitMode, setSplitMode] = useState<SplitMode>('half');
-  const [draftSplitMode, setDraftSplitMode] = useState<SplitMode>('half');
-  const [exactMine, setExactMine] = useState('');
-  const [percentMine, setPercentMine] = useState('50');
-  const [customMine, setCustomMine] = useState('');
-  const [customPartner, setCustomPartner] = useState('');
-
-  useEffect(() => {
-    Animated.timing(enter, {
-      toValue: 1,
-      duration: 260,
-      useNativeDriver: true,
-    }).start();
-  }, [enter]);
+  const [categoryModal, setCategoryModal] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) router.replace('/login');
@@ -88,19 +62,41 @@ export default function NuevoGastoScreen() {
     if (params.type === 'compartido') setTipo('compartido');
   }, [params.type]);
 
+  useEffect(() => {
+    if (categories.length > 0 && !categories.some((item) => item.slug === categoria)) {
+      const preferred =
+        categories.find((item) => item.slug === 'ocio') ??
+        categories.find((item) => item.slug === 'comida') ??
+        categories[0];
+      setCategoria(preferred.slug);
+    }
+  }, [categories, categoria]);
+
+  useEffect(() => {
+    if (
+      paymentMethods.length > 0 &&
+      !paymentMethods.some((item) => item.slug === metodoPago)
+    ) {
+      const preferred =
+        paymentMethods.find((item) => item.slug === 'debito') ??
+        paymentMethods.find((item) => item.slug === 'efectivo') ??
+        paymentMethods[0];
+      setMetodoPago(preferred.slug);
+    }
+  }, [paymentMethods, metodoPago]);
+
   const loadPartner = useCallback(async () => {
     if (!user) return;
 
-    const { data, error } = await supabase.rpc('get_partner_status');
-    if (error) return;
-
+    const { data } = await supabase.rpc('get_partner_status');
     const status = (data?.[0] ?? null) as PartnerStatus | null;
+
     if (!status || status.member_count < 2 || !status.household_id) {
       setPartnerId(null);
       return;
     }
 
-    setPartnerName(status.partner_name || 'Mi pareja');
+    setPartnerName(status.partner_name || 'Jhane');
 
     const { data: member } = await supabase
       .from('household_members')
@@ -120,29 +116,10 @@ export default function NuevoGastoScreen() {
   );
 
   useEffect(() => {
-    if (categories.length > 0 && !categories.some((item) => item.slug === categoria)) {
-      setCategoria(categories[0].slug);
-    }
-  }, [categories, categoria]);
-
-  useEffect(() => {
-    if (
-      paymentMethods.length > 0 &&
-      !paymentMethods.some((item) => item.slug === metodoPago)
-    ) {
-      const preferred = paymentMethods.find((item) => item.slug === 'efectivo');
-      setMetodoPago(preferred?.slug ?? paymentMethods[0].slug);
-    }
-  }, [paymentMethods, metodoPago]);
-
-  useEffect(() => {
-    if (tipo === 'personal' && user) {
-      setPayerId(user.id);
-    }
+    if (tipo === 'personal' && user) setPayerId(user.id);
   }, [tipo, user]);
 
-  const amount = Number(monto.replace(',', '.'));
-  const isValidAmount = Number.isFinite(amount) && amount > 0;
+  const selectedCategory = categories.find((item) => item.slug === categoria);
 
   const visiblePaymentMethods = useMemo(() => {
     const preferred = ['efectivo', 'debito', 'credito', 'transferencia'];
@@ -153,171 +130,48 @@ export default function NuevoGastoScreen() {
     return ordered.length >= 4 ? ordered.slice(0, 4) : paymentMethods.slice(0, 4);
   }, [paymentMethods]);
 
-  const paymentIconName = (slug: string): AppIconName => {
-    if (slug === 'efectivo') return 'cash';
-    if (slug === 'transferencia') return 'bank';
-    if (slug === 'debito' || slug === 'credito') return 'card';
-    return 'wallet';
-  };
+  const amount = Number(monto.replace(',', '.'));
+  const validAmount = Number.isFinite(amount) && amount > 0;
 
-  const split = useMemo(() => {
-    if (!isValidAmount) return { mine: 0, partner: 0, valid: false };
-
-    if (splitMode === 'half') {
-      const mine = Math.round((amount / 2) * 100) / 100;
-      return { mine, partner: Math.round((amount - mine) * 100) / 100, valid: true };
-    }
-
-    if (splitMode === 'exact') {
-      const mine = Number(exactMine.replace(',', '.'));
-      if (!Number.isFinite(mine) || mine < 0 || mine > amount) {
-        return { mine: 0, partner: 0, valid: false };
-      }
-      return {
-        mine: Math.round(mine * 100) / 100,
-        partner: Math.round((amount - mine) * 100) / 100,
-        valid: true,
-      };
-    }
-
-    if (splitMode === 'percentage') {
-      const percent = Number(percentMine.replace(',', '.'));
-      if (!Number.isFinite(percent) || percent < 0 || percent > 100) {
-        return { mine: 0, partner: 0, valid: false };
-      }
-      const mine = Math.round((amount * (percent / 100)) * 100) / 100;
-      return { mine, partner: Math.round((amount - mine) * 100) / 100, valid: true };
-    }
-
-    const mine = Number(customMine.replace(',', '.'));
-    const partner = Number(customPartner.replace(',', '.'));
-    const valid =
-      Number.isFinite(mine) &&
-      Number.isFinite(partner) &&
-      mine >= 0 &&
-      partner >= 0 &&
-      Math.abs(mine + partner - amount) <= 0.01;
-
-    return {
-      mine: valid ? Math.round(mine * 100) / 100 : 0,
-      partner: valid ? Math.round(partner * 100) / 100 : 0,
-      valid,
-    };
-  }, [
-    amount,
-    isValidAmount,
-    splitMode,
-    exactMine,
-    percentMine,
-    customMine,
-    customPartner,
-  ]);
-
-  const draftSplit = useMemo(() => {
-    if (!isValidAmount) return { mine: 0, partner: 0, valid: false };
-
-    if (draftSplitMode === 'half') {
-      const mine = Math.round((amount / 2) * 100) / 100;
-      return { mine, partner: Math.round((amount - mine) * 100) / 100, valid: true };
-    }
-
-    if (draftSplitMode === 'exact') {
-      const mine = Number(exactMine.replace(',', '.'));
-      if (!Number.isFinite(mine) || mine < 0 || mine > amount) {
-        return { mine: 0, partner: 0, valid: false };
-      }
-      return {
-        mine: Math.round(mine * 100) / 100,
-        partner: Math.round((amount - mine) * 100) / 100,
-        valid: true,
-      };
-    }
-
-    if (draftSplitMode === 'percentage') {
-      const percent = Number(percentMine.replace(',', '.'));
-      if (!Number.isFinite(percent) || percent < 0 || percent > 100) {
-        return { mine: 0, partner: 0, valid: false };
-      }
-      const mine = Math.round((amount * (percent / 100)) * 100) / 100;
-      return { mine, partner: Math.round((amount - mine) * 100) / 100, valid: true };
-    }
-
-    const mine = Number(customMine.replace(',', '.'));
-    const partner = Number(customPartner.replace(',', '.'));
-    const valid =
-      Number.isFinite(mine) &&
-      Number.isFinite(partner) &&
-      mine >= 0 &&
-      partner >= 0 &&
-      Math.abs(mine + partner - amount) <= 0.01;
-
-    return {
-      mine: valid ? Math.round(mine * 100) / 100 : 0,
-      partner: valid ? Math.round(partner * 100) / 100 : 0,
-      valid,
-    };
-  }, [
-    amount,
-    isValidAmount,
-    draftSplitMode,
-    exactMine,
-    percentMine,
-    customMine,
-    customPartner,
-  ]);
-
-  const openSplit = () => {
-    if (!isValidAmount) {
-      Alert.alert('Primero ingresa el monto', 'Necesitamos el total para calcular la división.');
-      return;
-    }
-
-    setDraftSplitMode(splitMode);
-    if (!exactMine) setExactMine((amount / 2).toFixed(2));
-    if (!customMine) setCustomMine((amount / 2).toFixed(2));
-    if (!customPartner) setCustomPartner((amount - amount / 2).toFixed(2));
-    setSplitModal(true);
-  };
-
-  const applySplit = () => {
-    if (!draftSplit.valid) {
-      Alert.alert('Revisa la división', 'Las partes deben sumar exactamente el total del gasto.');
-      return;
-    }
-    setSplitMode(draftSplitMode);
-    setSplitModal(false);
-  };
-
-  const guardarGasto = async () => {
-    if (!user) return;
-
-    if (!isValidAmount) {
-      Alert.alert('Monto inválido', 'Ingresa un monto mayor a 0.');
-      return;
+  const validateBase = () => {
+    if (!validAmount) {
+      Alert.alert('Monto inválido', 'Ingresa un monto mayor a cero.');
+      return false;
     }
 
     if (!descripcion.trim()) {
-      Alert.alert('Falta la descripción', 'Escribe una descripción para el gasto.');
-      return;
+      Alert.alert('Falta la descripción', 'Escribe en qué fue el gasto.');
+      return false;
     }
 
-    if (!categoria) {
-      Alert.alert('Falta la categoría', 'Agrega o selecciona una categoría.');
-      return;
-    }
-
-    if (!metodoPago) {
-      Alert.alert('Falta el método de pago', 'Agrega o selecciona un método de pago.');
-      return;
+    if (!categoria || !metodoPago) {
+      Alert.alert('Faltan datos', 'Selecciona categoría y método de pago.');
+      return false;
     }
 
     if (tipo === 'compartido' && !partnerId) {
-      Alert.alert('Pareja no vinculada', 'Primero vincula a tu pareja para registrar gastos compartidos.');
-      return;
+      Alert.alert('Pareja no vinculada', 'Primero vincula a tu pareja.');
+      return false;
     }
 
-    if (tipo === 'compartido' && !split.valid) {
-      Alert.alert('División inválida', 'Revisa cómo se dividirá el gasto.');
+    return true;
+  };
+
+  const continueFlow = async () => {
+    if (!user || !validateBase()) return;
+
+    if (tipo === 'compartido') {
+      router.push({
+        pathname: '/dividir-gasto',
+        params: {
+          amount: amount.toFixed(2),
+          description: descripcion.trim(),
+          category: categoria,
+          paymentMethod: metodoPago,
+          payerId: payerId || user.id,
+          partnerName,
+        },
+      } as any);
       return;
     }
 
@@ -326,25 +180,22 @@ export default function NuevoGastoScreen() {
       await addExpense({
         amount,
         description: descripcion.trim(),
-        type: tipo,
+        type: 'personal',
         category: categoria,
         paymentMethod: metodoPago,
-        payerId: tipo === 'compartido' ? payerId || user.id : user.id,
-        myShare: tipo === 'compartido' ? split.mine : amount,
-        partnerShare: tipo === 'compartido' ? split.partner : 0,
+        payerId: user.id,
+        myShare: amount,
+        partnerShare: 0,
       });
       router.back();
     } catch (error: any) {
-      Alert.alert(
-        'No se pudo guardar',
-        error?.message ?? 'No fue posible guardar el gasto.'
-      );
+      Alert.alert('No se pudo guardar', error?.message ?? 'Inténtalo nuevamente.');
     } finally {
       setSaving(false);
     }
   };
 
-  const unavailable = categories.length === 0 || paymentMethods.length === 0;
+  if (authLoading || !user) return null;
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -352,121 +203,85 @@ export default function NuevoGastoScreen() {
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <Animated.View
-          style={[
-            styles.flex,
-            {
-              opacity: enter,
-              transform: [
-                {
-                  translateY: enter.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [12, 0],
-                  }),
-                },
-              ],
-            },
-          ]}
+        <ScrollView
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          <ScrollView
-            contentContainerStyle={styles.content}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          >
-            <View style={styles.headerRow}>
-              <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                <AppIcon name="back" size={17} color="#23A7FF" />
-              </TouchableOpacity>
-              <Text style={styles.headerTitle}>Nuevo gasto</Text>
-              <View style={styles.headerSpacer} />
-            </View>
+          <View style={styles.header}>
+            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+              <AppIcon name="back" size={17} color="#23A7FF" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Nuevo gasto</Text>
+            <View style={styles.headerSpacer} />
+          </View>
 
-            <Text style={styles.subtitle}>
-              {tipo === 'compartido'
-                ? 'Gasto compartido · registra todo en pocos pasos.'
-                : 'Registra todo en pocos pasos.'}
-            </Text>
-
-            <Text style={styles.step}>1 · ¿Cuánto?</Text>
+          <Step number={1} title="¿Cuánto?">
             <TextInput
-              style={styles.inputMonto}
-              placeholder="S/ 0.00"
-              placeholderTextColor="#64748B"
-              keyboardType="decimal-pad"
+              style={styles.amountInput}
               value={monto}
               onChangeText={setMonto}
-            />
-
-            <Text style={styles.step}>2 · ¿En qué?</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Ej. Cine, almuerzo, supermercado..."
+              keyboardType="decimal-pad"
+              placeholder="S/ 0.00"
               placeholderTextColor="#64748B"
+            />
+          </Step>
+
+          <Step number={2} title="¿En qué?">
+            <TextInput
+              style={styles.textInput}
               value={descripcion}
               onChangeText={setDescripcion}
+              placeholder="Cine en el Mall"
+              placeholderTextColor="#64748B"
             />
+          </Step>
 
-            <View style={styles.stepHeader}>
-              <Text style={styles.stepNoMargin}>3 · Categoría</Text>
-              <TouchableOpacity onPress={() => router.push('/categorias')}>
-                <Text style={styles.manage}>Editar</Text>
-              </TouchableOpacity>
-            </View>
+          <Step number={3} title="Categoría">
+            <TouchableOpacity
+              style={styles.selectRow}
+              onPress={() => setCategoryModal(true)}
+            >
+              <View style={styles.selectLeft}>
+                <View style={styles.selectIconPink}>
+                  <AppIcon
+                    name={categoryIconName(categoria)}
+                    size={19}
+                    color="#FFFFFF"
+                  />
+                </View>
+                <Text style={styles.selectText}>
+                  {selectedCategory?.name ?? 'Seleccionar'}
+                </Text>
+              </View>
+              <Text style={styles.chevron}>›</Text>
+            </TouchableOpacity>
+          </Step>
 
-            {loadingCategories ? (
-              <Text style={styles.status}>Cargando...</Text>
-            ) : (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.chips}
-              >
-                {categories.map((item) => {
-                  const active = categoria === item.slug;
-                  return (
-                    <TouchableOpacity
-                      key={item.id}
-                      style={[styles.chip, active && styles.chipActive]}
-                      onPress={() => setCategoria(item.slug)}
-                    >
-                      <Text style={styles.chipIcon}>{item.icon}</Text>
-                      <Text style={[styles.chipText, active && styles.chipTextActive]}>
-                        {item.name}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
-            )}
-
-            <View style={styles.stepHeader}>
-              <Text style={styles.stepNoMargin}>4 · ¿Cómo pagaste?</Text>
-              <TouchableOpacity onPress={() => router.push('/metodos-pago')}>
-                <Text style={styles.manage}>Administrar</Text>
-              </TouchableOpacity>
-            </View>
-
+          <Step number={4} title="¿Cómo pagaste?">
             {loadingPaymentMethods ? (
-              <Text style={styles.status}>Cargando...</Text>
+              <Text style={styles.loadingText}>Cargando...</Text>
             ) : (
-              <View style={styles.paymentGrid}>
+              <View style={styles.paymentRow}>
                 {visiblePaymentMethods.map((item) => {
                   const active = metodoPago === item.slug;
                   return (
                     <TouchableOpacity
                       key={item.id}
-                      style={[styles.paymentCard, active && styles.paymentCardActive]}
+                      style={[styles.paymentItem, active && styles.paymentItemActive]}
                       onPress={() => setMetodoPago(item.slug)}
                     >
-                      <AppIcon
-                        name={paymentIconName(item.slug)}
-                        size={22}
-                        color={active ? '#23A7FF' : '#CBD5E1'}
-                      />
+                      <View style={[styles.paymentIconBox, active && styles.paymentIconBoxActive]}>
+                        <AppIcon
+                          name={paymentIconName(item.slug)}
+                          size={20}
+                          color={active ? '#23A7FF' : '#CBD5E1'}
+                        />
+                      </View>
                       <Text
                         style={[
-                          styles.paymentName,
-                          active && styles.paymentNameActive,
+                          styles.paymentLabel,
+                          active && styles.paymentLabelActive,
                         ]}
                         numberOfLines={1}
                       >
@@ -477,213 +292,127 @@ export default function NuevoGastoScreen() {
                 })}
               </View>
             )}
+          </Step>
 
-            <Text style={styles.step}>5 · Tipo</Text>
+          <Step number={5} title="¿Quién pagó?">
+            <View style={styles.payerRow}>
+              <TouchableOpacity
+                style={[
+                  styles.payerButton,
+                  payerId === user.id && styles.payerActiveBlue,
+                ]}
+                onPress={() => setPayerId(user.id)}
+              >
+                <View style={[styles.payerAvatar, styles.avatarBlue]}>
+                  <AppIcon name="profile" size={18} color="#FFFFFF" />
+                </View>
+                <Text style={styles.payerName}>Sofonías</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.payerButton,
+                  payerId === partnerId && styles.payerActivePink,
+                  !partnerId && styles.disabled,
+                ]}
+                disabled={!partnerId || tipo === 'personal'}
+                onPress={() => partnerId && setPayerId(partnerId)}
+              >
+                <View style={[styles.payerAvatar, styles.avatarPink]}>
+                  <AppIcon name="profile" size={18} color="#FFFFFF" />
+                </View>
+                <Text style={styles.payerName}>{partnerName}</Text>
+              </TouchableOpacity>
+            </View>
+          </Step>
+
+          <Step number={6} title="Tipo de gasto">
             <View style={styles.typeRow}>
               <TouchableOpacity
-                style={[styles.typeButton, tipo === 'personal' && styles.typeActive]}
+                style={[styles.typeCard, tipo === 'personal' && styles.typeCardBlue]}
                 onPress={() => setTipo('personal')}
               >
-                <AppIcon name="profile" size={21} color="#CBD5E1" />
+                <AppIcon name="profile" size={17} color="#CBD5E1" />
                 <View>
                   <Text style={styles.typeTitle}>Personal</Text>
-                  <Text style={styles.typeSub}>Solo tú</Text>
+                  <Text style={styles.typeSub}>Solo tú lo ves</Text>
                 </View>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.typeButton, tipo === 'compartido' && styles.typeActivePink]}
+                style={[styles.typeCard, tipo === 'compartido' && styles.typeCardPink]}
                 onPress={() => setTipo('compartido')}
               >
-                <AppIcon name="people" size={21} color="#F472B6" />
+                <AppIcon name="people" size={17} color="#F472B6" />
                 <View>
                   <Text style={styles.typeTitle}>Compartido</Text>
-                  <Text style={styles.typeSub}>Con tu pareja</Text>
+                  <Text style={styles.typeSub}>Lo vemos ambos</Text>
                 </View>
               </TouchableOpacity>
             </View>
+          </Step>
 
-            {tipo === 'compartido' && (
-              <>
-                <Text style={styles.step}>6 · ¿Quién pagó?</Text>
-                <View style={styles.typeRow}>
-                  <TouchableOpacity
-                    style={[styles.typeButton, payerId === user?.id && styles.typeActive]}
-                    onPress={() => user && setPayerId(user.id)}
-                  >
-                    <AppIcon name="profile" size={21} color="#23A7FF" />
-                    <View>
-                      <Text style={styles.typeTitle}>Yo</Text>
-                      <Text style={styles.typeSub}>Pagaste tú</Text>
-                    </View>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[
-                      styles.typeButton,
-                      payerId === partnerId && styles.typeActivePink,
-                      !partnerId && styles.disabled,
-                    ]}
-                    onPress={() => partnerId && setPayerId(partnerId)}
-                    disabled={!partnerId}
-                  >
-                    <AppIcon name="profile" size={21} color="#F472B6" />
-                    <View style={styles.partnerTextWrap}>
-                      <Text style={styles.typeTitle} numberOfLines={1}>{partnerName}</Text>
-                      <Text style={styles.typeSub}>
-                        {partnerId ? 'Pagó tu pareja' : 'Primero vincula tu pareja'}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                </View>
-
-                <TouchableOpacity style={styles.splitCard} onPress={openSplit}>
-                  <View>
-                    <Text style={styles.splitLabel}>7 · ¿Cómo dividir?</Text>
-                    <Text style={styles.splitTitle}>{splitLabels[splitMode]}</Text>
-                    {isValidAmount && split.valid ? (
-                      <Text style={styles.splitPreview}>
-                        Tu parte S/ {split.mine.toFixed(2)} · {partnerName} S/ {split.partner.toFixed(2)}
-                      </Text>
-                    ) : null}
-                  </View>
-                  <Text style={styles.splitArrow}>›</Text>
-                </TouchableOpacity>
-              </>
-            )}
-
-            <TouchableOpacity
-              style={[styles.saveButton, (saving || unavailable) && styles.disabled]}
-              onPress={guardarGasto}
-              disabled={saving || unavailable}
-            >
-              <Text style={styles.saveText}>
-                {saving ? 'Guardando...' : 'Guardar gasto'}
-              </Text>
-            </TouchableOpacity>
-          </ScrollView>
-        </Animated.View>
+          <TouchableOpacity
+            style={[styles.saveButton, saving && styles.disabled]}
+            onPress={continueFlow}
+            disabled={saving}
+          >
+            <Text style={styles.saveText}>
+              {saving ? 'Guardando...' : 'Guardar gasto'}
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
       </KeyboardAvoidingView>
 
       <Modal
-        visible={splitModal}
+        visible={categoryModal}
         animationType="slide"
         presentationStyle="pageSheet"
-        onRequestClose={() => setSplitModal(false)}
+        onRequestClose={() => setCategoryModal(false)}
       >
-        <SafeAreaView style={styles.modalContainer} edges={['top', 'bottom']}>
-          <ScrollView contentContainerStyle={styles.modalContent} keyboardShouldPersistTaps="handled">
-            <View style={styles.modalHeader}>
-              <TouchableOpacity onPress={() => setSplitModal(false)}>
-                <Text style={styles.back}>‹ Volver</Text>
-              </TouchableOpacity>
-              <Text style={styles.modalHeaderTitle}>Dividir gasto</Text>
-              <View style={styles.modalHeaderSpacer} />
-            </View>
-
-            {([
-              ['half', 'Mitad y mitad (50/50)', 'Ambos pagan lo mismo'],
-              ['exact', 'Cantidad exacta', 'Indica cuánto te corresponde a ti'],
-              ['percentage', 'Porcentaje', 'Ej. 60% / 40%'],
-              ['custom', 'Personalizado', 'Escribe ambas partes'],
-            ] as [SplitMode, string, string][]).map(([value, title, sub]) => {
-              const active = draftSplitMode === value;
-              return (
-                <TouchableOpacity
-                  key={value}
-                  style={[styles.splitOption, active && styles.splitOptionActive]}
-                  onPress={() => setDraftSplitMode(value)}
-                >
-                  <View style={[styles.radio, active && styles.radioActive]}>
-                    {active ? <View style={styles.radioDot} /> : null}
-                  </View>
-                  <View style={styles.splitOptionText}>
-                    <Text style={styles.splitOptionTitle}>{title}</Text>
-                    <Text style={styles.splitOptionSub}>{sub}</Text>
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-
-            {draftSplitMode === 'exact' ? (
-              <View style={styles.editorCard}>
-                <Text style={styles.editorLabel}>Tu parte</Text>
-                <TextInput
-                  value={exactMine}
-                  onChangeText={setExactMine}
-                  keyboardType="decimal-pad"
-                  placeholder="0.00"
-                  placeholderTextColor="#475569"
-                  style={styles.editorInput}
-                />
-                <Text style={styles.editorHint}>
-                  {partnerName}: S/ {draftSplit.valid ? draftSplit.partner.toFixed(2) : '0.00'}
-                </Text>
-              </View>
-            ) : null}
-
-            {draftSplitMode === 'percentage' ? (
-              <View style={styles.editorCard}>
-                <Text style={styles.editorLabel}>Tu porcentaje</Text>
-                <View style={styles.percentRow}>
-                  <TextInput
-                    value={percentMine}
-                    onChangeText={setPercentMine}
-                    keyboardType="decimal-pad"
-                    placeholder="50"
-                    placeholderTextColor="#475569"
-                    style={[styles.editorInput, styles.percentInput]}
-                  />
-                  <Text style={styles.percentSymbol}>%</Text>
-                </View>
-                <Text style={styles.editorHint}>
-                  {partnerName}: {Number.isFinite(Number(percentMine)) ? Math.max(0, 100 - Number(percentMine)).toFixed(0) : '0'}%
-                </Text>
-              </View>
-            ) : null}
-
-            {draftSplitMode === 'custom' ? (
-              <View style={styles.editorCard}>
-                <Text style={styles.editorLabel}>Tu parte</Text>
-                <TextInput
-                  value={customMine}
-                  onChangeText={setCustomMine}
-                  keyboardType="decimal-pad"
-                  placeholder="0.00"
-                  placeholderTextColor="#475569"
-                  style={styles.editorInput}
-                />
-                <Text style={[styles.editorLabel, styles.editorSecondLabel]}>{partnerName}</Text>
-                <TextInput
-                  value={customPartner}
-                  onChangeText={setCustomPartner}
-                  keyboardType="decimal-pad"
-                  placeholder="0.00"
-                  placeholderTextColor="#475569"
-                  style={styles.editorInput}
-                />
-              </View>
-            ) : null}
-
-            <View style={styles.previewCard}>
-              <Text style={styles.previewLabel}>Vista previa</Text>
-              <Text style={styles.previewTotal}>Total: S/ {isValidAmount ? amount.toFixed(2) : '0.00'}</Text>
-              <View style={styles.previewLine} />
-              <Text style={styles.previewPerson}>
-                Tú: S/ {draftSplit.valid ? draftSplit.mine.toFixed(2) : '0.00'}
-              </Text>
-              <Text style={styles.previewPerson}>
-                {partnerName}: S/ {draftSplit.valid ? draftSplit.partner.toFixed(2) : '0.00'}
-              </Text>
-            </View>
-
-            <TouchableOpacity
-              style={[styles.saveButton, !draftSplit.valid && styles.disabled]}
-              onPress={applySplit}
-              disabled={!draftSplit.valid}
-            >
-              <Text style={styles.saveText}>Aplicar división</Text>
+        <SafeAreaView style={styles.modal} edges={['top', 'bottom']}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={() => setCategoryModal(false)}>
+              <Text style={styles.modalClose}>Cerrar</Text>
             </TouchableOpacity>
+            <Text style={styles.modalTitle}>Categoría</Text>
+            <View style={styles.modalSpacer} />
+          </View>
+
+          <ScrollView contentContainerStyle={styles.categoryGrid}>
+            {loadingCategories ? (
+              <Text style={styles.loadingText}>Cargando...</Text>
+            ) : (
+              categories.map((item) => {
+                const active = categoria === item.slug;
+                return (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={[styles.categoryCard, active && styles.categoryCardActive]}
+                    onPress={() => {
+                      setCategoria(item.slug);
+                      setCategoryModal(false);
+                    }}
+                  >
+                    <View style={styles.categoryIconBox}>
+                      <AppIcon
+                        name={categoryIconName(item.slug)}
+                        size={22}
+                        color={active ? '#23A7FF' : '#CBD5E1'}
+                      />
+                    </View>
+                    <Text
+                      style={[
+                        styles.categoryName,
+                        active && styles.categoryNameActive,
+                      ]}
+                    >
+                      {item.name}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })
+            )}
           </ScrollView>
         </SafeAreaView>
       </Modal>
@@ -691,14 +420,37 @@ export default function NuevoGastoScreen() {
   );
 }
 
+function Step({
+  number,
+  title,
+  children,
+}: {
+  number: number;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <View style={styles.stepBlock}>
+      <View style={styles.stepHeader}>
+        <View style={styles.stepCircle}>
+          <Text style={styles.stepNumber}>{number}</Text>
+        </View>
+        <Text style={styles.stepTitle}>{title}</Text>
+      </View>
+      {children}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   container: { flex: 1, backgroundColor: '#07111F' },
-  content: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 44 },
-  headerRow: {
+  content: { padding: 18, paddingBottom: 34 },
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginBottom: 6,
   },
   backButton: {
     width: 34,
@@ -710,204 +462,179 @@ const styles = StyleSheet.create({
   },
   headerTitle: { color: '#FFFFFF', fontSize: 17, fontWeight: '900' },
   headerSpacer: { width: 34 },
-  back: { color: '#60A5FA', fontSize: 16, fontWeight: '800' },
-  title: { color: '#FFFFFF', fontSize: 29, fontWeight: '900', marginTop: 22 },
-  subtitle: { color: '#64748B', fontSize: 10, marginTop: 8, marginBottom: 12, textAlign: 'center' },
-  step: {
-    color: '#CBD5E1',
-    fontSize: 13,
-    fontWeight: '900',
-    marginTop: 18,
-    marginBottom: 8,
+  stepBlock: { marginTop: 14 },
+  stepHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 7 },
+  stepCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#173A6D',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  stepNoMargin: { color: '#CBD5E1', fontSize: 13, fontWeight: '900' },
-  stepHeader: {
-    marginTop: 20,
-    marginBottom: 9,
+  stepNumber: { color: '#60A5FA', fontSize: 10, fontWeight: '900' },
+  stepTitle: { color: '#FFFFFF', fontSize: 11, fontWeight: '900' },
+  amountInput: {
+    backgroundColor: '#0E1A2A',
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: '#24415F',
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    color: '#FFFFFF',
+    fontSize: 23,
+    fontWeight: '900',
+  },
+  textInput: {
+    backgroundColor: '#0E1A2A',
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: '#24415F',
+    paddingHorizontal: 13,
+    paddingVertical: 11,
+    color: '#FFFFFF',
+    fontSize: 12,
+  },
+  selectRow: {
+    backgroundColor: '#0E1A2A',
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: '#24415F',
+    padding: 10,
+    minHeight: 50,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  manage: { color: '#60A5FA', fontSize: 11, fontWeight: '800' },
-  inputMonto: {
-    backgroundColor: '#0E1A2A',
-    borderRadius: 17,
-    padding: 18,
-    color: '#FFFFFF',
-    fontSize: 28,
-    fontWeight: '900',
-    borderWidth: 1,
-    borderColor: '#16263A',
+  selectLeft: { flexDirection: 'row', alignItems: 'center', gap: 9 },
+  selectIconPink: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: '#F43F75',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  input: {
+  selectText: { color: '#FFFFFF', fontSize: 11, fontWeight: '900' },
+  chevron: { color: '#94A3B8', fontSize: 23 },
+  paymentRow: { flexDirection: 'row', gap: 7 },
+  paymentItem: { flex: 1, alignItems: 'center' },
+  paymentIconBox: {
+    width: 48,
+    height: 42,
+    borderRadius: 11,
     backgroundColor: '#0E1A2A',
-    borderRadius: 15,
-    padding: 15,
-    color: '#FFFFFF',
-    fontSize: 15,
     borderWidth: 1,
-    borderColor: '#16263A',
+    borderColor: '#24415F',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  status: { color: '#64748B', fontSize: 12 },
-  chips: { gap: 8, paddingRight: 16 },
-  chip: {
-    minHeight: 44,
+  paymentIconBoxActive: {
+    backgroundColor: '#12345F',
+    borderColor: '#23A7FF',
+    borderWidth: 2,
+  },
+  paymentItemActive: {},
+  paymentLabel: {
+    color: '#64748B',
+    fontSize: 7,
+    fontWeight: '800',
+    marginTop: 4,
+    maxWidth: 55,
+  },
+  paymentLabelActive: { color: '#FFFFFF' },
+  payerRow: { flexDirection: 'row', gap: 8 },
+  payerButton: {
+    flex: 1,
+    minHeight: 54,
+    borderRadius: 13,
     backgroundColor: '#0E1A2A',
-    borderRadius: 14,
-    paddingHorizontal: 13,
+    borderWidth: 1,
+    borderColor: '#24415F',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    borderWidth: 1,
-    borderColor: '#1B2B40',
-  },
-  chipActive: { backgroundColor: '#132E5B', borderColor: '#3B82F6' },
-  chipIcon: { fontSize: 17 },
-  chipText: { color: '#94A3B8', fontSize: 12, fontWeight: '700' },
-  chipTextActive: { color: '#FFFFFF' },
-  paymentGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    paddingHorizontal: 11,
     gap: 8,
   },
-  paymentCard: {
-    width: '31.5%',
-    minHeight: 76,
-    backgroundColor: '#0E1A2A',
+  payerActiveBlue: { borderColor: '#23A7FF', backgroundColor: '#12345F' },
+  payerActivePink: { borderColor: '#F43F75', backgroundColor: '#34172A' },
+  payerAvatar: {
+    width: 30,
+    height: 30,
     borderRadius: 15,
-    borderWidth: 1,
-    borderColor: '#1B2B40',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 6,
   },
-  paymentCardActive: {
-    backgroundColor: '#132E5B',
-    borderColor: '#3B82F6',
-    borderWidth: 2,
-  },
-  paymentName: {
-    color: '#94A3B8',
-    fontSize: 9,
-    fontWeight: '800',
-    marginTop: 6,
-    maxWidth: '95%',
-  },
-  paymentNameActive: { color: '#FFFFFF' },
-  typeRow: { flexDirection: 'row', gap: 10 },
-  typeButton: {
+  avatarBlue: { backgroundColor: '#1677FF' },
+  avatarPink: { backgroundColor: '#D9366F' },
+  payerName: { color: '#FFFFFF', fontSize: 9, fontWeight: '900' },
+  typeRow: { flexDirection: 'row', gap: 8 },
+  typeCard: {
     flex: 1,
-    minHeight: 72,
+    minHeight: 57,
+    borderRadius: 13,
     backgroundColor: '#0E1A2A',
-    borderRadius: 16,
-    padding: 14,
     borderWidth: 1,
-    borderColor: '#1B2B40',
+    borderColor: '#24415F',
     flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 10,
+    gap: 7,
+  },
+  typeCardBlue: { borderColor: '#23A7FF', backgroundColor: '#12345F' },
+  typeCardPink: { borderColor: '#F43F75', backgroundColor: '#34172A' },
+  typeTitle: { color: '#FFFFFF', fontSize: 9, fontWeight: '900' },
+  typeSub: { color: '#64748B', fontSize: 7, marginTop: 2 },
+  saveButton: {
+    marginTop: 20,
+    minHeight: 48,
+    borderRadius: 13,
+    backgroundColor: '#1677FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  saveText: { color: '#FFFFFF', fontSize: 11, fontWeight: '900' },
+  disabled: { opacity: 0.45 },
+  loadingText: { color: '#64748B', fontSize: 9 },
+  modal: { flex: 1, backgroundColor: '#07111F' },
+  modalHeader: {
+    minHeight: 52,
+    paddingHorizontal: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderBottomWidth: 1,
+    borderBottomColor: '#1B2B40',
+  },
+  modalClose: { color: '#60A5FA', fontSize: 10, fontWeight: '900' },
+  modalTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '900' },
+  modalSpacer: { width: 40 },
+  categoryGrid: {
+    padding: 18,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 9,
   },
-  typeActive: { backgroundColor: '#132E5B', borderColor: '#3B82F6' },
-  typeActivePink: { backgroundColor: '#3A1830', borderColor: '#EC4899' },
-  typeTitle: { color: '#FFFFFF', fontSize: 13, fontWeight: '900' },
-  typeSub: { color: '#64748B', fontSize: 9, marginTop: 2 },
-  partnerTextWrap: { flex: 1 },
-  splitCard: {
-    marginTop: 16,
+  categoryCard: {
+    width: '31%',
+    minHeight: 86,
+    borderRadius: 14,
     backgroundColor: '#0E1A2A',
-    borderRadius: 17,
-    borderWidth: 1,
-    borderColor: '#23446E',
-    padding: 15,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  splitLabel: { color: '#64748B', fontSize: 10, fontWeight: '800' },
-  splitTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '900', marginTop: 4 },
-  splitPreview: { color: '#60A5FA', fontSize: 10, marginTop: 5 },
-  splitArrow: { color: '#60A5FA', fontSize: 30 },
-  saveButton: {
-    backgroundColor: '#1677FF',
-    borderRadius: 16,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 26,
-  },
-  saveText: { color: '#FFFFFF', fontSize: 15, fontWeight: '900' },
-  disabled: { opacity: 0.45 },
-
-  modalContainer: { flex: 1, backgroundColor: '#07111F' },
-  modalContent: { padding: 20, paddingBottom: 40 },
-  modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  modalHeaderTitle: { color: '#FFFFFF', fontSize: 18, fontWeight: '900' },
-  modalHeaderSpacer: { width: 55 },
-  splitOption: {
-    backgroundColor: '#0E1A2A',
-    borderRadius: 17,
-    padding: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
     borderWidth: 1,
     borderColor: '#1B2B40',
-    marginBottom: 10,
-  },
-  splitOptionActive: { borderColor: '#3B82F6', backgroundColor: '#10264A' },
-  radio: {
-    width: 23,
-    height: 23,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#64748B',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    padding: 8,
   },
-  radioActive: { borderColor: '#3B82F6' },
-  radioDot: { width: 11, height: 11, borderRadius: 6, backgroundColor: '#3B82F6' },
-  splitOptionText: { flex: 1 },
-  splitOptionTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '900' },
-  splitOptionSub: { color: '#64748B', fontSize: 10, marginTop: 3 },
-  editorCard: {
-    backgroundColor: '#0E1A2A',
-    borderRadius: 17,
-    padding: 15,
-    marginTop: 8,
-    borderWidth: 1,
-    borderColor: '#1B2B40',
+  categoryCardActive: { borderColor: '#23A7FF', backgroundColor: '#12345F' },
+  categoryIconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: '#16263A',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  editorLabel: { color: '#94A3B8', fontSize: 11, fontWeight: '800', marginBottom: 7 },
-  editorSecondLabel: { marginTop: 12 },
-  editorInput: {
-    backgroundColor: '#07111F',
-    color: '#FFFFFF',
-    borderRadius: 13,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 18,
-    fontWeight: '900',
-    borderWidth: 1,
-    borderColor: '#20334B',
-  },
-  editorHint: { color: '#60A5FA', fontSize: 10, marginTop: 8 },
-  percentRow: { flexDirection: 'row', alignItems: 'center' },
-  percentInput: { flex: 1 },
-  percentSymbol: { color: '#FFFFFF', fontSize: 20, fontWeight: '900', marginLeft: 10 },
-  previewCard: {
-    backgroundColor: '#0E1A2A',
-    borderRadius: 17,
-    padding: 16,
-    marginTop: 16,
-    borderWidth: 1,
-    borderColor: '#1B2B40',
-  },
-  previewLabel: { color: '#94A3B8', fontSize: 11, fontWeight: '800' },
-  previewTotal: { color: '#FFFFFF', fontSize: 20, fontWeight: '900', marginTop: 5 },
-  previewLine: { height: 1, backgroundColor: '#1B2B40', marginVertical: 12 },
-  previewPerson: { color: '#CBD5E1', fontSize: 12, marginTop: 5 },
+  categoryName: { color: '#94A3B8', fontSize: 8, fontWeight: '800', marginTop: 6 },
+  categoryNameActive: { color: '#FFFFFF' },
 });
