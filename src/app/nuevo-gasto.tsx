@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppIcon, AppIconName } from '@/components/app-icon';
 import { ExpenseCategory, useFinance } from '@/context/finance-context';
 import { supabase } from '@/lib/supabase';
 
@@ -142,6 +143,22 @@ export default function NuevoGastoScreen() {
 
   const amount = Number(monto.replace(',', '.'));
   const isValidAmount = Number.isFinite(amount) && amount > 0;
+
+  const visiblePaymentMethods = useMemo(() => {
+    const preferred = ['efectivo', 'debito', 'credito', 'transferencia'];
+    const ordered = preferred
+      .map((slug) => paymentMethods.find((item) => item.slug === slug))
+      .filter(Boolean) as typeof paymentMethods;
+
+    return ordered.length >= 4 ? ordered.slice(0, 4) : paymentMethods.slice(0, 4);
+  }, [paymentMethods]);
+
+  const paymentIconName = (slug: string): AppIconName => {
+    if (slug === 'efectivo') return 'cash';
+    if (slug === 'transferencia') return 'bank';
+    if (slug === 'debito' || slug === 'credito') return 'card';
+    return 'wallet';
+  };
 
   const split = useMemo(() => {
     if (!isValidAmount) return { mine: 0, partner: 0, valid: false };
@@ -428,7 +445,7 @@ export default function NuevoGastoScreen() {
               <Text style={styles.status}>Cargando...</Text>
             ) : (
               <View style={styles.paymentGrid}>
-                {paymentMethods.slice(0, 6).map((item) => {
+                {visiblePaymentMethods.map((item) => {
                   const active = metodoPago === item.slug;
                   return (
                     <TouchableOpacity
@@ -436,7 +453,11 @@ export default function NuevoGastoScreen() {
                       style={[styles.paymentCard, active && styles.paymentCardActive]}
                       onPress={() => setMetodoPago(item.slug)}
                     >
-                      <Text style={styles.paymentIcon}>{item.icon}</Text>
+                      <AppIcon
+                        name={paymentIconName(item.slug)}
+                        size={22}
+                        color={active ? '#23A7FF' : '#CBD5E1'}
+                      />
                       <Text
                         style={[
                           styles.paymentName,
@@ -745,7 +766,6 @@ const styles = StyleSheet.create({
     borderColor: '#3B82F6',
     borderWidth: 2,
   },
-  paymentIcon: { fontSize: 23 },
   paymentName: {
     color: '#94A3B8',
     fontSize: 9,
