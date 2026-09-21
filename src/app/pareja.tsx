@@ -2,16 +2,17 @@ import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
+  ScrollView,
   Share,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BottomNav } from '@/components/bottom-nav';
 import { useFinance } from '@/context/finance-context';
 import { supabase } from '@/lib/supabase';
 
@@ -23,14 +24,18 @@ type PartnerStatus = {
   invite_code: string | null;
 };
 
+function isCurrentMonth(value: string) {
+  const date = new Date(value);
+  const now = new Date();
+  return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
+}
+
 export default function ParejaScreen() {
   const {
     user,
     authLoading,
     expenses,
-    totalSharedExpenses,
     partnerBalance,
-    settlements,
     refreshExpenses,
     refreshSettlements,
   } = useFinance();
@@ -46,13 +51,11 @@ export default function ParejaScreen() {
 
   const loadStatus = useCallback(async () => {
     if (!user) return;
-
     const { data, error } = await supabase.rpc('get_partner_status');
     if (error) {
       Alert.alert('No se pudo cargar', error.message);
       return;
     }
-
     const next = (data?.[0] ?? null) as PartnerStatus | null;
     setStatus(next);
     setInviteCode(next?.invite_code ?? '');
@@ -71,15 +74,10 @@ export default function ParejaScreen() {
       setBusy(true);
       const { data, error } = await supabase.rpc('create_partner_invite');
       if (error) throw error;
-
-      const generated = String(data ?? '');
-      setInviteCode(generated);
+      setInviteCode(String(data ?? ''));
       await loadStatus();
     } catch (error: any) {
-      Alert.alert(
-        'No se pudo generar',
-        error?.message ?? 'Inténtalo nuevamente.'
-      );
+      Alert.alert('No se pudo generar', error?.message ?? 'Inténtalo nuevamente.');
     } finally {
       setBusy(false);
     }
@@ -87,7 +85,6 @@ export default function ParejaScreen() {
 
   const joinWithCode = async () => {
     const normalized = code.trim().toUpperCase();
-
     if (normalized.length !== 8) {
       Alert.alert('Código incompleto', 'El código debe tener 8 caracteres.');
       return;
@@ -99,15 +96,11 @@ export default function ParejaScreen() {
         p_code: normalized,
       });
       if (error) throw error;
-
       setCode('');
       await Promise.all([loadStatus(), refreshExpenses()]);
-      Alert.alert('Vinculación completada', 'Ya pueden compartir gastos en MiFinanzas.');
+      Alert.alert('Listo', 'Ya pueden compartir gastos.');
     } catch (error: any) {
-      Alert.alert(
-        'No se pudo vincular',
-        error?.message ?? 'Revisa el código e inténtalo nuevamente.'
-      );
+      Alert.alert('No se pudo vincular', error?.message ?? 'Revisa el código.');
     } finally {
       setBusy(false);
     }
@@ -115,27 +108,46 @@ export default function ParejaScreen() {
 
   const shareInvite = async () => {
     if (!inviteCode) return;
-
     await Share.share({
-      message:
-        `Únete a mi grupo en MiFinanzas. Tu código de invitación es: ${inviteCode}`,
+      message: `Únete a mi grupo en MiFinanzas. Código: ${inviteCode}`,
     });
   };
 
+  const linked = (status?.member_count ?? 0) >= 2;
   const partnerName = status?.partner_name ?? 'tu pareja';
-  const recentShared = useMemo(
+  const myName =
+    user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Tú';
+
+  const monthShared = useMemo(
     () =>
-      expenses
-        .filter((expense) => expense.type === 'compartido')
-        .slice(0, 5),
+      expenses.filter(
+        (expense) =>
+          expense.type === 'compartido' && isCurrentMonth(expense.createdAt)
+      ),
     [expenses]
   );
 
-  if (authLoading || !user) return null;
+  const monthTotal = useMemo(
+    () => monthShared.reduce((sum, expense) => sum + expense.amount, 0),
+    [monthShared]
+  );
 
-  const linked = (status?.member_count ?? 0) >= 2;
+  const paidByMe = useMemo(
+    () =>
+      monthShared
+        .filter((expense) => expense.payerId === user?.id)
+        .reduce((sum, expense) => sum + expense.amount, 0),
+    [monthShared, user]
+  );
+
+  const paidByPartner = Math.max(0, monthTotal - paidByMe);
+
+  const recentShared = useMemo(
+    () => expenses.filter((expense) => expense.type === 'compartido').slice(0, 4),
+    [expenses]
+  );
+
   const balanceAbs = Math.abs(partnerBalance);
-
   const balanceText =
     partnerBalance > 0.005
       ? `${partnerName} te debe`
@@ -143,238 +155,211 @@ export default function ParejaScreen() {
       ? `Debes a ${partnerName}`
       : 'Están al día';
 
+  if (authLoading || !user) return null;
+
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <ScrollView
+        style={styles.flex}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.back}>‹ Volver</Text>
-        </TouchableOpacity>
+        <View style={styles.topRow}>
+          <View>
+            <Text style={styles.eyebrow}>🩷 PAREJA</Text>
+            <Text style={styles.title}>Juntos, pero claro</Text>
+          </View>
+          <TouchableOpacity style={styles.gear} onPress={() => router.push('/perfil')}>
+            <Text style={styles.gearText}>⚙️</Text>
+          </TouchableOpacity>
+        </View>
 
-        <Text style={styles.title}>Pareja</Text>
-        <Text style={styles.subtitle}>
-          Este espacio contiene solo sus gastos compartidos. Tus gastos personales siguen siendo privados.
-        </Text>
+        <View style={styles.spaceSwitch}>
+          <TouchableOpacity style={styles.spacePill} onPress={() => router.replace('/mi-dinero')}>
+            <Text style={styles.spacePillText}>Mi dinero</Text>
+          </TouchableOpacity>
+          <View style={[styles.spacePill, styles.spacePillActive]}>
+            <Text style={styles.spacePillActiveText}>Pareja</Text>
+          </View>
+        </View>
 
         {linked ? (
           <>
-            <View style={styles.linkedCard}>
-              <View style={styles.peopleIcon}>
-                <Text style={styles.peopleIconText}>👥</Text>
+            <View style={styles.peopleCard}>
+              <View style={styles.person}>
+                <View style={[styles.avatar, styles.avatarBlue]}>
+                  <Text style={styles.avatarText}>{myName.slice(0, 1).toUpperCase()}</Text>
+                </View>
+                <Text style={styles.personName}>{myName}</Text>
               </View>
-              <Text style={styles.linkedLabel}>Espacio compartido activo</Text>
-              <Text style={styles.partnerName}>
-                Tú + {partnerName}
-              </Text>
-              <Text style={styles.linkedText}>
-                Todo lo marcado como “Compartido” aparece para ambos.
-              </Text>
+              <Text style={styles.heart}>♥</Text>
+              <View style={styles.person}>
+                <View style={[styles.avatar, styles.avatarPink]}>
+                  <Text style={styles.avatarText}>{partnerName.slice(0, 1).toUpperCase()}</Text>
+                </View>
+                <Text style={styles.personName}>{partnerName}</Text>
+              </View>
             </View>
 
-            <View
-              style={[
-                styles.balanceCard,
-                partnerBalance < -0.005
-                  ? styles.balanceOwed
-                  : partnerBalance > 0.005
-                  ? styles.balanceReceivable
-                  : styles.balanceNeutral,
-              ]}
-            >
-              <Text style={styles.balanceLabel}>Balance entre ustedes</Text>
+            <View style={styles.balanceCard}>
+              <Text style={styles.balanceLabel}>Balance actual</Text>
               <Text style={styles.balanceTitle}>{balanceText}</Text>
               <Text
                 style={[
                   styles.balanceAmount,
-                  partnerBalance < -0.005
-                    ? styles.balanceAmountRed
-                    : partnerBalance > 0.005
-                    ? styles.balanceAmountGreen
-                    : styles.balanceAmountNeutral,
+                  partnerBalance > 0.005 && styles.balanceGreen,
+                  partnerBalance < -0.005 && styles.balanceRed,
                 ]}
               >
                 S/ {balanceAbs.toFixed(2)}
               </Text>
-              <Text style={styles.balanceHint}>
-                Se calcula automáticamente según quién pagó y cuánto le corresponde a cada uno.
-              </Text>
 
-              {balanceAbs >= 0.01 ? (
+              <View style={styles.balanceActions}>
                 <TouchableOpacity
-                  style={styles.settleButton}
-                  onPress={() => router.push('/saldar-deuda')}
+                  style={[styles.mainAction, styles.sharedAction]}
+                  onPress={() => router.push('/nuevo-gasto?type=compartido' as any)}
                 >
-                  <Text style={styles.settleButtonText}>Saldar deuda</Text>
+                  <Text style={styles.mainActionText}>＋ Compartido</Text>
                 </TouchableOpacity>
-              ) : null}
+
+                <TouchableOpacity
+                  style={[styles.mainAction, styles.settleAction]}
+                  onPress={() =>
+                    balanceAbs >= 0.01
+                      ? router.push('/saldar-deuda')
+                      : router.push('/deudas')
+                  }
+                >
+                  <Text style={styles.mainActionText}>▣ {balanceAbs >= 0.01 ? 'Saldar' : 'Historial'}</Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
-            <View style={styles.statsRow}>
-              <View style={styles.statCard}>
-                <Text style={styles.sharedLabel}>Total compartido</Text>
-                <Text style={styles.statAmount}>S/ {totalSharedExpenses.toFixed(2)}</Text>
+            <View style={styles.monthCard}>
+              <View style={styles.monthHeader}>
+                <View>
+                  <Text style={styles.monthLabel}>Gastado juntos este mes</Text>
+                  <Text style={styles.monthAmount}>S/ {monthTotal.toFixed(2)}</Text>
+                </View>
+                <TouchableOpacity onPress={() => router.push('/estadisticas?scope=pareja' as any)}>
+                  <Text style={styles.link}>Ver estadísticas</Text>
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity
-                style={[styles.statCard, styles.newExpenseCard]}
-                onPress={() => router.push('/nuevo-gasto?type=compartido' as any)}
-              >
-                <Text style={styles.newExpenseIcon}>＋</Text>
-                <Text style={styles.newExpenseText}>Nuevo gasto</Text>
-              </TouchableOpacity>
+
+              <View style={styles.payRow}>
+                <View style={styles.payCard}>
+                  <Text style={styles.payIcon}>👤</Text>
+                  <Text style={styles.payLabel}>Pagaste tú</Text>
+                  <Text style={styles.payBlue}>S/ {paidByMe.toFixed(2)}</Text>
+                </View>
+                <View style={styles.payCard}>
+                  <Text style={styles.payIcon}>🩷</Text>
+                  <Text style={styles.payLabel}>Pagó {partnerName}</Text>
+                  <Text style={styles.payPink}>S/ {paidByPartner.toFixed(2)}</Text>
+                </View>
+              </View>
             </View>
-
-            <TouchableOpacity
-              style={styles.budgetShortcut}
-              onPress={() => router.push('/presupuestos?scope=pareja' as any)}
-            >
-              <View>
-                <Text style={styles.budgetShortcutTitle}>📊 Presupuesto de pareja</Text>
-                <Text style={styles.budgetShortcutText}>
-                  Definan límites mensuales por categoría y vean el avance juntos.
-                </Text>
-              </View>
-              <Text style={styles.budgetShortcutArrow}>›</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.statsShortcut}
-              onPress={() => router.push('/estadisticas?scope=pareja' as any)}
-            >
-              <View>
-                <Text style={styles.statsShortcutTitle}>📈 Estadísticas de pareja</Text>
-                <Text style={styles.statsShortcutText}>
-                  Vean categorías, evolución, quién pagó y el balance actual.
-                </Text>
-              </View>
-              <Text style={styles.statsShortcutArrow}>›</Text>
-            </TouchableOpacity>
-
-            {settlements.length > 0 ? (
-              <>
-                <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionTitle}>Últimos pagos entre ustedes</Text>
-                  <TouchableOpacity onPress={() => router.push('/deudas')}>
-                    <Text style={styles.sharedLink}>Ver historial</Text>
-                  </TouchableOpacity>
-                </View>
-
-                <View style={styles.list}>
-                  {settlements.slice(0, 3).map((settlement) => {
-                    const iPaid = settlement.payerId === user.id;
-                    return (
-                      <View key={settlement.id} style={styles.settlementRow}>
-                        <View style={styles.expenseText}>
-                          <Text style={styles.expenseTitle}>
-                            {iPaid
-                              ? `Pagaste a ${partnerName}`
-                              : `${partnerName} te pagó`}
-                          </Text>
-                          <Text style={styles.expenseMeta}>
-                            {settlement.paymentMethod} · {new Date(settlement.createdAt).toLocaleDateString('es-PE')}
-                          </Text>
-                        </View>
-                        <Text style={styles.settlementAmount}>
-                          S/ {settlement.amount.toFixed(2)}
-                        </Text>
-                      </View>
-                    );
-                  })}
-                </View>
-              </>
-            ) : null}
 
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Últimos compartidos</Text>
-              <TouchableOpacity
-                onPress={() => router.push('/movimientos?filter=compartido' as any)}
-              >
-                <Text style={styles.sharedLink}>Ver todos</Text>
+              <Text style={styles.sectionTitle}>Últimos gastos</Text>
+              <TouchableOpacity onPress={() => router.push('/movimientos?filter=compartido' as any)}>
+                <Text style={styles.link}>Ver todos</Text>
               </TouchableOpacity>
             </View>
 
             {recentShared.length === 0 ? (
               <View style={styles.emptyCard}>
-                <Text style={styles.emptyTitle}>Todavía no hay gastos compartidos</Text>
-                <Text style={styles.emptyText}>Registren el primero desde “Nuevo gasto”.</Text>
+                <Text style={styles.emptyTitle}>Aún no hay gastos juntos</Text>
+                <Text style={styles.emptyText}>Registra el primero en “＋ Compartido”.</Text>
               </View>
             ) : (
               <View style={styles.list}>
                 {recentShared.map((expense) => {
-                  const payer =
-                    expense.payerId === user.id ? 'Tú' : partnerName;
+                  const payer = expense.payerId === user.id ? 'Tú' : partnerName;
                   const myPart =
                     expense.createdBy === user.id
                       ? expense.myShare
                       : expense.partnerShare;
 
                   return (
-                    <TouchableOpacity
-                      key={expense.id}
-                      style={styles.expenseRow}
-                      activeOpacity={0.82}
-                      onPress={() =>
-                        router.push(`/detalle-gasto?id=${expense.id}` as any)
-                      }
-                    >
-                      <View style={styles.expenseText}>
-                        <Text style={styles.expenseTitle}>{expense.description}</Text>
-                        <Text style={styles.expenseMeta}>
-                          Pagó {payer} · Tu parte S/ {myPart.toFixed(2)}
-                        </Text>
-                        <Text style={styles.expenseDate}>
-                          {new Date(expense.createdAt).toLocaleDateString('es-PE')}
-                        </Text>
-                      </View>
-                      <View style={styles.expenseAmountWrap}>
+                    <View key={expense.id} style={styles.expenseRow}>
+                      <TouchableOpacity
+                        style={styles.expenseMain}
+                        onPress={() => router.push(`/detalle-gasto?id=${expense.id}` as any)}
+                      >
+                        <View style={styles.expenseText}>
+                          <Text style={styles.expenseTitle}>{expense.description}</Text>
+                          <Text style={styles.expenseMeta}>
+                            Pagó {payer} · Tu parte S/ {myPart.toFixed(2)}
+                          </Text>
+                          <Text style={styles.expenseDate}>
+                            {new Date(expense.createdAt).toLocaleDateString('es-PE')}
+                          </Text>
+                        </View>
                         <Text style={styles.expenseAmount}>S/ {expense.amount.toFixed(2)}</Text>
-                        <Text style={styles.expenseArrow}>›</Text>
-                      </View>
-                    </TouchableOpacity>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.chatMini}
+                        onPress={() => router.push(`/chat-gasto?id=${expense.id}` as any)}
+                      >
+                        <Text style={styles.chatMiniText}>💬 Chat</Text>
+                      </TouchableOpacity>
+                    </View>
                   );
                 })}
               </View>
             )}
+
+            <View style={styles.shortcutRow}>
+              <TouchableOpacity
+                style={styles.shortcut}
+                onPress={() => router.push('/presupuestos?scope=pareja' as any)}
+              >
+                <Text style={styles.shortcutIcon}>📊</Text>
+                <Text style={styles.shortcutText}>Presupuesto</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.shortcut}
+                onPress={() => router.push('/deudas')}
+              >
+                <Text style={styles.shortcutIcon}>⚖️</Text>
+                <Text style={styles.shortcutText}>Deudas</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.shortcut}
+                onPress={() => router.push('/estadisticas?scope=pareja' as any)}
+              >
+                <Text style={styles.shortcutIcon}>▥</Text>
+                <Text style={styles.shortcutText}>Estadísticas</Text>
+              </TouchableOpacity>
+            </View>
           </>
         ) : (
           <>
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Invitar a mi pareja</Text>
-              <Text style={styles.cardText}>
-                Genera un código y envíaselo. Tu pareja crea su propia cuenta y escribe ese código.
+            <View style={styles.linkCard}>
+              <Text style={styles.linkCardIcon}>👥</Text>
+              <Text style={styles.linkCardTitle}>Vincula a tu pareja</Text>
+              <Text style={styles.linkCardText}>
+                Cada uno mantiene su cuenta. Solo compartirán lo que registren como “Compartido”.
               </Text>
 
               {inviteCode ? (
                 <>
-                  <Text style={styles.codeLabel}>Tu código</Text>
                   <View style={styles.codeBox}>
                     <Text style={styles.code}>{inviteCode}</Text>
                   </View>
-                  <Text style={styles.expiry}>Válido durante 7 días.</Text>
-
                   <TouchableOpacity style={styles.primaryButton} onPress={shareInvite}>
                     <Text style={styles.primaryText}>Compartir código</Text>
                   </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.secondaryButton}
-                    onPress={generateInvite}
-                    disabled={busy}
-                  >
-                    <Text style={styles.secondaryText}>Generar otro código</Text>
+                  <TouchableOpacity onPress={generateInvite} disabled={busy}>
+                    <Text style={styles.secondaryText}>Generar otro</Text>
                   </TouchableOpacity>
                 </>
               ) : (
-                <TouchableOpacity
-                  style={styles.primaryButton}
-                  onPress={generateInvite}
-                  disabled={busy}
-                >
-                  <Text style={styles.primaryText}>
-                    {busy ? 'Generando...' : 'Generar código'}
-                  </Text>
+                <TouchableOpacity style={styles.primaryButton} onPress={generateInvite} disabled={busy}>
+                  <Text style={styles.primaryText}>{busy ? 'Generando...' : 'Generar código'}</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -385,12 +370,8 @@ export default function ParejaScreen() {
               <View style={styles.line} />
             </View>
 
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Tengo un código</Text>
-              <Text style={styles.cardText}>
-                Escribe el código que te envió tu pareja.
-              </Text>
-
+            <View style={styles.linkCard}>
+              <Text style={styles.linkCardTitle}>Tengo un código</Text>
               <TextInput
                 style={styles.input}
                 value={code}
@@ -400,220 +381,98 @@ export default function ParejaScreen() {
                 autoCapitalize="characters"
                 maxLength={8}
               />
-
               <TouchableOpacity
                 style={[styles.primaryButton, busy && styles.disabled]}
                 onPress={joinWithCode}
                 disabled={busy}
               >
-                <Text style={styles.primaryText}>
-                  {busy ? 'Vinculando...' : 'Vincular cuentas'}
-                </Text>
+                <Text style={styles.primaryText}>{busy ? 'Vinculando...' : 'Vincular cuentas'}</Text>
               </TouchableOpacity>
             </View>
           </>
         )}
       </ScrollView>
+
+      <BottomNav active="inicio" />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0B1220' },
-  content: { padding: 20, paddingBottom: 40 },
-  back: { color: '#60A5FA', fontSize: 16 },
-  title: { color: '#FFFFFF', fontSize: 30, fontWeight: '800', marginTop: 22 },
-  subtitle: {
-    color: '#64748B',
-    fontSize: 13,
-    lineHeight: 19,
-    marginTop: 7,
-    marginBottom: 22,
-  },
-  card: {
-    backgroundColor: '#111827',
-    borderRadius: 18,
-    padding: 18,
-  },
-  cardTitle: { color: '#FFFFFF', fontSize: 17, fontWeight: '800' },
-  cardText: { color: '#64748B', fontSize: 12, lineHeight: 18, marginTop: 6 },
-  codeLabel: { color: '#94A3B8', fontSize: 11, marginTop: 20, marginBottom: 7 },
-  codeBox: {
-    backgroundColor: '#0F172A',
-    borderRadius: 15,
-    paddingVertical: 16,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#1D4ED8',
-  },
-  code: {
-    color: '#FFFFFF',
-    fontSize: 27,
-    fontWeight: '900',
-    letterSpacing: 4,
-  },
-  expiry: { color: '#64748B', fontSize: 10, textAlign: 'center', marginTop: 7 },
-  primaryButton: {
-    backgroundColor: '#2563EB',
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  primaryText: { color: '#FFFFFF', fontSize: 14, fontWeight: '800' },
-  secondaryButton: {
-    borderRadius: 14,
-    paddingVertical: 12,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  secondaryText: { color: '#60A5FA', fontSize: 12, fontWeight: '700' },
-  orRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 18,
-    gap: 10,
-  },
-  line: { flex: 1, height: 1, backgroundColor: '#1E293B' },
-  orText: { color: '#475569', fontSize: 12 },
-  input: {
-    backgroundColor: '#0F172A',
-    color: '#FFFFFF',
-    borderRadius: 14,
-    padding: 15,
-    fontSize: 20,
-    fontWeight: '800',
-    letterSpacing: 3,
-    textAlign: 'center',
-    marginTop: 16,
-  },
-  disabled: { opacity: 0.6 },
-  linkedCard: {
-    backgroundColor: '#111827',
-    borderRadius: 20,
-    padding: 22,
-    alignItems: 'center',
-  },
-  peopleIcon: {
-    width: 62,
-    height: 62,
-    borderRadius: 31,
-    backgroundColor: '#172554',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 13,
-  },
-  peopleIconText: { fontSize: 28 },
-  linkedLabel: { color: '#4ADE80', fontSize: 11, fontWeight: '800' },
-  partnerName: { color: '#FFFFFF', fontSize: 21, fontWeight: '800', marginTop: 4 },
-  linkedText: {
-    color: '#64748B',
-    fontSize: 12,
-    lineHeight: 18,
-    textAlign: 'center',
-    marginTop: 9,
-  },
-  balanceCard: {
-    borderRadius: 20,
-    padding: 18,
-    marginTop: 14,
-    borderWidth: 1,
-  },
-  balanceOwed: { backgroundColor: '#32171D', borderColor: '#5A232D' },
-  balanceReceivable: { backgroundColor: '#102B26', borderColor: '#1E4A3D' },
-  balanceNeutral: { backgroundColor: '#111827', borderColor: '#1E293B' },
-  balanceLabel: { color: '#94A3B8', fontSize: 11, fontWeight: '700' },
-  balanceTitle: { color: '#FFFFFF', fontSize: 17, fontWeight: '900', marginTop: 6 },
-  balanceAmount: { fontSize: 30, fontWeight: '900', marginTop: 4 },
-  balanceAmountRed: { color: '#F87171' },
-  balanceAmountGreen: { color: '#4ADE80' },
-  balanceAmountNeutral: { color: '#CBD5E1' },
-  balanceHint: { color: '#64748B', fontSize: 10, lineHeight: 15, marginTop: 8 },
-  settleButton: {
-    marginTop: 14,
-    backgroundColor: '#F43F75',
-    borderRadius: 13,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  settleButtonText: { color: '#FFFFFF', fontSize: 12, fontWeight: '900' },
-  statsRow: { flexDirection: 'row', gap: 10, marginTop: 14 },
-  statCard: {
-    flex: 1,
-    backgroundColor: '#111827',
-    borderRadius: 18,
-    padding: 16,
-    minHeight: 88,
-    justifyContent: 'center',
-  },
-  sharedLabel: { color: '#64748B', fontSize: 11 },
-  statAmount: { color: '#FFFFFF', fontSize: 20, fontWeight: '900', marginTop: 5 },
-  newExpenseCard: { alignItems: 'center', backgroundColor: '#172554' },
-  newExpenseIcon: { color: '#93C5FD', fontSize: 24, fontWeight: '800' },
-  newExpenseText: { color: '#FFFFFF', fontSize: 12, fontWeight: '800', marginTop: 2 },
-  budgetShortcut: {
-    marginTop: 14,
-    backgroundColor: '#34172A',
-    borderRadius: 17,
-    padding: 15,
-    borderWidth: 1,
-    borderColor: '#5C294B',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  budgetShortcutTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '900' },
-  budgetShortcutText: { color: '#C9A8B9', fontSize: 10, marginTop: 4, maxWidth: '90%' },
-  budgetShortcutArrow: { color: '#F472B6', fontSize: 28 },
-  statsShortcut: {
-    marginTop: 10,
-    backgroundColor: '#0E1A2A',
-    borderRadius: 17,
-    padding: 15,
-    borderWidth: 1,
-    borderColor: '#1B2B40',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  statsShortcutTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '900' },
-  statsShortcutText: { color: '#94A3B8', fontSize: 10, marginTop: 4, maxWidth: '90%' },
-  statsShortcutArrow: { color: '#F472B6', fontSize: 28 },
-  sectionHeader: {
-    marginTop: 24,
-    marginBottom: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  sectionTitle: { color: '#FFFFFF', fontSize: 16, fontWeight: '900' },
-  sharedLink: { color: '#60A5FA', fontSize: 11, fontWeight: '800' },
-  emptyCard: { backgroundColor: '#111827', borderRadius: 16, padding: 20 },
-  emptyTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '800' },
-  emptyText: { color: '#64748B', fontSize: 11, marginTop: 4 },
-  list: { gap: 9 },
-  expenseRow: {
-    backgroundColor: '#111827',
-    borderRadius: 15,
-    padding: 14,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  expenseText: { flex: 1, marginRight: 10 },
-  expenseTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '800' },
-  expenseMeta: { color: '#94A3B8', fontSize: 10, marginTop: 3 },
-  expenseDate: { color: '#475569', fontSize: 9, marginTop: 2 },
-  expenseAmountWrap: { flexDirection: 'row', alignItems: 'center' },
-  expenseAmount: { color: '#CBD5E1', fontSize: 13, fontWeight: '900' },
-  expenseArrow: { color: '#64748B', fontSize: 22, marginLeft: 7 },
-  settlementRow: {
-    backgroundColor: '#111827',
-    borderRadius: 15,
-    padding: 14,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  settlementAmount: { color: '#60A5FA', fontSize: 13, fontWeight: '900' },
+  flex: { flex: 1 },
+  container: { flex: 1, backgroundColor: '#07111F' },
+  content: { padding: 18, paddingBottom: 34 },
+  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  eyebrow: { color: '#F472B6', fontSize: 10, fontWeight: '900', letterSpacing: 0.8 },
+  title: { color: '#FFFFFF', fontSize: 20, fontWeight: '900', marginTop: 3 },
+  gear: { width: 38, height: 38, borderRadius: 12, backgroundColor: '#0E1A2A', alignItems: 'center', justifyContent: 'center' },
+  gearText: { fontSize: 17 },
+  spaceSwitch: { flexDirection: 'row', backgroundColor: '#0E1A2A', padding: 4, borderRadius: 14, marginTop: 16 },
+  spacePill: { flex: 1, minHeight: 38, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
+  spacePillActive: { backgroundColor: '#D9366F' },
+  spacePillText: { color: '#64748B', fontSize: 11, fontWeight: '900' },
+  spacePillActiveText: { color: '#FFFFFF', fontSize: 11, fontWeight: '900' },
+  peopleCard: { marginTop: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 18, paddingVertical: 13 },
+  person: { alignItems: 'center' },
+  avatar: { width: 50, height: 50, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  avatarBlue: { backgroundColor: '#1677FF' },
+  avatarPink: { backgroundColor: '#D9366F' },
+  avatarText: { color: '#FFFFFF', fontSize: 18, fontWeight: '900' },
+  personName: { color: '#CBD5E1', fontSize: 10, fontWeight: '900', marginTop: 5, maxWidth: 90 },
+  heart: { color: '#F43F75', fontSize: 25 },
+  balanceCard: { backgroundColor: '#34172A', borderRadius: 22, padding: 18, borderWidth: 1, borderColor: '#5C294B' },
+  balanceLabel: { color: '#C9A8B9', fontSize: 9, fontWeight: '800' },
+  balanceTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '900', marginTop: 5 },
+  balanceAmount: { color: '#CBD5E1', fontSize: 33, fontWeight: '900', marginTop: 3 },
+  balanceGreen: { color: '#4ADE80' },
+  balanceRed: { color: '#F472B6' },
+  balanceActions: { flexDirection: 'row', gap: 8, marginTop: 14 },
+  mainAction: { flex: 1, borderRadius: 13, minHeight: 46, alignItems: 'center', justifyContent: 'center' },
+  sharedAction: { backgroundColor: '#F43F75' },
+  settleAction: { backgroundColor: '#273B5C' },
+  mainActionText: { color: '#FFFFFF', fontSize: 11, fontWeight: '900' },
+  monthCard: { backgroundColor: '#0E1A2A', borderRadius: 18, padding: 15, marginTop: 12, borderWidth: 1, borderColor: '#1B2B40' },
+  monthHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  monthLabel: { color: '#94A3B8', fontSize: 9, fontWeight: '800' },
+  monthAmount: { color: '#FFFFFF', fontSize: 22, fontWeight: '900', marginTop: 4 },
+  link: { color: '#60A5FA', fontSize: 9, fontWeight: '900' },
+  payRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
+  payCard: { flex: 1, borderRadius: 14, padding: 11, backgroundColor: '#101A29' },
+  payIcon: { fontSize: 18 },
+  payLabel: { color: '#64748B', fontSize: 8, marginTop: 5 },
+  payBlue: { color: '#60A5FA', fontSize: 13, fontWeight: '900', marginTop: 2 },
+  payPink: { color: '#F472B6', fontSize: 13, fontWeight: '900', marginTop: 2 },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 20, marginBottom: 8 },
+  sectionTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '900' },
+  emptyCard: { backgroundColor: '#0E1A2A', borderRadius: 16, padding: 20, alignItems: 'center' },
+  emptyTitle: { color: '#FFFFFF', fontSize: 13, fontWeight: '900' },
+  emptyText: { color: '#64748B', fontSize: 9, marginTop: 4 },
+  list: { gap: 8 },
+  expenseRow: { backgroundColor: '#0E1A2A', borderRadius: 15, borderWidth: 1, borderColor: '#1B2B40', overflow: 'hidden' },
+  expenseMain: { padding: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  expenseText: { flex: 1, paddingRight: 10 },
+  expenseTitle: { color: '#FFFFFF', fontSize: 12, fontWeight: '900' },
+  expenseMeta: { color: '#94A3B8', fontSize: 8, marginTop: 3 },
+  expenseDate: { color: '#475569', fontSize: 8, marginTop: 2 },
+  expenseAmount: { color: '#FFFFFF', fontSize: 12, fontWeight: '900' },
+  chatMini: { borderTopWidth: 1, borderTopColor: '#1B2B40', paddingVertical: 8, alignItems: 'center' },
+  chatMiniText: { color: '#F472B6', fontSize: 9, fontWeight: '900' },
+  shortcutRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
+  shortcut: { flex: 1, backgroundColor: '#0E1A2A', borderRadius: 14, paddingVertical: 12, alignItems: 'center', borderWidth: 1, borderColor: '#1B2B40' },
+  shortcutIcon: { fontSize: 17 },
+  shortcutText: { color: '#CBD5E1', fontSize: 8, fontWeight: '900', marginTop: 4 },
+  linkCard: { backgroundColor: '#0E1A2A', borderRadius: 18, padding: 18, marginTop: 14, borderWidth: 1, borderColor: '#1B2B40' },
+  linkCardIcon: { fontSize: 31, textAlign: 'center' },
+  linkCardTitle: { color: '#FFFFFF', fontSize: 17, fontWeight: '900', textAlign: 'center' },
+  linkCardText: { color: '#64748B', fontSize: 10, lineHeight: 15, textAlign: 'center', marginTop: 6 },
+  codeBox: { backgroundColor: '#07111F', borderRadius: 13, paddingVertical: 14, alignItems: 'center', marginTop: 15, borderWidth: 1, borderColor: '#EC4899' },
+  code: { color: '#FFFFFF', fontSize: 24, fontWeight: '900', letterSpacing: 4 },
+  primaryButton: { backgroundColor: '#1677FF', borderRadius: 13, paddingVertical: 13, alignItems: 'center', marginTop: 14 },
+  primaryText: { color: '#FFFFFF', fontSize: 11, fontWeight: '900' },
+  secondaryText: { color: '#60A5FA', fontSize: 9, fontWeight: '900', textAlign: 'center', marginTop: 12 },
+  orRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginVertical: 13 },
+  line: { flex: 1, height: 1, backgroundColor: '#1B2B40' },
+  orText: { color: '#475569', fontSize: 9 },
+  input: { backgroundColor: '#07111F', color: '#FFFFFF', borderRadius: 13, padding: 14, fontSize: 18, fontWeight: '900', letterSpacing: 3, textAlign: 'center', marginTop: 13 },
+  disabled: { opacity: 0.5 },
 });
