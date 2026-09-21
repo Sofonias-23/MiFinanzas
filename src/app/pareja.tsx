@@ -35,6 +35,7 @@ export default function ParejaScreen() {
     user,
     authLoading,
     expenses,
+    categories,
     partnerBalance,
     refreshExpenses,
     refreshSettlements,
@@ -147,6 +148,28 @@ export default function ParejaScreen() {
     [expenses]
   );
 
+  const categorySummary = useMemo(() => {
+    const totals = new Map<string, number>();
+    monthShared.forEach((expense) => {
+      totals.set(expense.category, (totals.get(expense.category) ?? 0) + expense.amount);
+    });
+
+    return [...totals.entries()]
+      .map(([slug, amount], index) => {
+        const category = categories.find((item) => item.slug === slug);
+        return {
+          slug,
+          amount,
+          icon: category?.icon ?? '📦',
+          name: category?.name ?? slug,
+          percent: monthTotal > 0 ? (amount / monthTotal) * 100 : 0,
+          color: ['#23D5D5', '#2F8CFF', '#F43F75', '#8B5CF6', '#94A3B8'][index % 5],
+        };
+      })
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 5);
+  }, [monthShared, categories, monthTotal]);
+
   const balanceAbs = Math.abs(partnerBalance);
   const balanceText =
     partnerBalance > 0.005
@@ -246,6 +269,32 @@ export default function ParejaScreen() {
                   <Text style={styles.link}>Ver estadísticas</Text>
                 </TouchableOpacity>
               </View>
+
+              {categorySummary.length > 0 ? (
+                <>
+                  <View style={styles.stackBar}>
+                    {categorySummary.map((item) => (
+                      <View
+                        key={item.slug}
+                        style={{
+                          flex: Math.max(item.percent, 4),
+                          backgroundColor: item.color,
+                        }}
+                      />
+                    ))}
+                  </View>
+                  <View style={styles.legend}>
+                    {categorySummary.slice(0, 4).map((item) => (
+                      <View key={item.slug} style={styles.legendItem}>
+                        <View style={[styles.legendDot, { backgroundColor: item.color }]} />
+                        <Text style={styles.legendText}>
+                          {item.icon} {item.name} {Math.round(item.percent)}%
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                </>
+              ) : null}
 
               <View style={styles.payRow}>
                 <View style={styles.payCard}>
@@ -436,6 +485,27 @@ const styles = StyleSheet.create({
   monthLabel: { color: '#94A3B8', fontSize: 9, fontWeight: '800' },
   monthAmount: { color: '#FFFFFF', fontSize: 22, fontWeight: '900', marginTop: 4 },
   link: { color: '#60A5FA', fontSize: 9, fontWeight: '900' },
+  stackBar: {
+    height: 10,
+    flexDirection: 'row',
+    borderRadius: 6,
+    overflow: 'hidden',
+    backgroundColor: '#16263A',
+    marginTop: 12,
+  },
+  legend: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 7,
+    marginTop: 8,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minWidth: '45%',
+  },
+  legendDot: { width: 7, height: 7, borderRadius: 4, marginRight: 5 },
+  legendText: { color: '#94A3B8', fontSize: 7.5, fontWeight: '700' },
   payRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
   payCard: { flex: 1, borderRadius: 14, padding: 11, backgroundColor: '#101A29' },
   payIcon: { fontSize: 18 },
