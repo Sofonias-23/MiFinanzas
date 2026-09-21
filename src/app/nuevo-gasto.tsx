@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppIcon } from '@/components/app-icon';
 import { PaymentBrandIcon } from '@/components/payment-brand-icon';
 import { ExpenseCategory, useFinance } from '@/context/finance-context';
+import { getProfiles } from '@/lib/avatar';
 import { categoryIconName } from '@/lib/icon-map';
 import { supabase } from '@/lib/supabase';
 
@@ -46,7 +47,8 @@ export default function NuevoGastoScreen() {
   const [categoria, setCategoria] = useState<ExpenseCategory>('');
   const [metodoPago, setMetodoPago] = useState('');
   const [payerId, setPayerId] = useState('');
-  const [partnerName, setPartnerName] = useState('Jhane');
+  const [myName, setMyName] = useState('Tú');
+  const [partnerName, setPartnerName] = useState('Tu pareja');
   const [partnerId, setPartnerId] = useState<string | null>(null);
   const [categoryModal, setCategoryModal] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -97,7 +99,16 @@ export default function NuevoGastoScreen() {
       return;
     }
 
-    setPartnerName(status.partner_name || 'Jhane');
+    const ownProfiles = await getProfiles([user.id]);
+    const ownProfile = ownProfiles.find((item) => item.id === user.id);
+    setMyName(
+      ownProfile?.display_name?.trim() ||
+        user.user_metadata?.display_name?.trim() ||
+        user.email?.split('@')[0] ||
+        'Tú'
+    );
+
+    setPartnerName(status.partner_name || 'Tu pareja');
 
     const { data: member } = await supabase
       .from('household_members')
@@ -108,6 +119,14 @@ export default function NuevoGastoScreen() {
       .maybeSingle();
 
     setPartnerId(member?.user_id ?? null);
+
+    if (member?.user_id) {
+      const partnerProfiles = await getProfiles([member.user_id]);
+      const partnerProfile = partnerProfiles.find((item) => item.id === member.user_id);
+      if (partnerProfile?.display_name?.trim()) {
+        setPartnerName(partnerProfile.display_name.trim());
+      }
+    }
   }, [user]);
 
   useFocusEffect(
@@ -305,7 +324,7 @@ export default function NuevoGastoScreen() {
                 <View style={[styles.payerAvatar, styles.avatarBlue]}>
                   <AppIcon name="profile" size={18} color="#FFFFFF" />
                 </View>
-                <Text style={styles.payerName}>Sofonías</Text>
+                <Text style={styles.payerName}>{myName}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
