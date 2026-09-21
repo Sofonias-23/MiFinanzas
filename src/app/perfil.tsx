@@ -1,3 +1,4 @@
+import * as ImagePicker from 'expo-image-picker';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
@@ -11,7 +12,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BottomNav } from '@/components/bottom-nav';
+import { ProfileAvatar } from '@/components/profile-avatar';
 import { useFinance } from '@/context/finance-context';
+import { getAvatarUrl, uploadAvatar } from '@/lib/avatar';
 import { supabase } from '@/lib/supabase';
 
 type PartnerStatus = {
@@ -27,6 +30,7 @@ type ProfilePreferences = {
   currency: string;
   budget_alerts_enabled: boolean;
   partner_activity_enabled: boolean;
+  avatar_path: string | null;
 };
 
 export default function PerfilScreen() {
@@ -40,6 +44,8 @@ export default function PerfilScreen() {
   const [partnerStatus, setPartnerStatus] = useState<PartnerStatus | null>(null);
   const [preferences, setPreferences] = useState<ProfilePreferences | null>(null);
   const [resetting, setResetting] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarBusy, setAvatarBusy] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) router.replace('/login');
@@ -52,7 +58,7 @@ export default function PerfilScreen() {
       supabase.rpc('get_partner_status'),
       supabase
         .from('profiles')
-        .select('display_name, currency, budget_alerts_enabled, partner_activity_enabled')
+        .select('display_name, currency, budget_alerts_enabled, partner_activity_enabled, avatar_path')
         .eq('id', user.id)
         .single(),
     ]);
@@ -62,7 +68,9 @@ export default function PerfilScreen() {
     }
 
     if (!profileResult.error) {
-      setPreferences(profileResult.data as ProfilePreferences);
+      const next = profileResult.data as ProfilePreferences;
+      setPreferences(next);
+      setAvatarUrl(await getAvatarUrl(next.avatar_path));
     }
   }, [user]);
 
@@ -81,6 +89,79 @@ export default function PerfilScreen() {
     'Usuario';
 
   const linked = (partnerStatus?.member_count ?? 0) >= 2;
+
+  const pickAvatar = async (source: 'library' | 'camera') => {
+    if (!user) return;
+
+    try {
+      setAvatarBusy(true);
+
+      if (source === 'library') {
+        const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (!permission.granted) {
+          Alert.alert(
+            'Permiso necesario',
+            'Activa el acceso a Fotos para elegir una imagen de perfil.'
+          );
+          return;
+        }
+      } else {
+        const permission = await ImagePicker.requestCameraPermissionsAsync();
+        if (!permission.granted) {
+          Alert.alert(
+            'Permiso necesario',
+            'Activa el acceso a la cámara para tomar una foto.'
+          );
+          return;
+        }
+      }
+
+      const result =
+        source === 'library'
+          ? await ImagePicker.launchImageLibraryAsync({
+              mediaTypes: ['images'],
+              allowsEditing: true,
+              aspect: [1, 1],
+              quality: 0.8,
+            })
+          : await ImagePicker.launchCameraAsync({
+              mediaTypes: ['images'],
+              allowsEditing: true,
+              aspect: [1, 1],
+              quality: 0.8,
+            });
+
+      if (result.canceled || !result.assets[0]) return;
+
+      const asset = result.assets[0];
+      const path = await uploadAvatar({
+        userId: user.id,
+        uri: asset.uri,
+        mimeType: asset.mimeType,
+        previousPath: preferences?.avatar_path,
+      });
+
+      setPreferences((current) =>
+        current ? { ...current, avatar_path: path } : current
+      );
+      setAvatarUrl(await getAvatarUrl(path));
+    } catch (error: any) {
+      Alert.alert(
+        'No se pudo actualizar la foto',
+        error?.message ?? 'Inténtalo nuevamente.'
+      );
+    } finally {
+      setAvatarBusy(false);
+    }
+  };
+
+  const changeAvatar = () => {
+    Alert.alert('Foto de perfil', 'Elige cómo quieres actualizarla.', [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Tomar foto', onPress: () => pickAvatar('camera') },
+      { text: 'Elegir de Fotos', onPress: () => pickAvatar('library') },
+    ]);
+  };
 
   const handleReset = () => {
     Alert.alert(
@@ -151,19 +232,25 @@ export default function PerfilScreen() {
         <TouchableOpacity
           activeOpacity={0.86}
           style={styles.profileCard}
-          onPress={() => router.push('/ajustes')}
+          onPress={changeAvatar}
+          disabled={avatarBusy}
         >
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {displayName.slice(0, 1).toUpperCase()}
-            </Text>
+          <View style={styles.avatarWrap}>
+            <ProfileAvatar
+              uri={avatarUrl}
+              size={58}
+              color="#1677FF"
+            />
+            <View style={styles.cameraBadge}>
+              <Text style={styles.cameraBadgeText}>＋</Text>
+            </View>
           </View>
 
           <View style={styles.profileText}>
             <Text style={styles.name}>{displayName}</Text>
             <Text style={styles.email}>{user.email}</Text>
             <Text style={styles.profileMeta}>
-              {preferences?.currency ?? 'PEN'} · Editar cuenta
+              {avatarBusy ? 'Actualizando foto...' : 'Toca la foto para cambiarla'}
             </Text>
           </View>
 
@@ -329,16 +416,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  avatar: {
-    width: 55,
-    height: 55,
-    borderRadius: 18,
-    backgroundColor: '#1677FF',
+  avatarWrap: {
+    marginRight: 13,
+    position: 'relative',
+  },
+  cameraBadge: {
+    position: 'absolute',
+    right: -2,
+    bottom: -2,
+    width: 21,
+    height: 21,
+    borderRadius: 11,
+    backgroundColor: '#23A7FF',
+    borderWidth: 2,
+    borderColor: '#102B55',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 13,
   },
-  avatarText: { color: '#FFFFFF', fontSize: 22, fontWeight: '900' },
+  cameraBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '900',
+    lineHeight: 15,
+  },
   profileText: { flex: 1 },
   name: { color: '#FFFFFF', fontSize: 17, fontWeight: '900' },
   email: { color: '#94A3B8', fontSize: 10, marginTop: 3 },
