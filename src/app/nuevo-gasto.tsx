@@ -15,8 +15,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppIcon } from '@/components/app-icon';
+import { PaymentBrandIcon } from '@/components/payment-brand-icon';
 import { ExpenseCategory, useFinance } from '@/context/finance-context';
-import { categoryIconName, paymentIconName } from '@/lib/icon-map';
+import { categoryIconName } from '@/lib/icon-map';
 import { supabase } from '@/lib/supabase';
 
 type PartnerStatus = {
@@ -122,12 +123,12 @@ export default function NuevoGastoScreen() {
   const selectedCategory = categories.find((item) => item.slug === categoria);
 
   const visiblePaymentMethods = useMemo(() => {
-    const preferred = ['efectivo', 'debito', 'credito', 'transferencia'];
+    const preferred = ['yape', 'plin', 'efectivo', 'debito', 'credito', 'transferencia'];
     const ordered = preferred
       .map((slug) => paymentMethods.find((item) => item.slug === slug))
       .filter(Boolean) as typeof paymentMethods;
 
-    return ordered.length >= 4 ? ordered.slice(0, 4) : paymentMethods.slice(0, 4);
+    return ordered.length >= 6 ? ordered.slice(0, 6) : paymentMethods.slice(0, 6);
   }, [paymentMethods]);
 
   const amount = Number(monto.replace(',', '.'));
@@ -271,13 +272,11 @@ export default function NuevoGastoScreen() {
                       style={[styles.paymentItem, active && styles.paymentItemActive]}
                       onPress={() => setMetodoPago(item.slug)}
                     >
-                      <View style={[styles.paymentIconBox, active && styles.paymentIconBoxActive]}>
-                        <AppIcon
-                          name={paymentIconName(item.slug)}
-                          size={20}
-                          color={active ? '#23A7FF' : '#CBD5E1'}
-                        />
-                      </View>
+                      <PaymentBrandIcon
+                        slug={item.slug}
+                        size={46}
+                        selected={active}
+                      />
                       <Text
                         style={[
                           styles.paymentLabel,
@@ -517,23 +516,8 @@ const styles = StyleSheet.create({
   },
   selectText: { color: '#FFFFFF', fontSize: 11, fontWeight: '900' },
   chevron: { color: '#94A3B8', fontSize: 23 },
-  paymentRow: { flexDirection: 'row', gap: 7 },
-  paymentItem: { flex: 1, alignItems: 'center' },
-  paymentIconBox: {
-    width: 48,
-    height: 42,
-    borderRadius: 11,
-    backgroundColor: '#0E1A2A',
-    borderWidth: 1,
-    borderColor: '#24415F',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  paymentIconBoxActive: {
-    backgroundColor: '#12345F',
-    borderColor: '#23A7FF',
-    borderWidth: 2,
-  },
+  paymentRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
+  paymentItem: { width: '31.5%', alignItems: 'center' },
   paymentItemActive: {},
   paymentLabel: {
     color: '#64748B',
