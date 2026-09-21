@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppIcon } from '@/components/app-icon';
 import { useFinance } from '@/context/finance-context';
 
 export default function HomeScreen() {
@@ -65,7 +66,7 @@ export default function HomeScreen() {
         ]}
       >
         <View style={styles.logo}>
-          <Text style={styles.logoIcon}>▥</Text>
+          <AppIcon name="stats" size={31} color="#FFFFFF" />
         </View>
 
         <Text style={styles.brand}>MiFinanzas</Text>
@@ -80,7 +81,7 @@ export default function HomeScreen() {
           onPress={() => router.push('/mi-dinero')}
         >
           <View style={[styles.iconCircle, styles.iconBlue]}>
-            <Text style={styles.spaceIcon}>👤</Text>
+            <AppIcon name="profile" size={30} color="#FFFFFF" />
           </View>
           <View style={styles.cardText}>
             <Text style={styles.spaceTitle}>Mi dinero</Text>
@@ -95,7 +96,7 @@ export default function HomeScreen() {
           onPress={() => router.push('/pareja')}
         >
           <View style={[styles.iconCircle, styles.iconPink]}>
-            <Text style={styles.spaceIcon}>♥</Text>
+            <AppIcon name="heart" size={30} color="#FFFFFF" />
           </View>
           <View style={styles.cardText}>
             <Text style={styles.spaceTitle}>Pareja</Text>
@@ -105,7 +106,7 @@ export default function HomeScreen() {
         </TouchableOpacity>
 
         <View style={styles.privacy}>
-          <Text style={styles.privacyIcon}>🔒</Text>
+          <AppIcon name="lock" size={17} color="#60A5FA" />
           <Text style={styles.privacyText}>
             Tus finanzas personales siguen privadas aunque uses el espacio de pareja.
           </Text>
@@ -113,11 +114,11 @@ export default function HomeScreen() {
 
         <View style={styles.promiseRow}>
           <View style={styles.promiseItem}>
-            <Text style={styles.promiseIcon}>⚡</Text>
+            <AppIcon name="bolt" size={16} color="#23A7FF" />
             <Text style={styles.promiseText}>Simple y rápido</Text>
           </View>
           <View style={styles.promiseItem}>
-            <Text style={styles.promiseIcon}>👥</Text>
+            <AppIcon name="people" size={16} color="#F43F75" />
             <Text style={styles.promiseText}>Todo en un lugar</Text>
           </View>
         </View>
@@ -210,7 +211,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 18,
   },
-  logoIcon: { color: '#FFFFFF', fontSize: 30, fontWeight: '900' },
   brand: {
     color: '#FFFFFF',
     fontSize: 31,
@@ -258,7 +258,6 @@ const styles = StyleSheet.create({
   },
   iconBlue: { backgroundColor: '#1677FF' },
   iconPink: { backgroundColor: '#D9366F' },
-  spaceIcon: { color: '#FFFFFF', fontSize: 27 },
   cardText: { flex: 1, marginLeft: 13 },
   spaceTitle: { color: '#FFFFFF', fontSize: 18, fontWeight: '900' },
   spaceSubtitle: { color: '#94A3B8', fontSize: 9, lineHeight: 14, marginTop: 4 },
@@ -273,7 +272,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#1B2B40',
   },
-  privacyIcon: { fontSize: 16 },
   privacyText: { color: '#64748B', fontSize: 8, lineHeight: 13, marginLeft: 8, flex: 1 },
   promiseRow: {
     marginTop: 10,
@@ -290,7 +288,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  promiseIcon: { fontSize: 14 },
   promiseText: { color: '#94A3B8', fontSize: 7.5, fontWeight: '800', marginTop: 3 },
   footer: {
     color: '#64748B',
