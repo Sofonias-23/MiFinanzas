@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppIcon } from '@/components/app-icon';
 import { BottomNav } from '@/components/bottom-nav';
 import { useFinance } from '@/context/finance-context';
+import { categoryIconName } from '@/lib/icon-map';
 import { supabase } from '@/lib/supabase';
 
 type BudgetRow = {
@@ -129,7 +130,7 @@ export default function MiDineroScreen() {
         description: expense.description,
         amount: expense.amount,
         createdAt: expense.createdAt,
-        icon: category?.icon ?? '🧾',
+        icon: categoryIconName(expense.category),
         meta: payment?.name ?? expense.paymentMethod,
       };
     });
@@ -141,7 +142,7 @@ export default function MiDineroScreen() {
       description: income.description,
       amount: income.amount,
       createdAt: income.createdAt,
-      icon: '💰',
+      icon: 'income' as const,
       meta: 'Ingreso',
     }));
 
@@ -274,7 +275,11 @@ export default function MiDineroScreen() {
               >
                 <View style={styles.rowLeft}>
                   <View style={styles.iconBox}>
-                    <Text style={styles.icon}>{movement.icon}</Text>
+                    <AppIcon
+                      name={movement.icon}
+                      size={18}
+                      color={movement.kind === 'income' ? '#4ADE80' : '#23A7FF'}
+                    />
                   </View>
                   <View style={styles.rowText}>
                     <Text style={styles.rowTitle} numberOfLines={1}>{movement.description}</Text>
@@ -366,7 +371,6 @@ const styles = StyleSheet.create({
   row: { backgroundColor: '#0E1A2A', borderRadius: 14, padding: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   rowLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
   iconBox: { width: 39, height: 39, borderRadius: 12, backgroundColor: '#16263A', alignItems: 'center', justifyContent: 'center', marginRight: 10 },
-  icon: { fontSize: 18 },
   rowText: { flex: 1 },
   rowTitle: { color: '#FFFFFF', fontSize: 12, fontWeight: '900' },
   rowMeta: { color: '#64748B', fontSize: 8, marginTop: 3 },
