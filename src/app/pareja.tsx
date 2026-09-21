@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppIcon } from '@/components/app-icon';
 import { BottomNav } from '@/components/bottom-nav';
 import { useFinance } from '@/context/finance-context';
 import { supabase } from '@/lib/supabase';
@@ -189,22 +190,18 @@ export default function ParejaScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.topRow}>
-          <View>
-            <Text style={styles.eyebrow}>🩷 PAREJA</Text>
-            <Text style={styles.title}>Juntos, pero claro</Text>
+          <View style={styles.headerLeft}>
+            <View style={styles.headerIcon}>
+              <AppIcon name="heart" size={18} color="#FFFFFF" />
+            </View>
+            <View>
+              <Text style={styles.headerTitle}>Pareja</Text>
+              <Text style={styles.headerSub}>Finanzas compartidas</Text>
+            </View>
           </View>
           <TouchableOpacity style={styles.gear} onPress={() => router.push('/perfil')}>
-            <Text style={styles.gearText}>⚙️</Text>
+            <AppIcon name="settings" size={20} color="#CBD5E1" />
           </TouchableOpacity>
-        </View>
-
-        <View style={styles.spaceSwitch}>
-          <TouchableOpacity style={styles.spacePill} onPress={() => router.replace('/mi-dinero')}>
-            <Text style={styles.spacePillText}>Mi dinero</Text>
-          </TouchableOpacity>
-          <View style={[styles.spacePill, styles.spacePillActive]}>
-            <Text style={styles.spacePillActiveText}>Pareja</Text>
-          </View>
         </View>
 
         {linked ? (
@@ -212,51 +209,76 @@ export default function ParejaScreen() {
             <View style={styles.peopleCard}>
               <View style={styles.person}>
                 <View style={[styles.avatar, styles.avatarBlue]}>
-                  <Text style={styles.avatarText}>{myName.slice(0, 1).toUpperCase()}</Text>
+                  <AppIcon name="profile" size={24} color="#FFFFFF" />
                 </View>
                 <Text style={styles.personName}>{myName}</Text>
               </View>
-              <Text style={styles.heart}>♥</Text>
+              <AppIcon name="heart" size={20} color="#F43F75" />
               <View style={styles.person}>
                 <View style={[styles.avatar, styles.avatarPink]}>
-                  <Text style={styles.avatarText}>{partnerName.slice(0, 1).toUpperCase()}</Text>
+                  <AppIcon name="profile" size={24} color="#FFFFFF" />
                 </View>
                 <Text style={styles.personName}>{partnerName}</Text>
               </View>
             </View>
 
-            <View style={styles.balanceCard}>
-              <Text style={styles.balanceLabel}>Balance actual</Text>
-              <Text style={styles.balanceTitle}>{balanceText}</Text>
-              <Text
-                style={[
-                  styles.balanceAmount,
-                  partnerBalance > 0.005 && styles.balanceGreen,
-                  partnerBalance < -0.005 && styles.balanceRed,
-                ]}
-              >
-                S/ {balanceAbs.toFixed(2)}
-              </Text>
-
-              <View style={styles.balanceActions}>
-                <TouchableOpacity
-                  style={[styles.mainAction, styles.sharedAction]}
-                  onPress={() => router.push('/nuevo-gasto?type=compartido' as any)}
-                >
-                  <Text style={styles.mainActionText}>＋ Compartido</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.mainAction, styles.settleAction]}
-                  onPress={() =>
-                    balanceAbs >= 0.01
-                      ? router.push('/saldar-deuda')
-                      : router.push('/deudas')
-                  }
-                >
-                  <Text style={styles.mainActionText}>▣ {balanceAbs >= 0.01 ? 'Saldar' : 'Historial'}</Text>
-                </TouchableOpacity>
+            <View style={styles.sharedBalanceCard}>
+              <View>
+                <Text style={styles.sharedBalanceLabel}>Balance compartido</Text>
+                <Text style={styles.sharedBalanceAmount}>S/ {monthTotal.toFixed(2)}</Text>
               </View>
+              <AppIcon name="people" size={21} color="#23A7FF" />
+            </View>
+
+            <TouchableOpacity
+              style={styles.debtCard}
+              activeOpacity={0.85}
+              onPress={() =>
+                balanceAbs >= 0.01 ? router.push('/saldar-deuda') : router.push('/deudas')
+              }
+            >
+              <View>
+                <Text style={styles.debtTitle}>{balanceText}</Text>
+                <Text style={styles.debtAmount}>S/ {balanceAbs.toFixed(2)}</Text>
+                <Text style={styles.debtSub}>
+                  {partnerBalance < -0.005
+                    ? `a ${partnerName}`
+                    : partnerBalance > 0.005
+                    ? 'a tu favor'
+                    : 'Sin pagos pendientes'}
+                </Text>
+              </View>
+              <Text style={styles.debtArrow}>›</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.newSharedButton}
+              onPress={() => router.push('/nuevo-gasto?type=compartido' as any)}
+            >
+              <AppIcon name="add" size={18} color="#FFFFFF" />
+              <Text style={styles.newSharedText}>Nuevo gasto</Text>
+            </TouchableOpacity>
+
+            <View style={styles.actionRow}>
+              <TouchableOpacity
+                style={styles.actionTile}
+                onPress={() =>
+                  balanceAbs >= 0.01 ? router.push('/saldar-deuda') : router.push('/deudas')
+                }
+              >
+                <AppIcon name="settle" size={22} color="#CBD5E1" />
+                <Text style={styles.actionTileText}>Liquidar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.actionTile}
+                onPress={() => {
+                  const first = recentShared[0];
+                  if (first) router.push(`/chat-gasto?id=${first.id}` as any);
+                }}
+              >
+                <AppIcon name="chat" size={22} color="#CBD5E1" />
+                <Text style={styles.actionTileText}>Chat</Text>
+              </TouchableOpacity>
             </View>
 
             <View style={styles.monthCard}>
@@ -442,7 +464,7 @@ export default function ParejaScreen() {
         )}
       </ScrollView>
 
-      <BottomNav active="inicio" />
+      <BottomNav active="inicio" mode="pareja" />
     </SafeAreaView>
   );
 }
@@ -452,34 +474,73 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#07111F' },
   content: { padding: 18, paddingBottom: 34 },
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  eyebrow: { color: '#F472B6', fontSize: 10, fontWeight: '900', letterSpacing: 0.8 },
-  title: { color: '#FFFFFF', fontSize: 20, fontWeight: '900', marginTop: 3 },
-  gear: { width: 38, height: 38, borderRadius: 12, backgroundColor: '#0E1A2A', alignItems: 'center', justifyContent: 'center' },
-  gearText: { fontSize: 17 },
-  spaceSwitch: { flexDirection: 'row', backgroundColor: '#0E1A2A', padding: 4, borderRadius: 14, marginTop: 16 },
-  spacePill: { flex: 1, minHeight: 38, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
-  spacePillActive: { backgroundColor: '#D9366F' },
-  spacePillText: { color: '#64748B', fontSize: 11, fontWeight: '900' },
-  spacePillActiveText: { color: '#FFFFFF', fontSize: 11, fontWeight: '900' },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  headerIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 11,
+    backgroundColor: '#F43F75',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '900' },
+  headerSub: { color: '#64748B', fontSize: 8, marginTop: 2 },
+  gear: { width: 36, height: 36, borderRadius: 11, backgroundColor: '#0E1A2A', alignItems: 'center', justifyContent: 'center' },
   peopleCard: { marginTop: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 18, paddingVertical: 13 },
   person: { alignItems: 'center' },
   avatar: { width: 50, height: 50, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   avatarBlue: { backgroundColor: '#1677FF' },
   avatarPink: { backgroundColor: '#D9366F' },
-  avatarText: { color: '#FFFFFF', fontSize: 18, fontWeight: '900' },
   personName: { color: '#CBD5E1', fontSize: 10, fontWeight: '900', marginTop: 5, maxWidth: 90 },
-  heart: { color: '#F43F75', fontSize: 25 },
-  balanceCard: { backgroundColor: '#34172A', borderRadius: 22, padding: 18, borderWidth: 1, borderColor: '#5C294B' },
-  balanceLabel: { color: '#C9A8B9', fontSize: 9, fontWeight: '800' },
-  balanceTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '900', marginTop: 5 },
-  balanceAmount: { color: '#CBD5E1', fontSize: 33, fontWeight: '900', marginTop: 3 },
-  balanceGreen: { color: '#4ADE80' },
-  balanceRed: { color: '#F472B6' },
-  balanceActions: { flexDirection: 'row', gap: 8, marginTop: 14 },
-  mainAction: { flex: 1, borderRadius: 13, minHeight: 46, alignItems: 'center', justifyContent: 'center' },
-  sharedAction: { backgroundColor: '#F43F75' },
-  settleAction: { backgroundColor: '#273B5C' },
-  mainActionText: { color: '#FFFFFF', fontSize: 11, fontWeight: '900' },
+  sharedBalanceCard: {
+    backgroundColor: '#0E1A2A',
+    borderRadius: 17,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#1B2B40',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  sharedBalanceLabel: { color: '#94A3B8', fontSize: 8, fontWeight: '800' },
+  sharedBalanceAmount: { color: '#FFFFFF', fontSize: 24, fontWeight: '900', marginTop: 3 },
+  debtCard: {
+    marginTop: 8,
+    backgroundColor: '#A82E5F',
+    borderRadius: 15,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  debtTitle: { color: '#FFE2EC', fontSize: 9, fontWeight: '900' },
+  debtAmount: { color: '#FFFFFF', fontSize: 18, fontWeight: '900', marginTop: 1 },
+  debtSub: { color: '#FBCFE8', fontSize: 8, marginTop: 1 },
+  debtArrow: { color: '#FFFFFF', fontSize: 26 },
+  newSharedButton: {
+    marginTop: 10,
+    minHeight: 46,
+    borderRadius: 14,
+    backgroundColor: '#F43F75',
+    flexDirection: 'row',
+    gap: 7,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  newSharedText: { color: '#FFFFFF', fontSize: 11, fontWeight: '900' },
+  actionRow: { flexDirection: 'row', gap: 8, marginTop: 8 },
+  actionTile: {
+    flex: 1,
+    minHeight: 58,
+    backgroundColor: '#0E1A2A',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#1B2B40',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionTileText: { color: '#CBD5E1', fontSize: 9, fontWeight: '900', marginTop: 4 },
   monthCard: { backgroundColor: '#0E1A2A', borderRadius: 18, padding: 15, marginTop: 12, borderWidth: 1, borderColor: '#1B2B40' },
   monthHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   monthLabel: { color: '#94A3B8', fontSize: 9, fontWeight: '800' },
