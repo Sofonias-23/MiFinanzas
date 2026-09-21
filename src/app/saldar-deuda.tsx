@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppIcon } from '@/components/app-icon';
+import { PaymentBrandIcon } from '@/components/payment-brand-icon';
 import { useFinance } from '@/context/finance-context';
 import { supabase } from '@/lib/supabase';
 
@@ -229,18 +230,10 @@ export default function SaldarDeudaScreen() {
                         style={[styles.method, active && styles.methodActive]}
                         onPress={() => setMethod(item.slug)}
                       >
-                        <AppIcon
-                          name={
-                            item.slug === 'efectivo'
-                              ? 'cash'
-                              : item.slug === 'transferencia'
-                              ? 'bank'
-                              : item.slug === 'debito' || item.slug === 'credito'
-                              ? 'card'
-                              : 'wallet'
-                          }
-                          size={18}
-                          color={active ? '#23A7FF' : '#CBD5E1'}
+                        <PaymentBrandIcon
+                          slug={item.slug}
+                          size={34}
+                          selected={active}
                         />
                         <Text style={[styles.methodText, active && styles.methodTextActive]}>
                           {item.name}
