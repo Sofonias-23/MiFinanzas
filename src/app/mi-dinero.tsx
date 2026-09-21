@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppIcon } from '@/components/app-icon';
 import { BottomNav } from '@/components/bottom-nav';
 import { useFinance } from '@/context/finance-context';
 import { supabase } from '@/lib/supabase';
@@ -169,29 +170,25 @@ export default function MiDineroScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.topRow}>
-          <View>
-            <Text style={styles.eyebrow}>👤 MI DINERO</Text>
-            <Text style={styles.hello}>Hola, {displayName}</Text>
+          <View style={styles.headerLeft}>
+            <View style={styles.headerIcon}>
+              <AppIcon name="profile" size={18} color="#FFFFFF" />
+            </View>
+            <View>
+              <Text style={styles.headerTitle}>Mi dinero</Text>
+              <Text style={styles.hello}>Hola, {displayName}</Text>
+            </View>
           </View>
           <TouchableOpacity style={styles.gear} onPress={() => router.push('/perfil')}>
-            <Text style={styles.gearText}>⚙️</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.spaceSwitch}>
-          <View style={[styles.spacePill, styles.spacePillActive]}>
-            <Text style={styles.spacePillActiveText}>Mi dinero</Text>
-          </View>
-          <TouchableOpacity
-            style={styles.spacePill}
-            onPress={() => router.replace('/pareja')}
-          >
-            <Text style={styles.spacePillText}>Pareja</Text>
+            <AppIcon name="settings" size={20} color="#CBD5E1" />
           </TouchableOpacity>
         </View>
 
         <View style={styles.balanceCard}>
-          <Text style={styles.cardLabel}>Tu saldo este mes</Text>
+          <View style={styles.balanceTop}>
+            <Text style={styles.cardLabel}>Saldo actual</Text>
+            <AppIcon name="eye" size={17} color="#94A3B8" />
+          </View>
           <Text style={styles.balance}>S/ {balance.toFixed(2)}</Text>
           <View style={styles.metricsRow}>
             <View>
@@ -210,7 +207,7 @@ export default function MiDineroScreen() {
             style={[styles.quickCard, styles.quickExpense]}
             onPress={() => router.push('/nuevo-gasto')}
           >
-            <Text style={styles.quickIcon}>＋</Text>
+            <AppIcon name="add" size={17} color="#FFFFFF" />
             <Text style={styles.quickText}>Gasto</Text>
           </TouchableOpacity>
 
@@ -218,16 +215,8 @@ export default function MiDineroScreen() {
             style={[styles.quickCard, styles.quickIncome]}
             onPress={() => router.push('/nuevo-ingreso')}
           >
-            <Text style={styles.quickIcon}>＋</Text>
+            <AppIcon name="add" size={17} color="#FFFFFF" />
             <Text style={styles.quickText}>Ingreso</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.quickCard, styles.quickShared]}
-            onPress={() => router.push('/nuevo-gasto?type=compartido' as any)}
-          >
-            <Text style={styles.quickIcon}>👥</Text>
-            <Text style={styles.quickText}>Compartido</Text>
           </TouchableOpacity>
         </View>
 
@@ -315,7 +304,7 @@ export default function MiDineroScreen() {
         </TouchableOpacity>
       </ScrollView>
 
-      <BottomNav active="inicio" />
+      <BottomNav active="inicio" mode="personal" />
     </SafeAreaView>
   );
 }
@@ -326,16 +315,20 @@ const styles = StyleSheet.create({
   loading: { flex: 1, backgroundColor: '#07111F', alignItems: 'center', justifyContent: 'center' },
   content: { padding: 18, paddingBottom: 34 },
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  eyebrow: { color: '#60A5FA', fontSize: 10, fontWeight: '900', letterSpacing: 0.8 },
-  hello: { color: '#FFFFFF', fontSize: 20, fontWeight: '900', marginTop: 3 },
-  gear: { width: 38, height: 38, borderRadius: 12, backgroundColor: '#0E1A2A', alignItems: 'center', justifyContent: 'center' },
-  gearText: { fontSize: 17 },
-  spaceSwitch: { flexDirection: 'row', backgroundColor: '#0E1A2A', padding: 4, borderRadius: 14, marginTop: 16 },
-  spacePill: { flex: 1, minHeight: 38, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
-  spacePillActive: { backgroundColor: '#1677FF' },
-  spacePillText: { color: '#64748B', fontSize: 11, fontWeight: '900' },
-  spacePillActiveText: { color: '#FFFFFF', fontSize: 11, fontWeight: '900' },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  headerIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 11,
+    backgroundColor: '#1677FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '900' },
+  hello: { color: '#94A3B8', fontSize: 9, marginTop: 2 },
+  gear: { width: 36, height: 36, borderRadius: 11, backgroundColor: '#0E1A2A', alignItems: 'center', justifyContent: 'center' },
   balanceCard: { backgroundColor: '#102B55', borderRadius: 22, padding: 19, marginTop: 14, borderWidth: 1, borderColor: '#1E4E91' },
+  balanceTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   cardLabel: { color: '#94A3B8', fontSize: 10, fontWeight: '800' },
   balance: { color: '#FFFFFF', fontSize: 35, fontWeight: '900', marginTop: 5 },
   metricsRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 15, paddingTop: 13, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)' },
@@ -344,12 +337,18 @@ const styles = StyleSheet.create({
   income: { color: '#4ADE80', fontSize: 13, fontWeight: '900', marginTop: 3 },
   expense: { color: '#F87171', fontSize: 13, fontWeight: '900', marginTop: 3 },
   quickRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
-  quickCard: { flex: 1, minHeight: 74, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
-  quickExpense: { backgroundColor: '#EF3F72' },
-  quickIncome: { backgroundColor: '#13A879' },
-  quickShared: { backgroundColor: '#273B5C' },
-  quickIcon: { color: '#FFFFFF', fontSize: 23, fontWeight: '900' },
-  quickText: { color: '#FFFFFF', fontSize: 10, fontWeight: '900', marginTop: 4 },
+  quickCard: {
+    flex: 1,
+    minHeight: 45,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 6,
+  },
+  quickExpense: { backgroundColor: '#1677FF' },
+  quickIncome: { backgroundColor: '#253A5A' },
+  quickText: { color: '#FFFFFF', fontSize: 10, fontWeight: '900' },
   budgetCard: { backgroundColor: '#0E1A2A', borderRadius: 17, padding: 15, marginTop: 12, borderWidth: 1, borderColor: '#1B2B40' },
   budgetHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   sectionMini: { color: '#94A3B8', fontSize: 9, fontWeight: '800' },
