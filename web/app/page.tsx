@@ -83,6 +83,7 @@ const scenes = [
 export default function HomePage() {
   const [activeDemo, setActiveDemo] = useState<number | null>(null);
   const [demoStep, setDemoStep] = useState(0);
+  const [showcaseStep, setShowcaseStep] = useState(0);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -192,6 +193,14 @@ export default function HomePage() {
 
     return () => window.clearInterval(timer);
   }, [activeDemo]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setShowcaseStep((current) => (current + 1) % 4);
+    }, 1800);
+
+    return () => window.clearInterval(timer);
+  }, []);
 
   return (
     <main className="publicHome">
@@ -382,82 +391,166 @@ export default function HomePage() {
         <div className="kineticShowcaseTop">
           <div>
             <p className="eyebrow">KINETIC INTERACTION DESIGN</p>
-            <h2>Explora MiFinanzas moviendo, tocando y recorriendo cada escena.</h2>
+            <h2>Las funciones se muestran solas, como pequeños videos en movimiento.</h2>
           </div>
-          <span>MOVE · CLICK · SCROLL</span>
+          <span>MOVE · HOVER · SCROLL · LIVE</span>
         </div>
 
-        <div className="kineticShowcaseTrack">
-          <button
-            type="button"
-            className="kineticShowcaseCard showcaseCardOne kineticSurface"
-            onClick={() => setActiveDemo(0)}
-          >
-            <div className="kineticPoster posterBlue">
-              <span className="posterCode">PR.01</span>
-              <div className="posterAppPanel">
-                <small>Saldo disponible</small>
-                <strong>S/ 1,240</strong>
-                <div className="posterMiniChart">
-                  <i /><i /><i /><i /><i />
-                </div>
-                <span className="posterChip">+ S/240</span>
+        <div className="kineticShowcaseScenes">
+          <article className="kineticScene kineticScenePersonal">
+            <div className="kineticScenePoster kineticSurface">
+              <div className="liveDemoTopline">
+                <span className="livePulse" />
+                <small>DEMO EN VIVO · MI DINERO</small>
+                <b>01 / 03</b>
               </div>
-              <div className="posterMeta">
-                <b>Mi dinero</b>
-                <small>Registro y control personal</small>
-              </div>
-            </div>
-            <span className="kineticShowcasePill">01 · TOCA PARA VER LA DEMO</span>
-          </button>
 
-          <button
-            type="button"
-            className="kineticShowcaseCard showcaseCardTwo kineticSurface"
-            onClick={() => setActiveDemo(2)}
-          >
-            <div className="kineticPoster posterPink">
-              <span className="posterCode">PR.02</span>
-              <div className="posterCouplePanel">
-                <div><span>$</span><small>Tú</small></div>
-                <b>50 / 50</b>
-                <div><span>S/</span><small>Pareja</small></div>
-              </div>
-              <div className="posterTransferLine">
-                <i />
-                <span>S/ 120 → S/ 60 + S/ 60</span>
-              </div>
-              <div className="posterMeta">
-                <b>Pareja</b>
-                <small>División y balance automático</small>
-              </div>
-            </div>
-            <span className="kineticShowcasePill">02 · TOCA PARA VER LA DEMO</span>
-          </button>
-
-          <button
-            type="button"
-            className="kineticShowcaseCard showcaseCardThree kineticSurface"
-            onClick={() => setActiveDemo(3)}
-          >
-            <div className="kineticPoster posterCyan">
-              <span className="posterCode">PR.03</span>
-              <div className="posterAnalyticsPanel">
-                <span className="posterPercent">+12%</span>
-                <div className="posterAnalyticsBars">
-                  <i /><i /><i /><i /><i />
+              <div className="livePersonalFrame">
+                <div className="liveBalanceBlock">
+                  <span>Saldo disponible</span>
+                  <strong>
+                    {showcaseStep === 0 ? 'S/ 1,240' : showcaseStep === 1 ? 'S/ 1,154' : showcaseStep === 2 ? 'S/ 1,136' : 'S/ 1,136'}
+                  </strong>
+                  <small>{showcaseStep === 3 ? 'Actualizado hace un instante' : 'Septiembre'}</small>
                 </div>
-                <svg viewBox="0 0 260 110" role="presentation">
-                  <polyline points="5,95 50,78 94,82 140,48 188,58 255,16" />
-                </svg>
+
+                <div className="liveTransactionFeed">
+                  <div className={showcaseStep === 0 ? 'liveTransaction active income' : 'liveTransaction income'}>
+                    <span>＋</span>
+                    <div><b>Sueldo</b><small>Ingreso personal</small></div>
+                    <strong>+ S/ 2,800</strong>
+                  </div>
+                  <div className={showcaseStep === 1 ? 'liveTransaction active expense' : 'liveTransaction expense'}>
+                    <span>🍽️</span>
+                    <div><b>Almuerzo</b><small>Comida · Yape</small></div>
+                    <strong>- S/ 86</strong>
+                  </div>
+                  <div className={showcaseStep === 2 ? 'liveTransaction active expense' : 'liveTransaction expense'}>
+                    <span>🚕</span>
+                    <div><b>Taxi</b><small>Transporte · Efectivo</small></div>
+                    <strong>- S/ 18</strong>
+                  </div>
+                </div>
+
+                <div className="livePersonalFooter">
+                  <div><span>Presupuesto comida</span><b>{showcaseStep < 2 ? '62%' : '68%'}</b></div>
+                  <div className="liveBudgetTrack"><i style={{ width: showcaseStep < 2 ? '62%' : '68%' }} /></div>
+                </div>
               </div>
-              <div className="posterMeta">
-                <b>Estadísticas</b>
-                <small>Tendencias y decisiones</small>
+
+              <div className="liveStepDots">
+                {[0,1,2,3].map((item) => <i className={showcaseStep === item ? 'active' : ''} key={item} />)}
               </div>
             </div>
-            <span className="kineticShowcasePill">03 · TOCA PARA VER LA DEMO</span>
-          </button>
+
+            <div className="kineticSceneMeta">
+              <strong>PR.01</strong>
+              <span>/ PERSONAL</span>
+              <p>Un ejemplo realista: entra un ingreso, aparece un gasto y el saldo cambia sin que el usuario tenga que abrir nada.</p>
+            </div>
+
+            <span className="kineticShowcasePill">01 · DEMO AUTOMÁTICA</span>
+          </article>
+
+          <article className="kineticScene kineticSceneCouple">
+            <div className="kineticSceneMeta">
+              <strong>PR.02</strong>
+              <span>/ PAREJA</span>
+              <p>El ejemplo avanza solo desde “quién pagó” hasta la división, la deuda y finalmente el saldo en cero.</p>
+            </div>
+
+            <div className="kineticScenePoster kineticSurface">
+              <div className="liveDemoTopline">
+                <span className="livePulse pink" />
+                <small>DEMO EN VIVO · PAREJA</small>
+                <b>02 / 03</b>
+              </div>
+
+              <div className="liveCoupleFrame">
+                <div className="liveCouplePeople">
+                  <div className={showcaseStep === 0 ? 'liveCouplePerson blue active' : 'liveCouplePerson blue'}>
+                    <span>$</span><b>Tú</b><small>Pagaste</small>
+                  </div>
+                  <div className="liveCoupleCenter">
+                    <span className="liveSharedCoin">$</span>
+                    <b>{showcaseStep === 0 ? 'S/ 120' : showcaseStep === 1 ? '50 / 50' : showcaseStep === 2 ? 'S/ 60' : 'S/ 0'}</b>
+                    <small>
+                      {showcaseStep === 0 ? 'Cena' : showcaseStep === 1 ? 'S/ 60 cada uno' : showcaseStep === 2 ? 'Tu pareja te debe' : 'Balance saldado'}
+                    </small>
+                  </div>
+                  <div className={showcaseStep === 2 ? 'liveCouplePerson pink active' : 'liveCouplePerson pink'}>
+                    <span>S/</span><b>Pareja</b><small>{showcaseStep === 3 ? 'Pagó S/ 60' : 'Parte compartida'}</small>
+                  </div>
+                </div>
+
+                <div className="liveTransferPath">
+                  <i className={showcaseStep >= 1 ? 'active' : ''} />
+                  <span>{showcaseStep === 0 ? 'Registrando gasto...' : showcaseStep === 1 ? 'Dividiendo automáticamente...' : showcaseStep === 2 ? 'Actualizando balance...' : 'Pago recibido ✓'}</span>
+                </div>
+
+                <div className="liveCoupleSummary">
+                  <div><span>Pagaste tú</span><b>S/ 120</b></div>
+                  <div><span>Tu parte</span><b>S/ 60</b></div>
+                  <div><span>Balance</span><b className={showcaseStep === 3 ? 'zero' : ''}>{showcaseStep === 3 ? 'S/ 0' : 'S/ 60'}</b></div>
+                </div>
+              </div>
+
+              <div className="liveStepDots pink">
+                {[0,1,2,3].map((item) => <i className={showcaseStep === item ? 'active' : ''} key={item} />)}
+              </div>
+            </div>
+
+            <span className="kineticShowcasePill">02 · DEMO AUTOMÁTICA</span>
+          </article>
+
+          <article className="kineticScene kineticSceneStats">
+            <div className="kineticScenePoster kineticSurface">
+              <div className="liveDemoTopline">
+                <span className="livePulse cyan" />
+                <small>DEMO EN VIVO · ESTADÍSTICAS</small>
+                <b>03 / 03</b>
+              </div>
+
+              <div className="liveStatsFrame">
+                <div className="liveStatsHeadline">
+                  <span>Gasto del mes</span>
+                  <strong>{showcaseStep === 0 ? 'S/ 1,210' : showcaseStep === 1 ? 'S/ 1,296' : showcaseStep === 2 ? 'S/ 1,314' : 'S/ 1,314'}</strong>
+                  <b>+12%</b>
+                </div>
+
+                <div className="liveStatsChart">
+                  <div className="liveStatsBars">
+                    <i style={{ height: showcaseStep === 0 ? '34%' : '46%' }} />
+                    <i style={{ height: showcaseStep <= 1 ? '54%' : '62%' }} />
+                    <i style={{ height: showcaseStep <= 2 ? '48%' : '58%' }} />
+                    <i style={{ height: '78%' }} />
+                    <i style={{ height: showcaseStep === 3 ? '96%' : '88%' }} />
+                  </div>
+                  <svg viewBox="0 0 260 110" role="presentation">
+                    <polyline points="5,95 50,78 94,82 140,48 188,58 255,16" />
+                  </svg>
+                </div>
+
+                <div className="liveStatsCategories">
+                  <div><span>🍽️ Comida</span><b>{showcaseStep < 2 ? '34%' : '38%'}</b></div>
+                  <div><span>🚕 Transporte</span><b>21%</b></div>
+                  <div><span>🎬 Ocio</span><b>17%</b></div>
+                </div>
+              </div>
+
+              <div className="liveStepDots cyan">
+                {[0,1,2,3].map((item) => <i className={showcaseStep === item ? 'active' : ''} key={item} />)}
+              </div>
+            </div>
+
+            <div className="kineticSceneMeta">
+              <strong>PR.03</strong>
+              <span>/ DATOS</span>
+              <p>Los movimientos de ejemplo alimentan el gráfico y cambian los porcentajes automáticamente, igual que una animación GIF.</p>
+            </div>
+
+            <span className="kineticShowcasePill">03 · DEMO AUTOMÁTICA</span>
+          </article>
         </div>
       </section>
 
