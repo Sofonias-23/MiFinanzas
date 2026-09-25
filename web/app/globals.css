@@ -2756,3 +2756,230 @@ footer div { display: flex; gap: 26px; }
     justify-self: start;
   }
 }
+
+
+.paymentsPage {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 82% 12%, rgba(57, 178, 255, .09), transparent 30rem),
+    #07111f;
+}
+.paymentsWrap {
+  width: min(1120px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 58px 0 90px;
+}
+.paymentsHeading {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 24px;
+}
+.paymentsHeading h1 {
+  margin: 8px 0 10px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(48px, 6vw, 76px);
+  line-height: .95;
+  letter-spacing: -.045em;
+}
+.paymentsHeading > div > p:last-child {
+  color: #879ab7;
+  margin-bottom: 0;
+}
+.paymentsCount {
+  padding: 8px 12px;
+  border: 1px solid rgba(144,170,255,.14);
+  border-radius: 999px;
+  color: #91a3bd;
+  background: rgba(10,21,39,.72);
+  font-size: 12px;
+}
+.paymentsGrid {
+  display: grid;
+  grid-template-columns: .85fr 1.15fr;
+  gap: 16px;
+  margin-top: 28px;
+  align-items: start;
+}
+.paymentCreateCard,
+.paymentListCard {
+  padding: 22px;
+  border: 1px solid rgba(144,170,255,.13);
+  border-radius: 20px;
+  background: rgba(10,21,39,.88);
+}
+.paymentCreateCard {
+  display: grid;
+  gap: 18px;
+}
+.paymentCreateCard > div {
+  display: grid;
+  gap: 8px;
+}
+.paymentCreateCard label,
+.paymentFieldLabel {
+  color: #d7e2f3;
+  font-size: 13px;
+  font-weight: 800;
+}
+.paymentCreateCard input {
+  min-height: 52px;
+  padding: 0 14px;
+  border: 1px solid #253b61;
+  border-radius: 14px;
+  outline: none;
+  color: white;
+  background: #09172c;
+}
+.paymentCreateCard input:focus {
+  border-color: #288fff;
+  box-shadow: 0 0 0 3px rgba(40,143,255,.08);
+}
+.paymentIconPicker {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+.paymentIconChoice {
+  min-height: 50px;
+  border: 1px solid rgba(144,170,255,.12);
+  border-radius: 12px;
+  background: #0b172a;
+  cursor: pointer;
+  font-size: 21px;
+}
+.paymentIconChoice.active {
+  border-color: #318fff;
+  background: rgba(31,140,255,.14);
+  box-shadow: inset 0 0 0 1px rgba(49,143,255,.13);
+}
+.paymentPreview {
+  grid-template-columns: 48px 1fr;
+  align-items: center;
+  padding: 13px;
+  border: 1px solid rgba(144,170,255,.1);
+  border-radius: 14px;
+  background: #0b172a;
+}
+.paymentPreviewIcon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: #162940;
+  font-size: 21px;
+}
+.paymentPreview > div {
+  display: grid;
+  gap: 3px;
+}
+.paymentPreview small {
+  color: #71839e;
+}
+.paymentError {
+  margin: 0;
+}
+.paymentAddButton {
+  border: 0;
+  cursor: pointer;
+}
+.paymentAddButton:disabled {
+  opacity: .66;
+}
+.paymentListHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 16px;
+}
+.paymentListHeader h2 {
+  margin: 5px 0 0;
+  font-size: 24px;
+}
+.paymentListHeader > span {
+  min-width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: #9db0cb;
+  background: #18283e;
+  font-size: 12px;
+}
+.paymentList {
+  display: grid;
+  gap: 9px;
+  margin-top: 18px;
+}
+.paymentRowWeb {
+  display: grid;
+  grid-template-columns: 46px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid rgba(144,170,255,.09);
+  border-radius: 15px;
+  background: #0b172a;
+}
+.paymentRowIcon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: #162940;
+  font-size: 21px;
+}
+.paymentRowWeb > div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+.paymentRowWeb b {
+  font-size: 14px;
+}
+.paymentRowWeb small {
+  color: #667994;
+  font-size: 11px;
+}
+.paymentRowWeb button {
+  padding: 8px 10px;
+  border: 1px solid rgba(248,113,113,.15);
+  border-radius: 9px;
+  color: #f28a95;
+  background: rgba(93,31,39,.1);
+  cursor: pointer;
+}
+.paymentNote {
+  margin: 16px 0 0;
+  color: #667994;
+  font-size: 12px;
+  line-height: 1.6;
+  text-align: center;
+}
+@media (max-width: 850px) {
+  .paymentsHeading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .paymentsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 560px) {
+  .paymentsWrap {
+    width: min(100% - 28px, 720px);
+    padding-top: 38px;
+  }
+  .paymentIconPicker {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .paymentRowWeb {
+    grid-template-columns: 42px 1fr;
+  }
+  .paymentRowWeb button {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
