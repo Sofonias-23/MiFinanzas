@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 
@@ -36,7 +36,7 @@ function money(value: number) {
   }).format(value);
 }
 
-export default function DetalleGastoPage() {
+function DetalleGastoContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const expenseId = searchParams.get('id');
@@ -385,5 +385,14 @@ export default function DetalleGastoPage() {
         )}
       </section>
     </main>
+  );
+}
+
+
+export default function DetalleGastoPage() {
+  return (
+    <Suspense fallback={<main className="dashboardLoading"><p>Cargando detalle...</p></main>}>
+      <DetalleGastoContent />
+    </Suspense>
   );
 }
