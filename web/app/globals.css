@@ -1549,3 +1549,239 @@ footer div { display: flex; gap: 26px; }
     padding-top: 40px;
   }
 }
+
+
+.movementsPage {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 82% 10%, rgba(31, 140, 255, .1), transparent 30rem),
+    #07111f;
+}
+.movementTopActions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.movementsWrap {
+  width: min(1260px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 58px 0 90px;
+}
+.movementsHeading {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 28px;
+}
+.movementsHeading h1 {
+  margin: 8px 0 10px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(48px, 6vw, 78px);
+  line-height: .95;
+  letter-spacing: -.045em;
+}
+.movementsHeading > div:first-child > p:last-child {
+  color: #879ab7;
+  margin-bottom: 0;
+}
+.movementTotals {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(120px, 1fr));
+  gap: 10px;
+  width: min(520px, 100%);
+}
+.movementTotals > div {
+  display: grid;
+  gap: 5px;
+  padding: 15px;
+  border: 1px solid rgba(144, 170, 255, .12);
+  border-radius: 14px;
+  background: rgba(10, 21, 39, .78);
+}
+.movementTotals span {
+  color: #72849e;
+  font-size: 11px;
+}
+.movementTotals b {
+  font-size: 15px;
+}
+.movementControls {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 34px;
+}
+.movementSearch {
+  width: min(470px, 100%);
+  min-height: 48px;
+  padding: 0 16px;
+  border: 1px solid rgba(144, 170, 255, .16);
+  border-radius: 14px;
+  outline: none;
+  color: white;
+  background: #0b172a;
+}
+.movementSearch:focus {
+  border-color: #288fff;
+  box-shadow: 0 0 0 3px rgba(40, 143, 255, .08);
+}
+.movementFilters {
+  display: flex;
+  gap: 8px;
+}
+.movementFilter {
+  min-height: 46px;
+  padding: 0 17px;
+  border: 1px solid rgba(144, 170, 255, .14);
+  border-radius: 13px;
+  color: #8395b0;
+  background: #0b172a;
+  cursor: pointer;
+}
+.movementFilter.active {
+  border-color: rgba(31, 140, 255, .55);
+  color: white;
+  background: linear-gradient(110deg, rgba(31, 140, 255, .7), rgba(84, 91, 230, .62));
+}
+.movementTableCard {
+  margin-top: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(144, 170, 255, .13);
+  border-radius: 20px;
+  background: rgba(10, 21, 39, .88);
+}
+.movementTableHeader,
+.movementRow {
+  display: grid;
+  grid-template-columns: 1.25fr 1.4fr 170px 150px;
+  align-items: center;
+  gap: 18px;
+}
+.movementTableHeader {
+  padding: 14px 18px;
+  color: #687b97;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  border-bottom: 1px solid rgba(144, 170, 255, .1);
+}
+.movementRow {
+  min-height: 78px;
+  padding: 13px 18px;
+  border-bottom: 1px solid rgba(144, 170, 255, .08);
+}
+.movementRow:last-child {
+  border-bottom: 0;
+}
+.movementMain {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.movementBigIcon {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: #162940;
+  font-size: 19px;
+}
+.movementMain > div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+.movementMain b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.movementMain small,
+.movementMeta,
+.movementDate {
+  color: #71839e;
+  font-size: 12px;
+}
+.movementRow > strong {
+  justify-self: end;
+  white-space: nowrap;
+}
+.movementEmpty {
+  min-height: 260px;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 6px;
+  color: #71839e;
+}
+.movementEmpty b {
+  color: white;
+  font-size: 16px;
+}
+@media (max-width: 980px) {
+  .movementsHeading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .movementTotals {
+    width: 100%;
+  }
+  .movementControls {
+    flex-direction: column;
+  }
+  .movementSearch {
+    width: 100%;
+  }
+  .movementFilters {
+    width: 100%;
+  }
+  .movementFilter {
+    flex: 1;
+  }
+  .movementTableHeader {
+    display: none;
+  }
+  .movementRow {
+    grid-template-columns: 1fr auto;
+  }
+  .movementMeta,
+  .movementDate {
+    grid-column: 1;
+    margin-left: 54px;
+  }
+  .movementRow > strong {
+    grid-column: 2;
+    grid-row: 1;
+  }
+}
+@media (max-width: 620px) {
+  .movementTopActions .expenseBack {
+    display: none;
+  }
+  .movementsWrap {
+    width: min(100% - 28px, 720px);
+    padding-top: 38px;
+  }
+  .movementTotals {
+    grid-template-columns: 1fr;
+  }
+  .movementFilters {
+    overflow-x: auto;
+  }
+  .movementFilter {
+    min-width: 110px;
+  }
+  .movementRow {
+    grid-template-columns: 1fr;
+  }
+  .movementRow > strong {
+    grid-column: 1;
+    grid-row: auto;
+    justify-self: start;
+    margin-left: 54px;
+  }
+}
