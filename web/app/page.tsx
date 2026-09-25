@@ -291,7 +291,7 @@ export default function HomePage() {
       <section id="historia" className="publicStory">
         {scenes.map((scene, index) => (
           <article className={'publicStoryScene story-' + scene.accent} key={scene.number}>
-            <div className="publicStoryVisual">
+            <div className="publicStoryVisual kineticSurface">
               <div className="storyHalo" />
               <div className="storyObject">
                 <span>{scene.number}</span>
