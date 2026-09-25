@@ -408,6 +408,7 @@ export default function ParejaPage() {
           <a href="/movimientos?filter=compartido">▣ Movimientos</a>
           <a href="/presupuestos?scope=pareja">◎ Presupuestos</a>
           <a href="/estadisticas?scope=pareja">◫ Estadísticas</a>
+          <a href="/deudas">↕ Deudas</a>
           <a href="/espacio">↔ Cambiar espacio</a>
         </nav>
       </aside>
@@ -438,7 +439,7 @@ export default function ParejaPage() {
             </div>
           </section>
 
-          <section className="coupleDebtCard">
+          <a className="coupleDebtCard" href="/deudas">
             <span>Balance entre ustedes</span>
             <strong>{balanceText}</strong>
             <b>{formatMoney(balanceAbs)}</b>
@@ -449,7 +450,7 @@ export default function ParejaPage() {
                 ? 'Saldo pendiente'
                 : 'Sin pagos pendientes'}
             </small>
-          </section>
+          </a>
         </div>
 
         <div className="coupleDashboardGrid">
@@ -473,7 +474,7 @@ export default function ParejaPage() {
                       : Number(expense.partner_share || 0);
 
                   return (
-                    <article className="coupleExpenseRow" key={expense.id}>
+                    <a className="coupleExpenseRow" href={"/detalle-gasto?id=" + expense.id} key={expense.id}>
                       <span className="coupleExpenseIcon">{category?.icon || '🧾'}</span>
                       <div>
                         <b>{expense.description}</b>
@@ -483,7 +484,7 @@ export default function ParejaPage() {
                         <small>{payment?.name || expense.payment_method || 'Sin especificar'} · {formatDate(expense.created_at)}</small>
                       </div>
                       <strong>{formatMoney(expense.amount)}</strong>
-                    </article>
+                    </a>
                   );
                 })
               ) : (
