@@ -1,6 +1,53 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+
+const demos = [
+  {
+    label: 'DEMO · MI DINERO',
+    title: 'Registrar un gasto y verlo reflejado al instante.',
+    amount: 'S/ 86.00',
+    accent: 'blue',
+    steps: [
+      { title: 'Monto', detail: 'S/ 86.00 · Almuerzo' },
+      { title: 'Categoría y pago', detail: '🍽️ Comida · 📱 Yape' },
+      { title: 'Resultado', detail: 'Saldo y estadísticas actualizados' },
+    ],
+  },
+  {
+    label: 'DEMO · PRIVACIDAD',
+    title: 'Tus movimientos personales permanecen fuera de Pareja.',
+    amount: 'Privado',
+    accent: 'violet',
+    steps: [
+      { title: 'Gasto personal', detail: 'Solo visible en Mi dinero' },
+      { title: 'Separación', detail: 'No aparece en el espacio Pareja' },
+      { title: 'Control', detail: 'Tú decides qué compartes' },
+    ],
+  },
+  {
+    label: 'DEMO · PAREJA',
+    title: 'Un gasto compartido se divide y actualiza el balance.',
+    amount: 'S/ 120.00',
+    accent: 'pink',
+    steps: [
+      { title: 'Quién pagó', detail: 'Tú pagaste S/ 120.00' },
+      { title: 'División', detail: '50 / 50 · S/ 60 cada uno' },
+      { title: 'Balance', detail: 'Tu pareja te debe S/ 60.00' },
+    ],
+  },
+  {
+    label: 'DEMO · ESTADÍSTICAS',
+    title: 'Cada movimiento alimenta una lectura más clara del mes.',
+    amount: '+12%',
+    accent: 'cyan',
+    steps: [
+      { title: 'Movimientos', detail: 'Se agrupan por categoría' },
+      { title: 'Tendencia', detail: 'Comparas gasto y presupuesto' },
+      { title: 'Decisión', detail: 'Detectas dónde ajustar' },
+    ],
+  },
+];
 
 const scenes = [
   {
@@ -34,6 +81,9 @@ const scenes = [
 ];
 
 export default function HomePage() {
+  const [activeDemo, setActiveDemo] = useState<number | null>(null);
+  const [demoStep, setDemoStep] = useState(0);
+
   useEffect(() => {
     const root = document.documentElement;
 
@@ -59,6 +109,47 @@ export default function HomePage() {
       ),
     );
 
+    const kineticTargets = Array.from(
+      document.querySelectorAll<HTMLElement>(
+        '.kineticButton, .toolkitCards > a, .guideEditorialFeature, .guideEditorialSide > a',
+      ),
+    );
+
+    const cleanupKinetic = kineticTargets.map((target) => {
+      const move = (event: PointerEvent) => {
+        const rect = target.getBoundingClientRect();
+        const x = event.clientX - (rect.left + rect.width / 2);
+        const y = event.clientY - (rect.top + rect.height / 2);
+        target.style.setProperty('--kinetic-x', (x * 0.08).toFixed(2) + 'px');
+        target.style.setProperty('--kinetic-y', (y * 0.1).toFixed(2) + 'px');
+      };
+
+      const leave = () => {
+        target.style.setProperty('--kinetic-x', '0px');
+        target.style.setProperty('--kinetic-y', '0px');
+        target.classList.remove('kineticPress');
+      };
+
+      const down = (event: PointerEvent) => {
+        const rect = target.getBoundingClientRect();
+        target.style.setProperty('--press-x', event.clientX - rect.left + 'px');
+        target.style.setProperty('--press-y', event.clientY - rect.top + 'px');
+        target.classList.remove('kineticPress');
+        void target.offsetWidth;
+        target.classList.add('kineticPress');
+      };
+
+      target.addEventListener('pointermove', move);
+      target.addEventListener('pointerleave', leave);
+      target.addEventListener('pointerdown', down);
+
+      return () => {
+        target.removeEventListener('pointermove', move);
+        target.removeEventListener('pointerleave', leave);
+        target.removeEventListener('pointerdown', down);
+      };
+    });
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -80,8 +171,20 @@ export default function HomePage() {
       window.removeEventListener('scroll', updateScroll);
       window.removeEventListener('pointermove', updatePointer);
       observer.disconnect();
+      cleanupKinetic.forEach((cleanup) => cleanup());
     };
   }, []);
+
+  useEffect(() => {
+    if (activeDemo === null) return;
+
+    setDemoStep(0);
+    const timer = window.setInterval(() => {
+      setDemoStep((current) => (current + 1) % demos[activeDemo].steps.length);
+    }, 1700);
+
+    return () => window.clearInterval(timer);
+  }, [activeDemo]);
 
   return (
     <main className="publicHome">
@@ -102,7 +205,7 @@ export default function HomePage() {
 
         <div className="navActions">
           <a className="textButton" href="/login">Entrar</a>
-          <a className="primaryButton small" href="/login">Empezar</a>
+          <a className="primaryButton small kineticButton" href="/login">Empezar</a>
         </div>
       </header>
 
@@ -122,8 +225,8 @@ export default function HomePage() {
           </p>
 
           <div className="cinemaActions">
-            <a className="primaryButton" href="/login">Entrar a MiFinanzas →</a>
-            <a className="ghostButton" href="#historia">Explorar</a>
+            <a className="primaryButton kineticButton" href="/login">Entrar a MiFinanzas →</a>
+            <a className="ghostButton kineticButton" href="#historia">Explorar</a>
           </div>
 
           <div className="cinemaFacts">
@@ -242,11 +345,20 @@ export default function HomePage() {
               <h2>{scene.title}</h2>
               <p>{scene.copy}</p>
 
-              {index === 2 ? (
-                <a href="/calculadoras" className="inlineLink">Probar calculadora de pareja →</a>
-              ) : (
-                <a href="/login" className="inlineLink">Entrar a la app →</a>
-              )}
+              <div className="storyActions">
+                <button
+                  type="button"
+                  className="storyDemoButton kineticButton"
+                  onClick={() => setActiveDemo(index)}
+                >
+                  ▶ Ver demo interactiva
+                </button>
+                {index === 2 ? (
+                  <a href="/calculadoras" className="inlineLink">Probar calculadora →</a>
+                ) : (
+                  <a href="/login" className="inlineLink">Entrar a la app →</a>
+                )}
+              </div>
             </div>
           </article>
         ))}
@@ -323,8 +435,108 @@ export default function HomePage() {
           <p className="eyebrow">TU SIGUIENTE MES</p>
           <h2>Más visible. Más ordenado. Más fácil de conversar.</h2>
         </div>
-        <a className="primaryButton" href="/login">Abrir MiFinanzas →</a>
+        <a className="primaryButton kineticButton" href="/login">Abrir MiFinanzas →</a>
       </section>
+
+      {activeDemo !== null ? (
+        <div className="demoOverlay" role="dialog" aria-modal="true" aria-label={demos[activeDemo].title}>
+          <button className="demoBackdrop" type="button" aria-label="Cerrar demo" onClick={() => setActiveDemo(null)} />
+          <section className={'demoModal demo-' + demos[activeDemo].accent}>
+            <header className="demoModalHeader">
+              <div>
+                <p className="eyebrow">{demos[activeDemo].label}</p>
+                <h2>{demos[activeDemo].title}</h2>
+              </div>
+              <button className="demoClose kineticButton" type="button" onClick={() => setActiveDemo(null)}>×</button>
+            </header>
+
+            <div className="demoStage">
+              <div className="demoPhoneFrame">
+                <div className="demoPhoneTop">
+                  <span className="demoPhoneBrand">$</span>
+                  <small>MiFinanzas</small>
+                  <i />
+                </div>
+
+                <div className="demoPhoneBalance">
+                  <span>{demos[activeDemo].steps[demoStep].title}</span>
+                  <strong>{demos[activeDemo].amount}</strong>
+                  <small>{demos[activeDemo].steps[demoStep].detail}</small>
+                </div>
+
+                <div className="demoMotionCanvas">
+                  {activeDemo === 0 ? (
+                    <>
+                      <span className="demoMoney demoMoneyOne">+ S/ 2,800</span>
+                      <span className="demoMoney demoMoneyTwo">- S/ 86</span>
+                      <div className="demoWalletCard"><b>$</b><span>Saldo</span></div>
+                    </>
+                  ) : null}
+
+                  {activeDemo === 1 ? (
+                    <>
+                      <div className="demoShieldAnim"><span>$</span></div>
+                      <span className="demoPrivateChip">Solo tú</span>
+                      <span className="demoOrbitMini">S/</span>
+                    </>
+                  ) : null}
+
+                  {activeDemo === 2 ? (
+                    <>
+                      <div className="demoPersonCard blue"><span>$</span><b>Tú</b></div>
+                      <div className="demoTransferAnim"><i>→</i><b>50/50</b><i>←</i></div>
+                      <div className="demoPersonCard pink"><span>S/</span><b>Pareja</b></div>
+                    </>
+                  ) : null}
+
+                  {activeDemo === 3 ? (
+                    <>
+                      <div className="demoChartAnim"><i /><i /><i /><i /><i /></div>
+                      <svg className="demoLineAnim" viewBox="0 0 220 100" role="presentation">
+                        <polyline points="4,86 48,62 84,68 130,36 174,44 216,12" />
+                      </svg>
+                      <span className="demoPercentAnim">+12%</span>
+                    </>
+                  ) : null}
+                </div>
+
+                <div className="demoProgress">
+                  {demos[activeDemo].steps.map((step, index) => (
+                    <button
+                      key={step.title}
+                      type="button"
+                      className={demoStep === index ? 'active' : ''}
+                      onClick={() => setDemoStep(index)}
+                      aria-label={'Ver paso ' + (index + 1)}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div className="demoNarrative">
+                <span className="demoStepNumber">0{demoStep + 1}</span>
+                <small>PASO {demoStep + 1} DE {demos[activeDemo].steps.length}</small>
+                <h3>{demos[activeDemo].steps[demoStep].title}</h3>
+                <p>{demos[activeDemo].steps[demoStep].detail}</p>
+
+                <div className="demoStepList">
+                  {demos[activeDemo].steps.map((step, index) => (
+                    <button
+                      key={step.title}
+                      type="button"
+                      className={demoStep === index ? 'active kineticButton' : 'kineticButton'}
+                      onClick={() => setDemoStep(index)}
+                    >
+                      <span>0{index + 1}</span>
+                      <div><b>{step.title}</b><small>{step.detail}</small></div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      ) : null}
 
       <footer className="publicFooter">
         <a className="brand" href="#inicio">
