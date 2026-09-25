@@ -3607,3 +3607,7 @@ footer div { display: flex; gap: 26px; }
 @media(max-width:900px){.debtsGrid,.settleWrap,.detailGrid{grid-template-columns:1fr}.settleIntro{position:static}}
 @media(max-width:700px){.debtsHeading,.partnerDebtHero{align-items:flex-start;flex-direction:column}.debtNewButton,.partnerSettleButton{width:100%;justify-content:center}.debtSummaryGrid,.personalDebtForm,.detailEditForm{grid-template-columns:1fr}.debtDirectionTabs,.debtNoteField,.debtFormError,.debtFormActions,.detailEditHeader,.detailPayerFieldset,.detailEditError{grid-column:1}.detailConversationPreview{grid-template-columns:1fr}.detailReactions{grid-column:1}}
 @media(max-width:560px){.debtsWrap,.settleWrap,.detailWrap{width:min(100% - 28px,720px);padding-top:38px}.settleMethods{grid-template-columns:1fr 1fr}.detailSplit{grid-template-columns:1fr}.chatHeader{padding:0 16px}.chatHeader>div span{display:none}.chatPeople{grid-template-columns:40px auto 22px 40px auto;gap:7px}.chatPerson{width:40px;height:40px}.chatBubbleWrap{max-width:88%}.chatComposer{grid-template-columns:1fr}.chatComposer button{min-height:44px}}
+
+
+.movementRow.clickable{cursor:pointer;transition:background .18s ease,transform .18s ease}
+.movementRow.clickable:hover{background:rgba(21,42,70,.82);transform:translateY(-1px)}
