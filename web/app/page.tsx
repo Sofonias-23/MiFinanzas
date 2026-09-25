@@ -35,14 +35,48 @@ const scenes = [
 
 export default function HomePage() {
   useEffect(() => {
-    const update = () => {
-      document.documentElement.style.setProperty('--home-scroll', String(window.scrollY));
+    const root = document.documentElement;
+
+    const updateScroll = () => {
+      root.style.setProperty('--home-scroll', String(window.scrollY));
     };
 
-    update();
-    window.addEventListener('scroll', update, { passive: true });
+    const updatePointer = (event: PointerEvent) => {
+      const x = event.clientX / Math.max(window.innerWidth, 1) - 0.5;
+      const y = event.clientY / Math.max(window.innerHeight, 1) - 0.5;
 
-    return () => window.removeEventListener('scroll', update);
+      root.style.setProperty('--home-pointer-x', x.toFixed(4));
+      root.style.setProperty('--home-pointer-y', y.toFixed(4));
+    };
+
+    const revealTargets = Array.from(
+      document.querySelectorAll<HTMLElement>(
+        '.publicStoryScene, .toolkitCards > a, .guideEditorialFeature, .guideEditorialSide > a',
+      ),
+    );
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            (entry.target as HTMLElement).classList.add('is-visible');
+          }
+        });
+      },
+      { threshold: 0.18 },
+    );
+
+    revealTargets.forEach((target) => observer.observe(target));
+
+    updateScroll();
+    window.addEventListener('scroll', updateScroll, { passive: true });
+    window.addEventListener('pointermove', updatePointer, { passive: true });
+
+    return () => {
+      window.removeEventListener('scroll', updateScroll);
+      window.removeEventListener('pointermove', updatePointer);
+      observer.disconnect();
+    };
   }, []);
 
   return (
