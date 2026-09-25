@@ -12,6 +12,7 @@ type ExpenseRow = {
   description: string;
   type: string;
   category: string | null;
+  payment_method: string | null;
   created_at: string;
 };
 
@@ -21,6 +22,32 @@ type IncomeRow = {
   description: string;
   created_at: string;
 };
+
+type CategoryRow = {
+  slug: string;
+  name: string;
+};
+
+type PaymentRow = {
+  slug: string;
+  name: string;
+};
+
+type BudgetRow = {
+  category: string;
+  amount: number;
+};
+
+function isCurrentMonth(value: string) {
+  const date = new Date(value);
+  const now = new Date();
+  return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
+}
+
+function monthKey() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+}
 
 function formatMoney(value: number) {
   return new Intl.NumberFormat('es-PE', {
@@ -43,6 +70,9 @@ export default function DashboardPage() {
   const [displayName, setDisplayName] = useState('Usuario');
   const [expenses, setExpenses] = useState<ExpenseRow[]>([]);
   const [incomes, setIncomes] = useState<IncomeRow[]>([]);
+  const [categories, setCategories] = useState<CategoryRow[]>([]);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentRow[]>([]);
+  const [budgets, setBudgets] = useState<BudgetRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -60,21 +90,36 @@ export default function DashboardPage() {
       if (!active) return;
       setUser(currentUser);
 
-      const [profileResult, expenseResult, incomeResult] = await Promise.all([
-        supabase
-          .from('profiles')
-          .select('display_name')
-          .eq('id', currentUser.id)
-          .maybeSingle(),
-        supabase
-          .from('expenses')
-          .select('id, amount, description, type, category, created_at')
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('incomes')
-          .select('id, amount, description, created_at')
-          .order('created_at', { ascending: false }),
-      ]);
+      const [profileResult, expenseResult, incomeResult, categoryResult, paymentResult, budgetResult] =
+        await Promise.all([
+          supabase
+            .from('profiles')
+            .select('display_name')
+            .eq('id', currentUser.id)
+            .maybeSingle(),
+          supabase
+            .from('expenses')
+            .select('id, amount, description, type, category, payment_method, created_at')
+            .eq('type', 'personal')
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('incomes')
+            .select('id, amount, description, created_at')
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('expense_categories')
+            .select('slug, name')
+            .order('created_at', { ascending: true }),
+          supabase
+            .from('payment_methods')
+            .select('slug, name')
+            .order('created_at', { ascending: true }),
+          supabase
+            .from('budgets')
+            .select('category, amount')
+            .eq('scope', 'personal')
+            .eq('month', monthKey()),
+        ]);
 
       if (!active) return;
 
@@ -86,6 +131,9 @@ export default function DashboardPage() {
       setDisplayName(profileResult.data?.display_name || fallbackName);
       setExpenses((expenseResult.data ?? []) as ExpenseRow[]);
       setIncomes((incomeResult.data ?? []) as IncomeRow[]);
+      setCategories((categoryResult.data ?? []) as CategoryRow[]);
+      setPaymentMethods((paymentResult.data ?? []) as PaymentRow[]);
+      setBudgets((budgetResult.data ?? []) as BudgetRow[]);
       setLoading(false);
     }
 
@@ -96,35 +144,99 @@ export default function DashboardPage() {
     };
   }, [router]);
 
-  const totalExpenses = useMemo(
-    () => expenses.reduce((sum, item) => sum + Number(item.amount || 0), 0),
+  const monthExpenses = useMemo(
+    () => expenses.filter((expense) => isCurrentMonth(expense.created_at)),
     [expenses],
   );
 
-  const totalIncome = useMemo(
-    () => incomes.reduce((sum, item) => sum + Number(item.amount || 0), 0),
+  const monthIncomes = useMemo(
+    () => incomes.filter((income) => isCurrentMonth(income.created_at)),
     [incomes],
   );
 
-  const available = totalIncome - totalExpenses;
+  const totalExpense = useMemo(
+    () => monthExpenses.reduce((sum, item) => sum + Number(item.amount || 0), 0),
+    [monthExpenses],
+  );
+
+  const totalIncome = useMemo(
+    () => monthIncomes.reduce((sum, item) => sum + Number(item.amount || 0), 0),
+    [monthIncomes],
+  );
+
+  const balance = totalIncome - totalExpense;
+
+  const budgetTotal = useMemo(
+    () => budgets.reduce((sum, item) => sum + Number(item.amount || 0), 0),
+    [budgets],
+  );
+
+  const budgetSpent = useMemo(
+    () =>
+      budgets.reduce((sum, budget) => {
+        const spent = monthExpenses
+          .filter((expense) => expense.category === budget.category)
+          .reduce((acc, expense) => acc + Number(expense.amount || 0), 0);
+        return sum + spent;
+      }, 0),
+    [budgets, monthExpenses],
+  );
+
+  const budgetPercent =
+    budgetTotal > 0 ? Math.min(100, Math.round((budgetSpent / budgetTotal) * 100)) : 0;
+
+  const recentMovements = useMemo(() => {
+    const expenseMovements = expenses.map((expense) => ({
+      id: `expense-${expense.id}`,
+      kind: 'expense' as const,
+      description: expense.description,
+      amount: Number(expense.amount || 0),
+      createdAt: expense.created_at,
+      category:
+        categories.find((item) => item.slug === expense.category)?.name ||
+        expense.category ||
+        'Otros',
+      meta:
+        paymentMethods.find((item) => item.slug === expense.payment_method)?.name ||
+        expense.payment_method ||
+        'Sin especificar',
+    }));
+
+    const incomeMovements = incomes.map((income) => ({
+      id: `income-${income.id}`,
+      kind: 'income' as const,
+      description: income.description,
+      amount: Number(income.amount || 0),
+      createdAt: income.created_at,
+      category: 'Ingreso',
+      meta: 'Ingreso',
+    }));
+
+    return [...expenseMovements, ...incomeMovements]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 6);
+  }, [expenses, incomes, categories, paymentMethods]);
 
   const categoryTotals = useMemo(() => {
     const totals = new Map<string, number>();
 
-    expenses.forEach((expense) => {
-      const category = expense.category || 'otros';
-      totals.set(category, (totals.get(category) ?? 0) + Number(expense.amount || 0));
+    monthExpenses.forEach((expense) => {
+      const categoryName =
+        categories.find((item) => item.slug === expense.category)?.name ||
+        expense.category ||
+        'Otros';
+      totals.set(categoryName, (totals.get(categoryName) ?? 0) + Number(expense.amount || 0));
     });
 
     return Array.from(totals.entries())
       .map(([name, amount]) => ({
         name,
         amount,
-        percentage: totalExpenses > 0 ? Math.round((amount / totalExpenses) * 100) : 0,
+        percentage: totalExpense > 0 ? Math.round((amount / totalExpense) * 100) : 0,
       }))
       .sort((a, b) => b.amount - a.amount)
       .slice(0, 4);
-  }, [expenses, totalExpenses]);
+  }, [monthExpenses, categories, totalExpense]);
 
   async function handleLogout() {
     await supabase.auth.signOut();
@@ -140,28 +252,29 @@ export default function DashboardPage() {
           </span>
           <span>MiFinanzas</span>
         </div>
-        <p>Cargando tus finanzas...</p>
+        <p>Cargando Mi dinero...</p>
       </main>
     );
   }
 
   return (
-    <main className="dashboardShell">
-      <aside className="sidebar">
-        <a className="brand" href="/">
+    <main className="moneyShell">
+      <aside className="moneySidebar">
+        <a className="brand" href="/espacio">
           <span className="brandMark" aria-hidden="true">
             <span className="brandDollar">$</span>
           </span>
           <span>MiFinanzas</span>
         </a>
 
-        <nav>
-          <a className="active" href="#">⌂ Inicio</a>
-          <a href="#">▣ Gastos</a>
-          <a href="#">◫ Estadísticas</a>
-          <a href="#">◇ Deudas</a>
-          <a href="#">◎ Metas</a>
-          <a href="#">⚙ Configuración</a>
+        <nav className="moneyNav">
+          <a className="active" href="/dashboard">⌂ Mi dinero</a>
+          <a href="/movimientos">▣ Movimientos</a>
+          <a href="/presupuestos">◎ Presupuestos</a>
+          <a href="/estadisticas">◫ Estadísticas</a>
+          <a href="/categorias">◇ Categorías</a>
+          <a href="/metodos-pago">▤ Métodos de pago</a>
+          <a href="/espacio">↔ Cambiar espacio</a>
         </nav>
 
         <button className="logoutButton" type="button" onClick={handleLogout}>
@@ -169,82 +282,124 @@ export default function DashboardPage() {
         </button>
       </aside>
 
-      <section className="dashboardMain">
-        <div className="dashboardHeader">
+      <section className="moneyMain">
+        <header className="moneyHeader">
           <div>
-            <p className="eyebrow">MI PERFIL</p>
+            <p className="eyebrow">MI DINERO</p>
             <h1>Hola, {displayName}</h1>
-            <p>Aquí tienes un resumen real de tus finanzas.</p>
+            <p>Tu resumen personal del mes.</p>
           </div>
-          <div className="profileSwitch">
-            <button className="selected">Mi perfil</button>
-            <button>Pareja</button>
+          <a className="moneyProfileButton" href="/espacio">Cambiar espacio</a>
+        </header>
+
+        <section className="moneyBalanceCard">
+          <div className="moneyBalanceTop">
+            <div>
+              <span>Saldo actual</span>
+              <strong>{formatMoney(balance)}</strong>
+            </div>
+            <span className="moneyMonth">Este mes</span>
           </div>
+          <div className="moneyMetrics">
+            <div>
+              <span>Ingresos</span>
+              <b className="moneyIncome">+ {formatMoney(totalIncome)}</b>
+            </div>
+            <div>
+              <span>Gastos</span>
+              <b className="moneyExpense">- {formatMoney(totalExpense)}</b>
+            </div>
+          </div>
+        </section>
+
+        <div className="moneyQuickActions">
+          <a className="moneyQuick moneyQuickPrimary" href="/nuevo-gasto">＋ Registrar gasto</a>
+          <a className="moneyQuick" href="/nuevo-ingreso">＋ Registrar ingreso</a>
         </div>
 
-        <div className="metricGrid">
-          <article>
-            <span>Gasto total</span>
-            <strong>{formatMoney(totalExpenses)}</strong>
-          </article>
-          <article>
-            <span>Ingresos</span>
-            <strong>{formatMoney(totalIncome)}</strong>
-          </article>
-          <article>
-            <span>Disponible</span>
-            <strong>{formatMoney(available)}</strong>
-          </article>
-        </div>
+        <section className="moneyBudgetCard">
+          <div>
+            <span>Presupuesto del mes</span>
+            <strong>
+              {budgetTotal > 0
+                ? `${formatMoney(budgetSpent)} / ${formatMoney(budgetTotal)}`
+                : 'Aún no configurado'}
+            </strong>
+          </div>
+          <div className="moneyBudgetRight">
+            <b>{budgetTotal > 0 ? `${budgetPercent}%` : '→'}</b>
+            <a href="/presupuestos">Gestionar</a>
+          </div>
+          {budgetTotal > 0 ? (
+            <div className="moneyBudgetTrack">
+              <div className="moneyBudgetFill" style={{ width: `${budgetPercent}%` }} />
+            </div>
+          ) : null}
+        </section>
 
-        <div className="dashboardGrid">
-          <article className="panel">
-            <div className="panelTitle">
+        <div className="moneyGrid">
+          <section className="moneyPanel">
+            <div className="moneyPanelHeader">
               <div>
-                <span>Gastos por categoría</span>
-                <strong>{formatMoney(totalExpenses)}</strong>
+                <p className="eyebrow">MOVIMIENTOS</p>
+                <h2>Últimos movimientos</h2>
               </div>
-              <div className="donut" />
+              <a href="/movimientos">Ver todos</a>
             </div>
 
-            <div className="legend">
-              {categoryTotals.length ? (
-                categoryTotals.map((category, index) => (
-                  <span key={category.name}>
-                    <i className={'dot d' + ((index % 4) + 1)} />
-                    {category.name}
-                    <b>{category.percentage}%</b>
-                  </span>
+            <div className="moneyMovementList">
+              {recentMovements.length ? (
+                recentMovements.map((movement) => (
+                  <div className="moneyMovement" key={movement.id}>
+                    <span className={movement.kind === 'income' ? 'movementIcon incomeIcon' : 'movementIcon'}>
+                      {movement.kind === 'income' ? '↑' : '↓'}
+                    </span>
+                    <span className="movementCopy">
+                      <b>{movement.description}</b>
+                      <small>
+                        {movement.category} · {movement.meta} · {formatDate(movement.createdAt)}
+                      </small>
+                    </span>
+                    <strong className={movement.kind === 'income' ? 'moneyIncome' : 'moneyExpense'}>
+                      {movement.kind === 'income' ? '+' : '-'} {formatMoney(movement.amount)}
+                    </strong>
+                  </div>
                 ))
               ) : (
-                <span className="emptyState">Aún no tienes gastos registrados.</span>
+                <div className="moneyEmpty">
+                  <b>Todo empieza con el primer movimiento.</b>
+                  <span>Registra un gasto o ingreso para verlo aquí.</span>
+                </div>
               )}
             </div>
-          </article>
+          </section>
 
-          <article className="panel">
-            <div className="panelHeading">
-              <h2>Últimos gastos</h2>
-              <span>{expenses.length} registros</span>
+          <section className="moneyPanel">
+            <div className="moneyPanelHeader">
+              <div>
+                <p className="eyebrow">ESTADÍSTICAS</p>
+                <h2>Gastos por categoría</h2>
+              </div>
+              <a href="/estadisticas">Ver detalle</a>
             </div>
 
-            <div className="expenseList">
-              {expenses.slice(0, 6).map((expense) => (
-                <div key={expense.id}>
-                  <span className="expenseIcon">◈</span>
-                  <span>
-                    <b>{expense.description}</b>
-                    <small>{formatDate(expense.created_at)}</small>
-                  </span>
-                  <strong>- {formatMoney(Number(expense.amount || 0))}</strong>
-                </div>
-              ))}
-
-              {!expenses.length ? (
-                <p className="emptyState">Los gastos que registres en la app aparecerán aquí.</p>
-              ) : null}
+            <div className="categorySummary">
+              <div className="donut" />
+              <div className="legend">
+                {categoryTotals.length ? (
+                  categoryTotals.map((category, index) => (
+                    <span key={category.name}>
+                      <i className={'dot d' + ((index % 4) + 1)} />
+                      {category.name}
+                      <b>{category.percentage}%</b>
+                    </span>
+                  ))
+                ) : (
+                  <span className="emptyState">Aún no hay gastos este mes.</span>
+                )}
+              </div>
             </div>
-          </article>
+          </section>
         </div>
       </section>
     </main>

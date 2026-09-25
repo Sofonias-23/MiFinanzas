@@ -785,3 +785,346 @@ footer div { display: flex; gap: 26px; }
     align-items: flex-start;
   }
 }
+
+
+.moneyShell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  background: #07111f;
+}
+.moneySidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  padding: 32px 22px;
+  border-right: 1px solid rgba(144, 170, 255, .14);
+  background: #081020;
+}
+.moneyNav {
+  display: grid;
+  gap: 8px;
+  margin-top: 48px;
+}
+.moneyNav a {
+  padding: 13px 14px;
+  border-radius: 12px;
+  color: #93a4bd;
+  font-size: 14px;
+}
+.moneyNav a:hover {
+  color: white;
+  background: rgba(36, 65, 108, .28);
+}
+.moneyNav a.active {
+  color: white;
+  background: linear-gradient(90deg, rgba(31, 140, 255, .28), rgba(105, 78, 255, .18));
+}
+.moneyMain {
+  width: min(1240px, 100%);
+  margin: 0 auto;
+  padding: 46px 4vw 70px;
+}
+.moneyHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 24px;
+}
+.moneyHeader h1 {
+  margin: 8px 0;
+  font-size: clamp(38px, 4vw, 58px);
+  letter-spacing: -.035em;
+}
+.moneyHeader > div > p:last-child {
+  color: #8496b1;
+  margin-bottom: 0;
+}
+.moneyProfileButton {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 16px;
+  border: 1px solid rgba(144, 170, 255, .18);
+  border-radius: 12px;
+  color: #bed0e8;
+  background: rgba(13, 25, 47, .7);
+}
+.moneyBalanceCard {
+  margin-top: 30px;
+  padding: 30px;
+  border: 1px solid rgba(63, 133, 255, .36);
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at 85% 10%, rgba(65, 116, 255, .18), transparent 26rem),
+    linear-gradient(145deg, rgba(16, 43, 85, .97), rgba(9, 23, 48, .98));
+  box-shadow: 0 24px 70px rgba(13, 70, 151, .14);
+}
+.moneyBalanceTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+}
+.moneyBalanceTop > div {
+  display: grid;
+  gap: 5px;
+}
+.moneyBalanceTop span,
+.moneyMetrics span,
+.moneyBudgetCard span {
+  color: #91a3bd;
+  font-size: 13px;
+}
+.moneyBalanceTop strong {
+  font-size: clamp(42px, 5vw, 66px);
+  letter-spacing: -.045em;
+}
+.moneyMonth {
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.06);
+}
+.moneyMetrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+.moneyMetrics > div {
+  display: grid;
+  gap: 5px;
+}
+.moneyMetrics > div:last-child {
+  text-align: right;
+}
+.moneyIncome {
+  color: #4ade80 !important;
+}
+.moneyExpense {
+  color: #f87171 !important;
+}
+.moneyQuickActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 14px;
+}
+.moneyQuick {
+  min-height: 50px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(144, 170, 255, .16);
+  border-radius: 14px;
+  color: white;
+  background: #172742;
+  font-weight: 800;
+}
+.moneyQuickPrimary {
+  border-color: rgba(31, 140, 255, .46);
+  background: linear-gradient(110deg, #1677ff, #446df4);
+}
+.moneyBudgetCard {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 18px;
+  margin-top: 14px;
+  padding: 20px;
+  border: 1px solid rgba(144, 170, 255, .14);
+  border-radius: 18px;
+  background: rgba(13, 26, 45, .92);
+}
+.moneyBudgetCard > div:first-child {
+  display: grid;
+  gap: 5px;
+}
+.moneyBudgetCard strong {
+  font-size: 17px;
+}
+.moneyBudgetRight {
+  display: grid;
+  justify-items: end;
+  align-content: center;
+  gap: 3px;
+}
+.moneyBudgetRight b {
+  color: #74b4ff;
+}
+.moneyBudgetRight a {
+  color: #7890b1;
+  font-size: 12px;
+}
+.moneyBudgetTrack {
+  grid-column: 1 / -1;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: #16263a;
+}
+.moneyBudgetFill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #238dff, #7058ff);
+}
+.moneyGrid {
+  display: grid;
+  grid-template-columns: 1.2fr .8fr;
+  gap: 16px;
+  margin-top: 18px;
+}
+.moneyPanel {
+  padding: 22px;
+  border: 1px solid rgba(144, 170, 255, .14);
+  border-radius: 20px;
+  background: rgba(11, 22, 41, .88);
+}
+.moneyPanelHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+}
+.moneyPanelHeader h2 {
+  margin: 6px 0 0;
+  font-size: 20px;
+}
+.moneyPanelHeader > a {
+  color: #70b7ff;
+  font-size: 12px;
+}
+.moneyMovementList {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+}
+.moneyMovement {
+  display: grid;
+  grid-template-columns: 42px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(144, 170, 255, .09);
+}
+.movementIcon {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  color: #69baff;
+  background: #162940;
+}
+.incomeIcon {
+  color: #65db9c;
+  background: rgba(44, 126, 83, .18);
+}
+.movementCopy {
+  display: grid;
+  gap: 4px;
+}
+.movementCopy b {
+  font-size: 14px;
+}
+.movementCopy small {
+  color: #6f819e;
+  font-size: 11px;
+}
+.moneyMovement > strong {
+  font-size: 13px;
+  white-space: nowrap;
+}
+.moneyEmpty {
+  min-height: 160px;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 7px;
+  color: #8fa0b8;
+  text-align: center;
+}
+.moneyEmpty b {
+  color: white;
+}
+.categorySummary {
+  display: grid;
+  justify-items: center;
+  gap: 26px;
+  padding-top: 28px;
+}
+.categorySummary .legend {
+  width: 100%;
+}
+.featurePlaceholder {
+  min-height: 100vh;
+  padding: 46px 7vw;
+  background:
+    radial-gradient(circle at 72% 18%, rgba(31, 140, 255, .12), transparent 28rem),
+    #07111f;
+}
+.featurePlaceholder > section {
+  width: min(760px, 100%);
+  margin: 18vh auto 0;
+}
+.featurePlaceholder h1 {
+  margin: 14px 0 18px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(48px, 6vw, 76px);
+  line-height: .98;
+}
+.featurePlaceholder p:not(.eyebrow) {
+  color: #94a6c0;
+  font-size: 17px;
+  line-height: 1.7;
+  margin-bottom: 30px;
+}
+@media (max-width: 980px) {
+  .moneyShell {
+    grid-template-columns: 1fr;
+  }
+  .moneySidebar {
+    position: static;
+    height: auto;
+    border-right: 0;
+    border-bottom: 1px solid rgba(144,170,255,.14);
+  }
+  .moneyNav {
+    grid-template-columns: repeat(3, 1fr);
+    margin-top: 26px;
+  }
+  .moneyGrid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 650px) {
+  .moneyMain {
+    padding: 30px 18px 56px;
+  }
+  .moneyHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .moneyBalanceCard {
+    padding: 22px;
+  }
+  .moneyMetrics {
+    grid-template-columns: 1fr;
+  }
+  .moneyMetrics > div:last-child {
+    text-align: left;
+  }
+  .moneyQuickActions {
+    grid-template-columns: 1fr;
+  }
+  .moneyNav {
+    grid-template-columns: 1fr 1fr;
+  }
+  .moneyMovement {
+    grid-template-columns: 38px 1fr;
+  }
+  .moneyMovement > strong {
+    grid-column: 2;
+  }
+}
