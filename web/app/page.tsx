@@ -80,6 +80,41 @@ const scenes = [
   },
 ];
 
+const sceneLiveData = [
+  {
+    label: 'MOVIMIENTO PERSONAL',
+    metrics: [
+      { value: '+ S/ 2,800', text: 'Sueldo', tone: 'positive' },
+      { value: '- S/ 86', text: 'Almuerzo · Yape', tone: 'negative' },
+      { value: '68%', text: 'Presupuesto comida', tone: 'blue' },
+    ],
+  },
+  {
+    label: 'PRIVACIDAD EN VIVO',
+    metrics: [
+      { value: 'Solo tú', text: 'Gasto personal', tone: 'violet' },
+      { value: 'No visible', text: 'En espacio Pareja', tone: 'muted' },
+      { value: '100%', text: 'Control de privacidad', tone: 'blue' },
+    ],
+  },
+  {
+    label: 'BALANCE COMPARTIDO',
+    metrics: [
+      { value: 'S/ 120', text: 'Cena', tone: 'pink' },
+      { value: '50 / 50', text: 'S/ 60 cada uno', tone: 'violet' },
+      { value: '+ S/ 60', text: 'A tu favor', tone: 'positive' },
+    ],
+  },
+  {
+    label: 'LECTURA DEL MES',
+    metrics: [
+      { value: 'S/ 1,314', text: 'Gasto mensual', tone: 'cyan' },
+      { value: '+12%', text: 'Variación', tone: 'positive' },
+      { value: '38%', text: 'Comida', tone: 'blue' },
+    ],
+  },
+];
+
 export default function HomePage() {
   const [activeDemo, setActiveDemo] = useState<number | null>(null);
   const [demoStep, setDemoStep] = useState(0);
@@ -300,6 +335,30 @@ export default function HomePage() {
       <section id="historia" className="publicStory">
         {scenes.map((scene, index) => (
           <article className={'publicStoryScene story-' + scene.accent} key={scene.number}>
+            <div className="storySceneTop">
+              <div className="storySceneLiveLabel">
+                <span className="storyLiveDot" />
+                <b>{sceneLiveData[index].label}</b>
+              </div>
+
+              <div className="storyMetricRail">
+                {sceneLiveData[index].metrics.map((metric, metricIndex) => (
+                  <div className={'storyMetricChip tone-' + metric.tone} key={metric.text}>
+                    <span>{metric.value}</span>
+                    <small>{metric.text}</small>
+                    <i style={{ animationDelay: metricIndex * 0.45 + 's' }} />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="storyAmbientLayer" aria-hidden="true">
+              <span className="storyAmbient ambientOne">$</span>
+              <span className="storyAmbient ambientTwo">S/</span>
+              <span className="storyAmbient ambientThree">%</span>
+              <span className="storyAmbient ambientFour">{scene.number}</span>
+            </div>
+
             <div className="publicStoryVisual kineticSurface">
               <div className="storyHalo" />
               <div className="storyObject">
