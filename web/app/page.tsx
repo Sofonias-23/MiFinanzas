@@ -1,34 +1,53 @@
-const slides = [
+'use client';
+
+import { useEffect } from 'react';
+
+const scenes = [
   {
-    kicker: "TU DINERO, MÁS CLARO",
-    title: "Finanzas personales sin complicarte.",
-    copy: "Registra tus gastos, identifica hábitos y toma mejores decisiones con una vista simple de tu dinero.",
-    tag: "01",
+    number: '01',
+    kicker: 'ORDEN PERSONAL',
+    title: 'Tu dinero deja de sentirse disperso.',
+    copy: 'Gastos, ingresos, presupuestos y hábitos en una sola vista. Lo importante aparece primero.',
+    accent: 'blue',
   },
   {
-    kicker: "EN PAREJA",
-    title: "Compartido cuando tiene que ser compartido.",
-    copy: "Cada uno mantiene sus gastos privados y ambos pueden ver los gastos que comparten.",
-    tag: "02",
+    number: '02',
+    kicker: 'ESPACIO PRIVADO',
+    title: 'Lo personal sigue siendo solo tuyo.',
+    copy: 'Tus movimientos personales no se mezclan con el espacio compartido. Tú decides qué pertenece a Pareja.',
+    accent: 'violet',
   },
   {
-    kicker: "BALANCE AUTOMÁTICO",
-    title: "Quién pagó y quién debe, siempre claro.",
-    copy: "MiFinanzas calcula el balance entre ambos para que dividir gastos no se convierta en una discusión.",
-    tag: "03",
+    number: '03',
+    kicker: 'EN PAREJA',
+    title: 'Dos personas. Un balance claro.',
+    copy: 'Registra quién pagó, divide 50/50 o con porcentajes personalizados y mantén el saldo actualizado.',
+    accent: 'pink',
   },
   {
-    kicker: "ENTIENDE TUS HÁBITOS",
-    title: "Estadísticas que sí se entienden.",
-    copy: "Categorías, evolución del gasto y metas para saber exactamente a dónde está yendo tu dinero.",
-    tag: "04",
+    number: '04',
+    kicker: 'DECISIONES',
+    title: 'Mira el patrón, no solo el gasto.',
+    copy: 'Presupuestos y estadísticas convierten tus movimientos del día a día en una lectura simple del mes.',
+    accent: 'cyan',
   },
 ];
 
 export default function HomePage() {
+  useEffect(() => {
+    const update = () => {
+      document.documentElement.style.setProperty('--home-scroll', String(window.scrollY));
+    };
+
+    update();
+    window.addEventListener('scroll', update, { passive: true });
+
+    return () => window.removeEventListener('scroll', update);
+  }, []);
+
   return (
-    <main>
-      <header className="topbar">
+    <main className="publicHome">
+      <header className="topbar publicTopbar">
         <a className="brand" href="#inicio" aria-label="MiFinanzas">
           <span className="brandMark" aria-hidden="true">
             <span className="brandDollar">$</span>
@@ -38,127 +57,210 @@ export default function HomePage() {
 
         <nav className="navLinks" aria-label="Navegación principal">
           <a href="#inicio">Inicio</a>
-          <a href="#funciones">Funciones</a>
-          <a href="#pareja">Pareja</a>
-          <a href="#guias">Guías</a>
+          <a href="#historia">Funciones</a>
+          <a href="/calculadoras">Calculadoras</a>
+          <a href="/guias">Guías</a>
         </nav>
 
         <div className="navActions">
           <a className="textButton" href="/login">Entrar</a>
-          <a className="primaryButton small" href="/login">Empezar gratis</a>
+          <a className="primaryButton small" href="/login">Empezar</a>
         </div>
       </header>
 
-      <section id="inicio" className="hero">
-        <div className="heroGlow heroGlowOne" />
-        <div className="heroGlow heroGlowTwo" />
+      <section id="inicio" className="cinemaHero">
+        <div className="cinemaSky cinemaSkyOne" />
+        <div className="cinemaSky cinemaSkyTwo" />
+        <div className="cinemaGrid" />
 
-        <div className="heroCopy">
-          <p className="eyebrow">FINANZAS PERSONALES Y EN PAREJA</p>
-          <h1>Controla tu dinero, sin enredos.</h1>
-          <p className="heroText">
-            Lo privado sigue siendo privado. Lo compartido se organiza entre dos.
+        <div className="cinemaCopy">
+          <p className="eyebrow">MI FINANZAS · PERSONAL + PAREJA</p>
+          <h1>
+            Ordena tu dinero.
+            <span>Ve lo que antes se perdía.</span>
+          </h1>
+          <p>
+            Una experiencia financiera simple para registrar, dividir, entender y decidir sin convertir tu día a día en una hoja de cálculo.
           </p>
-          <div className="heroActions">
-            <a className="primaryButton" href="/login">Empezar gratis →</a>
-            <a className="ghostButton" href="#funciones">Ver cómo funciona</a>
+
+          <div className="cinemaActions">
+            <a className="primaryButton" href="/login">Entrar a MiFinanzas →</a>
+            <a className="ghostButton" href="#historia">Explorar</a>
           </div>
-          <div className="trustRow">
-            <span>◈ Privado</span>
-            <span>♡ En pareja</span>
-            <span>▥ Claro</span>
+
+          <div className="cinemaFacts">
+            <span>Privado</span>
+            <i />
+            <span>Compartido cuando tú decides</span>
+            <i />
+            <span>Sin enredos</span>
           </div>
         </div>
 
-        <div className="heroScene" aria-label="Vista conceptual de MiFinanzas">
-          <div className="orb orbOne" />
-          <div className="orb orbTwo" />
-          <div className="sceneCard mainCard">
-            <div className="miniTop">
-              <span>MiFinanzas</span>
-              <span className="pill">Pareja</span>
-            </div>
-            <p className="muted">Gasto compartido del mes</p>
-            <strong>S/ 1,480.00</strong>
-            <div className="chartBars">
-              <i /><i /><i /><i /><i /><i /><i />
-            </div>
-            <div className="balance">
-              <span>Tú pagaste <b>S/ 780</b></span>
-              <span>Pareja pagó <b>S/ 700</b></span>
-            </div>
+        <div className="cinemaWorld" aria-hidden="true">
+          <div className="cinemaPlanet">
+            <div className="planetGlow" />
+            <div className="planetSurface" />
           </div>
-          <div className="sceneCard floatingCard cardLeft">
-            <small>Balance</small>
-            <b>+ S/ 40</b>
+
+          <div className="cinemaOrbit orbitOne">
+            <span>S/ 480</span>
           </div>
-          <div className="sceneCard floatingCard cardRight">
-            <small>Meta mensual</small>
-            <b>75%</b>
+          <div className="cinemaOrbit orbitTwo">
+            <span>50 / 50</span>
+          </div>
+
+          <div className="cinemaGlass glassOne">
+            <small>Saldo del mes</small>
+            <strong>S/ 1,240</strong>
+            <div><span>Ingresos</span><b>+ 2,800</b></div>
+            <div><span>Gastos</span><b>- 1,560</b></div>
+          </div>
+
+          <div className="cinemaGlass glassTwo">
+            <small>Pareja</small>
+            <strong>Todo al día</strong>
+            <span>Balance S/ 0.00</span>
           </div>
         </div>
+
+        <a className="cinemaScroll" href="#historia">
+          <span>SCROLL</span>
+          <i />
+        </a>
       </section>
 
-      <section id="funciones" className="story">
-        {slides.map((slide, index) => (
-          <article className="storySlide" key={slide.tag} id={index === 1 ? "pareja" : undefined}>
-            <div className={"visual visual" + (index + 1)}>
-              <div className="visualRing" />
-              <div className="visualCore">
-                <span>{slide.tag}</span>
+      <section id="historia" className="publicStory">
+        {scenes.map((scene, index) => (
+          <article className={'publicStoryScene story-' + scene.accent} key={scene.number}>
+            <div className="publicStoryVisual">
+              <div className="storyHalo" />
+              <div className="storyObject">
+                <span>{scene.number}</span>
+                {index === 0 ? (
+                  <div className="storyLedger">
+                    <i /><i /><i /><i />
+                  </div>
+                ) : null}
+                {index === 1 ? <div className="storyLock">⌁</div> : null}
+                {index === 2 ? (
+                  <div className="storyPair">
+                    <i />
+                    <b>+</b>
+                    <i />
+                  </div>
+                ) : null}
+                {index === 3 ? (
+                  <div className="storyBars">
+                    <i /><i /><i /><i /><i />
+                  </div>
+                ) : null}
               </div>
             </div>
-            <div className="storyCopy">
-              <span className="slideNumber">{slide.tag} — 04</span>
-              <p className="eyebrow">{slide.kicker}</p>
-              <h2>{slide.title}</h2>
-              <p>{slide.copy}</p>
-              <a href="/login" className="inlineLink">Conocer más →</a>
+
+            <div className="publicStoryCopy">
+              <span className="slideNumber">{scene.number} — 04</span>
+              <p className="eyebrow">{scene.kicker}</p>
+              <h2>{scene.title}</h2>
+              <p>{scene.copy}</p>
+
+              {index === 2 ? (
+                <a href="/calculadoras" className="inlineLink">Probar calculadora de pareja →</a>
+              ) : (
+                <a href="/login" className="inlineLink">Entrar a la app →</a>
+              )}
             </div>
           </article>
         ))}
       </section>
 
-      <section id="guias" className="contentSection">
+      <section className="publicToolkit">
+        <div className="toolkitIntro">
+          <p className="eyebrow">ANTES DE REGISTRARTE</p>
+          <h2>Herramientas que puedes usar ahora mismo.</h2>
+          <p>Calcula, compara y entiende tus números sin iniciar sesión.</p>
+        </div>
+
+        <div className="toolkitCards">
+          <a href="/calculadoras#presupuesto">
+            <span>01</span>
+            <small>PRESUPUESTO</small>
+            <h3>¿Cuánto te queda al mes?</h3>
+            <p>Ingresos menos gastos fijos y variables.</p>
+            <b>Calcular →</b>
+          </a>
+
+          <a href="/calculadoras#503020">
+            <span>02</span>
+            <small>PLANIFICACIÓN</small>
+            <h3>Regla 50/30/20</h3>
+            <p>Distribuye un ingreso mensual en tres bloques.</p>
+            <b>Calcular →</b>
+          </a>
+
+          <a href="/calculadoras#pareja">
+            <span>03</span>
+            <small>PAREJA</small>
+            <h3>Dividir un gasto</h3>
+            <p>50/50 o por porcentaje entre dos personas.</p>
+            <b>Calcular →</b>
+          </a>
+        </div>
+      </section>
+
+      <section className="publicGuidesPreview">
+        <div className="guidesPreviewHead">
+          <div>
+            <p className="eyebrow">GUÍAS</p>
+            <h2>Menos teoría. Más decisiones útiles.</h2>
+          </div>
+          <a href="/guias">Ver todas →</a>
+        </div>
+
+        <div className="guideEditorialGrid">
+          <a className="guideEditorialFeature" href="/guias/fondo-emergencia">
+            <small>AHORRO · GUÍA</small>
+            <h3>Cómo construir un fondo de emergencia sin descuidar el mes actual.</h3>
+            <p>Una forma práctica de definir una meta, separarla por etapas y mantenerla fuera del gasto cotidiano.</p>
+            <span>Leer guía →</span>
+          </a>
+
+          <div className="guideEditorialSide">
+            <a href="/guias/gastos-pareja">
+              <small>PAREJA</small>
+              <h3>Cómo dividir gastos sin convertir todo en 50/50.</h3>
+              <span>Leer →</span>
+            </a>
+            <a href="/guias/regla-50-30-20">
+              <small>PRESUPUESTO</small>
+              <h3>Regla 50/30/20: cómo usarla como referencia, no como obligación.</h3>
+              <span>Leer →</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section className="publicFinalCta">
         <div>
-          <p className="eyebrow">CONTENIDO ÚTIL</p>
-          <h2>Aprende a manejar mejor tu dinero.</h2>
-          <p>
-            Guías, calculadoras y consejos prácticos para finanzas personales y en pareja.
-          </p>
+          <p className="eyebrow">TU SIGUIENTE MES</p>
+          <h2>Más visible. Más ordenado. Más fácil de conversar.</h2>
         </div>
-        <div className="contentCards">
-          <article>
-            <span>AHORRO</span>
-            <h3>Cómo crear un fondo de emergencia</h3>
-            <a href="#">Leer guía →</a>
-          </article>
-          <article>
-            <span>PAREJA</span>
-            <h3>Cómo dividir gastos sin complicarse</h3>
-            <a href="#">Leer guía →</a>
-          </article>
-          <article>
-            <span>PLANIFICACIÓN</span>
-            <h3>Regla 50/30/20 con ejemplos reales</h3>
-            <a href="#">Leer guía →</a>
-          </article>
-        </div>
+        <a className="primaryButton" href="/login">Abrir MiFinanzas →</a>
       </section>
 
-      <section className="finalCta">
-        <p className="eyebrow">MI FINANZAS</p>
-        <h2>Empieza a tomar el control de tus finanzas.</h2>
-        <a className="primaryButton" href="/login">Empezar gratis →</a>
-      </section>
+      <footer className="publicFooter">
+        <a className="brand" href="#inicio">
+          <span className="brandMark" aria-hidden="true"><span className="brandDollar">$</span></span>
+          <span>MiFinanzas</span>
+        </a>
 
-      <footer>
+        <div>
+          <a href="/calculadoras">Calculadoras</a>
+          <a href="/guias">Guías</a>
+          <a href="/login">Entrar</a>
+        </div>
+
         <span>© 2026 MiFinanzas</span>
-        <div>
-          <a href="#">Privacidad</a>
-          <a href="#">Términos</a>
-          <a href="#">Contacto</a>
-        </div>
       </footer>
     </main>
   );
