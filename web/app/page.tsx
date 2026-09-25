@@ -134,6 +134,8 @@ export default function HomePage() {
 
   useEffect(() => {
     const root = document.documentElement;
+    const motionSection = document.querySelector<HTMLElement>('.motionNarrative');
+    const storySections = Array.from(document.querySelectorAll<HTMLElement>('.publicStoryScene'));
 
     const updateScroll = () => {
       const y = window.scrollY;
@@ -144,6 +146,33 @@ export default function HomePage() {
       root.style.setProperty('--home-scroll-shift', (y * 0.035).toFixed(2) + 'px');
       root.style.setProperty('--home-scroll-shift-reverse', (y * -0.028).toFixed(2) + 'px');
       root.style.setProperty('--scroll-progress', progress.toFixed(2) + '%');
+
+      if (motionSection) {
+        const rect = motionSection.getBoundingClientRect();
+        const travel = Math.max(window.innerHeight + rect.height, 1);
+        const local = Math.min(1, Math.max(0, (window.innerHeight - rect.top) / travel));
+        const centered = local - 0.5;
+
+        motionSection.style.setProperty('--mn-progress', local.toFixed(4));
+        motionSection.style.setProperty('--mn-copy-scroll-y', (72 - local * 144).toFixed(2) + 'px');
+        motionSection.style.setProperty('--mn-frame-scroll-y', (145 - local * 290).toFixed(2) + 'px');
+        motionSection.style.setProperty('--mn-frame-scroll-x', (centered * 46).toFixed(2) + 'px');
+        motionSection.style.setProperty('--mn-frame-scroll-rotate', (centered * -5.5).toFixed(2) + 'deg');
+        motionSection.style.setProperty('--mn-frame-scroll-scale', (0.94 + local * 0.1).toFixed(4));
+        motionSection.style.setProperty('--mn-ghost-scroll-x', (centered * 160).toFixed(2) + 'px');
+        motionSection.style.setProperty('--mn-orb-scroll-y', (centered * -120).toFixed(2) + 'px');
+        motionSection.style.setProperty('--mn-line-progress', (0.55 + local * 0.65).toFixed(3));
+      }
+
+      storySections.forEach((section) => {
+        const rect = section.getBoundingClientRect();
+        const local = Math.min(1, Math.max(0, (window.innerHeight - rect.top) / Math.max(window.innerHeight + rect.height, 1)));
+        const centered = local - 0.5;
+
+        section.style.setProperty('--scene-scroll-y', (centered * -105).toFixed(2) + 'px');
+        section.style.setProperty('--scene-copy-scroll-y', (centered * 72).toFixed(2) + 'px');
+        section.style.setProperty('--scene-top-scroll-x', (centered * -70).toFixed(2) + 'px');
+      });
     };
 
     const updatePointer = (event: PointerEvent) => {
