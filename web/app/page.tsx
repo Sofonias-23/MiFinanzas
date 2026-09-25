@@ -88,7 +88,10 @@ export default function HomePage() {
     const root = document.documentElement;
 
     const updateScroll = () => {
-      root.style.setProperty('--home-scroll', String(window.scrollY));
+      const y = window.scrollY;
+      root.style.setProperty('--home-scroll', String(y));
+      root.style.setProperty('--home-scroll-shift', (y * 0.035).toFixed(2) + 'px');
+      root.style.setProperty('--home-scroll-shift-reverse', (y * -0.028).toFixed(2) + 'px');
     };
 
     const updatePointer = (event: PointerEvent) => {
@@ -111,7 +114,7 @@ export default function HomePage() {
 
     const kineticTargets = Array.from(
       document.querySelectorAll<HTMLElement>(
-        '.kineticButton, .toolkitCards > a, .guideEditorialFeature, .guideEditorialSide > a',
+        '.kineticButton, .kineticSurface, .toolkitCards > a, .guideEditorialFeature, .guideEditorialSide > a, .kineticShowcaseCard',
       ),
     );
 
@@ -122,11 +125,15 @@ export default function HomePage() {
         const y = event.clientY - (rect.top + rect.height / 2);
         target.style.setProperty('--kinetic-x', (x * 0.08).toFixed(2) + 'px');
         target.style.setProperty('--kinetic-y', (y * 0.1).toFixed(2) + 'px');
+        target.style.setProperty('--kinetic-rx', (y * -0.035).toFixed(2) + 'deg');
+        target.style.setProperty('--kinetic-ry', (x * 0.035).toFixed(2) + 'deg');
       };
 
       const leave = () => {
         target.style.setProperty('--kinetic-x', '0px');
         target.style.setProperty('--kinetic-y', '0px');
+        target.style.setProperty('--kinetic-rx', '0deg');
+        target.style.setProperty('--kinetic-ry', '0deg');
         target.classList.remove('kineticPress');
       };
 
@@ -241,6 +248,13 @@ export default function HomePage() {
         <div className="cinemaWorld" aria-hidden="true">
           <div className="cinemaPlanet">
             <div className="planetGlow" />
+            <div className="worldSpinLayer">
+              <i className="worldLongitude worldLongitudeOne" />
+              <i className="worldLongitude worldLongitudeTwo" />
+              <i className="worldLatitude worldLatitudeOne" />
+              <i className="worldLatitude worldLatitudeTwo" />
+              <i className="worldEquator" />
+            </div>
             <div className="planetSurface" />
             <span className="heroFinanceGlyph heroGlyphDollar">$</span>
             <span className="heroFinanceGlyph heroGlyphSol">S/</span>
@@ -362,6 +376,89 @@ export default function HomePage() {
             </div>
           </article>
         ))}
+      </section>
+
+      <section className="kineticShowcase">
+        <div className="kineticShowcaseTop">
+          <div>
+            <p className="eyebrow">KINETIC INTERACTION DESIGN</p>
+            <h2>Explora MiFinanzas moviendo, tocando y recorriendo cada escena.</h2>
+          </div>
+          <span>MOVE · CLICK · SCROLL</span>
+        </div>
+
+        <div className="kineticShowcaseTrack">
+          <button
+            type="button"
+            className="kineticShowcaseCard showcaseCardOne kineticSurface"
+            onClick={() => setActiveDemo(0)}
+          >
+            <div className="kineticPoster posterBlue">
+              <span className="posterCode">PR.01</span>
+              <div className="posterAppPanel">
+                <small>Saldo disponible</small>
+                <strong>S/ 1,240</strong>
+                <div className="posterMiniChart">
+                  <i /><i /><i /><i /><i />
+                </div>
+                <span className="posterChip">+ S/240</span>
+              </div>
+              <div className="posterMeta">
+                <b>Mi dinero</b>
+                <small>Registro y control personal</small>
+              </div>
+            </div>
+            <span className="kineticShowcasePill">01 · TOCA PARA VER LA DEMO</span>
+          </button>
+
+          <button
+            type="button"
+            className="kineticShowcaseCard showcaseCardTwo kineticSurface"
+            onClick={() => setActiveDemo(2)}
+          >
+            <div className="kineticPoster posterPink">
+              <span className="posterCode">PR.02</span>
+              <div className="posterCouplePanel">
+                <div><span>$</span><small>Tú</small></div>
+                <b>50 / 50</b>
+                <div><span>S/</span><small>Pareja</small></div>
+              </div>
+              <div className="posterTransferLine">
+                <i />
+                <span>S/ 120 → S/ 60 + S/ 60</span>
+              </div>
+              <div className="posterMeta">
+                <b>Pareja</b>
+                <small>División y balance automático</small>
+              </div>
+            </div>
+            <span className="kineticShowcasePill">02 · TOCA PARA VER LA DEMO</span>
+          </button>
+
+          <button
+            type="button"
+            className="kineticShowcaseCard showcaseCardThree kineticSurface"
+            onClick={() => setActiveDemo(3)}
+          >
+            <div className="kineticPoster posterCyan">
+              <span className="posterCode">PR.03</span>
+              <div className="posterAnalyticsPanel">
+                <span className="posterPercent">+12%</span>
+                <div className="posterAnalyticsBars">
+                  <i /><i /><i /><i /><i />
+                </div>
+                <svg viewBox="0 0 260 110" role="presentation">
+                  <polyline points="5,95 50,78 94,82 140,48 188,58 255,16" />
+                </svg>
+              </div>
+              <div className="posterMeta">
+                <b>Estadísticas</b>
+                <small>Tendencias y decisiones</small>
+              </div>
+            </div>
+            <span className="kineticShowcasePill">03 · TOCA PARA VER LA DEMO</span>
+          </button>
+        </div>
       </section>
 
       <section className="publicToolkit">
