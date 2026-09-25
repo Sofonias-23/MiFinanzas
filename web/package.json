@@ -1,0 +1,23 @@
+{
+  "name": "mifinanzas-web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.4",
+    "next": "^16.0.0",
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "typescript": "^6.0.3"
+  }
+}
