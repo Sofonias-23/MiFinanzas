@@ -139,6 +139,9 @@ export default function HomePage() {
           <div className="cinemaPlanet">
             <div className="planetGlow" />
             <div className="planetSurface" />
+            <span className="heroFinanceGlyph heroGlyphDollar">$</span>
+            <span className="heroFinanceGlyph heroGlyphSol">S/</span>
+            <span className="heroFinanceGlyph heroGlyphPercent">%</span>
           </div>
 
           <div className="cinemaOrbit orbitOne">
@@ -176,21 +179,58 @@ export default function HomePage() {
               <div className="storyObject">
                 <span>{scene.number}</span>
                 {index === 0 ? (
-                  <div className="storyLedger">
-                    <i /><i /><i /><i />
+                  <div className="financeWalletScene">
+                    <div className="financeWallet">
+                      <span className="financeWalletLine" />
+                      <span className="financeWalletChip">$</span>
+                      <span className="financeWalletAmount">S/ 1,240</span>
+                    </div>
+                    <span className="financeFloat financeFloatIn">+ S/240</span>
+                    <span className="financeFloat financeFloatOut">- S/80</span>
+                    <span className="financeCoin financeCoinOne">$</span>
+                    <span className="financeCoin financeCoinTwo">S/</span>
                   </div>
                 ) : null}
-                {index === 1 ? <div className="storyLock">⌁</div> : null}
+
+                {index === 1 ? (
+                  <div className="financePrivacyScene">
+                    <div className="financeShield">
+                      <span className="financeLockShackle" />
+                      <span className="financeLockBody">$</span>
+                    </div>
+                    <span className="securityOrbitCoin">$</span>
+                    <span className="securityOrbitCoin second">S/</span>
+                    <span className="securityLabel">PRIVADO</span>
+                  </div>
+                ) : null}
+
                 {index === 2 ? (
-                  <div className="storyPair">
-                    <i />
-                    <b>+</b>
-                    <i />
+                  <div className="financeCoupleScene">
+                    <div className="financeWalletMini financeWalletBlue">
+                      <span>$</span>
+                    </div>
+                    <div className="financeTransfer">
+                      <i>→</i>
+                      <b>50 / 50</b>
+                      <i>←</i>
+                    </div>
+                    <div className="financeWalletMini financeWalletPink">
+                      <span>S/</span>
+                    </div>
+                    <span className="sharedCoin">$</span>
                   </div>
                 ) : null}
+
                 {index === 3 ? (
-                  <div className="storyBars">
-                    <i /><i /><i /><i /><i />
+                  <div className="financeAnalyticsScene">
+                    <div className="financeChartBars">
+                      <i /><i /><i /><i /><i />
+                    </div>
+                    <svg className="financeTrendLine" viewBox="0 0 180 90" role="presentation">
+                      <polyline points="6,74 40,58 72,64 108,31 142,40 174,12" />
+                    </svg>
+                    <span className="financeGrowth">+12%</span>
+                    <span className="financeChartDollar">$</span>
                   </div>
                 ) : null}
               </div>
