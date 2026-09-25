@@ -1785,3 +1785,360 @@ footer div { display: flex; gap: 26px; }
     margin-left: 54px;
   }
 }
+
+
+.budgetsPage {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 82% 12%, rgba(92, 84, 255, .11), transparent 30rem),
+    #07111f;
+}
+.budgetsWrap {
+  width: min(1120px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 58px 0 90px;
+}
+.budgetsHeading {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 28px;
+}
+.budgetsHeading h1 {
+  margin: 8px 0 10px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(48px, 6vw, 76px);
+  line-height: .95;
+  letter-spacing: -.045em;
+}
+.budgetsHeading > div > p:last-child {
+  color: #879ab7;
+  margin-bottom: 0;
+}
+.budgetNewButton {
+  border: 0;
+  cursor: pointer;
+}
+.budgetScopeTabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 34px;
+}
+.budgetScope {
+  min-height: 50px;
+  border: 1px solid rgba(144, 170, 255, .14);
+  border-radius: 14px;
+  color: #899ab4;
+  background: #0b172a;
+  cursor: pointer;
+  font-weight: 800;
+}
+.budgetScope.active.personal {
+  color: white;
+  border-color: rgba(31, 140, 255, .48);
+  background: linear-gradient(110deg, rgba(31, 140, 255, .52), rgba(50, 86, 180, .45));
+}
+.budgetScope.active.couple {
+  color: white;
+  border-color: rgba(219, 72, 143, .38);
+  background: linear-gradient(110deg, rgba(187, 51, 117, .42), rgba(94, 47, 130, .42));
+}
+.budgetPartnerWarning {
+  display: grid;
+  gap: 4px;
+  margin-top: 14px;
+  padding: 14px 16px;
+  border: 1px solid rgba(247, 178, 72, .2);
+  border-radius: 14px;
+  background: rgba(97, 62, 14, .16);
+  color: #d5b776;
+}
+.budgetPartnerWarning span {
+  color: #9e865b;
+  font-size: 12px;
+}
+.budgetSummaryCard {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 18px;
+  margin-top: 16px;
+  padding: 24px;
+  border: 1px solid rgba(144, 170, 255, .16);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 88% 10%, rgba(75, 103, 255, .14), transparent 22rem),
+    rgba(11, 22, 41, .9);
+}
+.budgetSummaryCard > div:first-child {
+  display: grid;
+  gap: 4px;
+}
+.budgetSummaryCard span,
+.budgetSummaryCard small {
+  color: #8294ae;
+  font-size: 12px;
+}
+.budgetSummaryCard strong {
+  font-size: 34px;
+}
+.budgetSummaryRight {
+  display: grid;
+  justify-items: end;
+  align-content: center;
+  gap: 4px;
+}
+.budgetSummaryRight b {
+  font-size: 24px;
+  color: #6eb5ff;
+}
+.budgetProgressTrack {
+  grid-column: 1 / -1;
+  height: 9px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: #16263a;
+}
+.budgetProgressFill,
+.budgetCategoryFill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #238dff, #6e65ff);
+}
+.budgetProgressFill.warn,
+.budgetCategoryFill.warn {
+  background: linear-gradient(90deg, #d99a30, #f2bb4e);
+}
+.budgetProgressFill.danger,
+.budgetCategoryFill.danger {
+  background: linear-gradient(90deg, #e55e68, #ff7e8b);
+}
+.budgetForm {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 16px;
+  padding: 22px;
+  border: 1px solid rgba(144, 170, 255, .15);
+  border-radius: 20px;
+  background: rgba(10, 21, 39, .9);
+}
+.budgetForm > div:not(.budgetFormActions) {
+  display: grid;
+  gap: 8px;
+}
+.budgetForm label {
+  color: #d7e2f3;
+  font-size: 13px;
+  font-weight: 800;
+}
+.budgetForm select,
+.budgetAmountControl {
+  min-height: 52px;
+  border: 1px solid #253b61;
+  border-radius: 14px;
+  color: white;
+  background: #09172c;
+}
+.budgetForm select {
+  padding: 0 14px;
+}
+.budgetAmountControl {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 14px;
+}
+.budgetAmountControl span {
+  color: #6faeff;
+  font-weight: 850;
+}
+.budgetAmountControl input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  color: white;
+  background: transparent;
+  font-size: 18px;
+  font-weight: 800;
+}
+.budgetFormError {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+.budgetFormActions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.budgetFormActions button {
+  border: 0;
+  cursor: pointer;
+}
+.budgetSaveButton:disabled {
+  opacity: .65;
+}
+.budgetStandaloneError {
+  margin-top: 14px;
+}
+.budgetListSection {
+  margin-top: 32px;
+}
+.budgetListHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 18px;
+}
+.budgetListHeader h2 {
+  margin: 5px 0 0;
+  font-size: 26px;
+}
+.budgetListHeader > span {
+  color: #7385a1;
+  font-size: 12px;
+}
+.budgetCards {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+.budgetCategoryCard {
+  padding: 19px;
+  border: 1px solid rgba(144, 170, 255, .12);
+  border-radius: 18px;
+  background: rgba(10, 21, 39, .82);
+}
+.budgetCategoryTop {
+  display: grid;
+  grid-template-columns: 46px 1fr auto;
+  align-items: center;
+  gap: 12px;
+}
+.budgetCategoryIcon {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  background: #162940;
+  font-size: 21px;
+}
+.budgetCategoryTop > div {
+  display: grid;
+  gap: 3px;
+}
+.budgetCategoryTop span {
+  color: #7689a4;
+  font-size: 12px;
+}
+.budgetCategoryTop strong {
+  color: #69b4ff;
+}
+.warnText {
+  color: #efbd5d !important;
+}
+.dangerText {
+  color: #ff7b87 !important;
+}
+.budgetCategoryTrack {
+  height: 8px;
+  overflow: hidden;
+  margin-top: 15px;
+  border-radius: 99px;
+  background: #16263a;
+}
+.budgetCategoryFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  margin-top: 13px;
+}
+.budgetCategoryFooter > span {
+  color: #71849f;
+  font-size: 12px;
+}
+.budgetCategoryFooter > div {
+  display: flex;
+  gap: 8px;
+}
+.budgetCategoryFooter button {
+  padding: 7px 10px;
+  border: 1px solid rgba(144, 170, 255, .15);
+  border-radius: 9px;
+  color: #91bced;
+  background: #0c1a2e;
+  cursor: pointer;
+}
+.budgetCategoryFooter button.delete {
+  color: #f28a95;
+}
+.budgetEmpty {
+  min-height: 280px;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 30px;
+  border: 1px dashed rgba(144, 170, 255, .16);
+  border-radius: 20px;
+  color: #71839e;
+  text-align: center;
+  background: rgba(10, 21, 39, .5);
+}
+.budgetEmpty > span {
+  color: #69b4ff;
+  font-size: 30px;
+}
+.budgetEmpty b {
+  color: white;
+  font-size: 17px;
+}
+.budgetEmpty p {
+  max-width: 460px;
+  margin: 0 0 8px;
+  line-height: 1.6;
+  font-size: 13px;
+}
+.budgetEmpty button {
+  border: 0;
+  cursor: pointer;
+}
+@media (max-width: 760px) {
+  .budgetsHeading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .budgetNewButton {
+    width: 100%;
+  }
+  .budgetForm {
+    grid-template-columns: 1fr;
+  }
+  .budgetFormError,
+  .budgetFormActions {
+    grid-column: 1;
+  }
+  .budgetSummaryCard {
+    grid-template-columns: 1fr;
+  }
+  .budgetSummaryRight {
+    justify-items: start;
+  }
+}
+@media (max-width: 560px) {
+  .budgetsWrap {
+    width: min(100% - 28px, 720px);
+    padding-top: 38px;
+  }
+  .budgetScopeTabs {
+    grid-template-columns: 1fr;
+  }
+  .budgetCategoryFooter {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
