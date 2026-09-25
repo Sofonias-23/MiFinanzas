@@ -3660,3 +3660,8 @@ footer div { display: flex; gap: 26px; }
 
 @media(max-width:850px){.profileColumns,.settingsGrid,.dataGrid{grid-template-columns:1fr}.settingsWide{grid-column:1}.settingsPrivacy{grid-template-columns:1fr}.dataCard{grid-template-columns:48px 1fr}.dataCard>button{grid-column:2;justify-self:start}}
 @media(max-width:620px){.profileWrap,.settingsWrap,.dataWrap{width:min(100% - 28px,720px);padding-top:38px}.profileHero{grid-template-columns:auto 1fr}.profileEditButton{grid-column:1/-1;justify-content:center}.profileMenuCard>a{grid-template-columns:40px 1fr}.profileMenuCard>a i{display:none}.settingsCurrency{grid-template-columns:38px 1fr}.settingsCurrency i{grid-column:2;justify-self:start}.dataCard{grid-template-columns:1fr}.dataCard>button{grid-column:1}.profilePrivacy{align-items:flex-start}}
+
+
+.moneyHeaderLinks{display:flex;gap:9px;align-items:center}
+.spaceHeaderActions>a{min-height:38px;display:inline-flex;align-items:center;padding:0 13px;border:1px solid rgba(144,170,255,.14);border-radius:10px;color:#a9bdd7;background:rgba(13,25,47,.58);font-size:13px}
+@media(max-width:650px){.moneyHeaderLinks{width:100%;flex-wrap:wrap}.moneyHeaderLinks .moneyProfileButton{flex:1;justify-content:center}}
