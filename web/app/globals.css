@@ -5413,12 +5413,12 @@ footer div { display: flex; gap: 26px; }
 .showcaseCardOne{
   justify-self:start;
   --showcase-rotate:-4deg;
-  translate:0 calc(var(--home-scroll-shift,0px) * .04);
+  translate:0 var(--home-scroll-shift,0px);
 }
 .showcaseCardTwo{
   justify-self:end;
   --showcase-rotate:4.5deg;
-  translate:0 calc(var(--home-scroll-shift-reverse,0px) * .04);
+  translate:0 var(--home-scroll-shift-reverse,0px);
 }
 .showcaseCardThree{
   justify-self:center;
