@@ -282,7 +282,11 @@ export default function MovimientosPage() {
           {movements.length ? (
             <div className="movementRows">
               {movements.map((movement) => (
-                <div className="movementRow" key={movement.id}>
+                <div
+                  className={movement.kind === 'expense' ? 'movementRow clickable' : 'movementRow'}
+                  key={movement.id}
+                  onClick={() => movement.expenseId && router.push('/detalle-gasto?id=' + movement.expenseId)}
+                >
                   <div className="movementMain">
                     <span className={movement.kind === 'income' ? 'movementBigIcon incomeIcon' : 'movementBigIcon'}>
                       {movement.icon}
