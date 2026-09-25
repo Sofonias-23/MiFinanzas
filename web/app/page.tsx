@@ -115,6 +115,18 @@ const sceneLiveData = [
   },
 ];
 
+function KineticWords({ text, className = '' }: { text: string; className?: string }) {
+  return (
+    <span className={'kineticLine ' + className}>
+      {text.split(' ').map((word, index) => (
+        <span className={'kineticWord word-' + (index % 6)} key={word + index}>
+          {word}
+        </span>
+      ))}
+    </span>
+  );
+}
+
 export default function HomePage() {
   const [activeDemo, setActiveDemo] = useState<number | null>(null);
   const [demoStep, setDemoStep] = useState(0);
@@ -125,9 +137,13 @@ export default function HomePage() {
 
     const updateScroll = () => {
       const y = window.scrollY;
+      const max = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
+      const progress = Math.min(100, Math.max(0, (y / max) * 100));
+
       root.style.setProperty('--home-scroll', String(y));
       root.style.setProperty('--home-scroll-shift', (y * 0.035).toFixed(2) + 'px');
       root.style.setProperty('--home-scroll-shift-reverse', (y * -0.028).toFixed(2) + 'px');
+      root.style.setProperty('--scroll-progress', progress.toFixed(2) + '%');
     };
 
     const updatePointer = (event: PointerEvent) => {
@@ -140,6 +156,12 @@ export default function HomePage() {
       root.style.setProperty('--home-parallax-y', (y * 18).toFixed(2) + 'px');
       root.style.setProperty('--home-parallax-x-reverse', (x * -15).toFixed(2) + 'px');
       root.style.setProperty('--home-parallax-y-reverse', (y * -12).toFixed(2) + 'px');
+      root.style.setProperty('--type-x', (x * 34).toFixed(2) + 'px');
+      root.style.setProperty('--type-y', (y * 25).toFixed(2) + 'px');
+      root.style.setProperty('--type-x-reverse', (x * -28).toFixed(2) + 'px');
+      root.style.setProperty('--type-y-reverse', (y * -20).toFixed(2) + 'px');
+      root.style.setProperty('--cursor-x', event.clientX.toFixed(1) + 'px');
+      root.style.setProperty('--cursor-y', event.clientY.toFixed(1) + 'px');
     };
 
     const revealTargets = Array.from(
@@ -208,10 +230,12 @@ export default function HomePage() {
 
     updateScroll();
     window.addEventListener('scroll', updateScroll, { passive: true });
+    window.addEventListener('resize', updateScroll, { passive: true });
     window.addEventListener('pointermove', updatePointer, { passive: true });
 
     return () => {
       window.removeEventListener('scroll', updateScroll);
+      window.removeEventListener('resize', updateScroll);
       window.removeEventListener('pointermove', updatePointer);
       observer.disconnect();
       cleanupKinetic.forEach((cleanup) => cleanup());
@@ -239,6 +263,10 @@ export default function HomePage() {
 
   return (
     <main className="publicHome">
+      <div className="motionCursor" aria-hidden="true"><i /><span>MOVE</span></div>
+      <div className="motionProgress" aria-hidden="true"><i /></div>
+      <div className="motionGrain" aria-hidden="true" />
+
       <header className="topbar publicTopbar">
         <a className="brand" href="#inicio" aria-label="MiFinanzas">
           <span className="brandMark" aria-hidden="true">
@@ -267,9 +295,9 @@ export default function HomePage() {
 
         <div className="cinemaCopy">
           <p className="eyebrow">MI FINANZAS · PERSONAL + PAREJA</p>
-          <h1>
-            Ordena tu dinero.
-            <span>Ve lo que antes se perdía.</span>
+          <h1 className="kineticTitle kineticHeroTitle">
+            <KineticWords text="Ordena tu dinero." />
+            <KineticWords className="accentLine" text="Ve lo que antes se perdía." />
           </h1>
           <p>
             Una experiencia financiera simple para registrar, dividir, entender y decidir sin convertir tu día a día en una hoja de cálculo.
@@ -330,6 +358,72 @@ export default function HomePage() {
           <span>SCROLL</span>
           <i />
         </a>
+      </section>
+
+      <section className="motionNarrative">
+        <div className="motionNarrativeCopy">
+          <p className="eyebrow">MOTION NARRATIVE</p>
+          <h2 className="kineticTitle motionNarrativeTitle">
+            <KineticWords text="Movimiento que cuenta la historia de tu dinero." />
+          </h2>
+
+          <div className="motionNarrativeBullets">
+            <div><span>01</span><p>Los datos aparecen, cambian y se conectan sin esperar un clic.</p></div>
+            <div><span>02</span><p>El cursor empuja tipografía, paneles, cifras y objetos financieros.</p></div>
+            <div><span>03</span><p>El scroll transforma la lectura en una secuencia visual continua.</p></div>
+          </div>
+        </div>
+
+        <div className="motionNarrativeFrame kineticSurface">
+          <div className="motionFrameTop">
+            <span className="livePulse" />
+            <small>LIVE FINANCE STORY</small>
+            <b>{showcaseStep + 1}/4</b>
+          </div>
+
+          <div className="motionFinanceStage">
+            <div className="motionOrb">
+              <span className="motionOrbDollar">$</span>
+              <i className="motionOrbRing ringA" />
+              <i className="motionOrbRing ringB" />
+              <i className="motionOrbRing ringC" />
+            </div>
+
+            <div className="motionPhone">
+              <div className="motionPhoneHeader"><span>$</span><b>MiFinanzas</b><i /></div>
+              <div className="motionPhoneBalance">
+                <small>Saldo del mes</small>
+                <strong>{showcaseStep === 0 ? 'S/ 1,240' : showcaseStep === 1 ? 'S/ 1,154' : showcaseStep === 2 ? 'S/ 1,136' : 'S/ 1,196'}</strong>
+                <span>{showcaseStep === 0 ? '+ S/ 2,800 ingreso' : showcaseStep === 1 ? '- S/ 86 almuerzo' : showcaseStep === 2 ? '- S/ 18 taxi' : '+ S/ 60 pareja'}</span>
+              </div>
+              <div className="motionPhoneChart">
+                <i /><i /><i /><i /><i />
+              </div>
+              <div className="motionPhoneRows">
+                <span><b>Comida</b><small>38%</small></span>
+                <span><b>Transporte</b><small>21%</small></span>
+                <span><b>Pareja</b><small>S/ 0</small></span>
+              </div>
+            </div>
+
+            <span className="motionBadge badgeOne">+ S/ 240</span>
+            <span className="motionBadge badgeTwo">50 / 50</span>
+            <span className="motionBadge badgeThree">+12%</span>
+            <span className="motionBadge badgeFour">S/ 60</span>
+          </div>
+
+          <div className="motionNarrativeCaption">
+            <span>01 / EXPERIENCIA</span>
+            <b>Los números también pueden contar una historia.</b>
+          </div>
+        </div>
+      </section>
+
+      <section className="motionTicker" aria-hidden="true">
+        <div>
+          <span>$ CONTROL</span><i>•</i><span>S/ PERSONAL</span><i>•</i><span>50/50 PAREJA</span><i>•</i><span>% PRESUPUESTO</span><i>•</i><span>+12% TENDENCIA</span><i>•</i>
+          <span>$ CONTROL</span><i>•</i><span>S/ PERSONAL</span><i>•</i><span>50/50 PAREJA</span><i>•</i><span>% PRESUPUESTO</span><i>•</i><span>+12% TENDENCIA</span><i>•</i>
+        </div>
       </section>
 
       <section id="historia" className="publicStory">
@@ -424,7 +518,7 @@ export default function HomePage() {
             <div className="publicStoryCopy">
               <span className="slideNumber">{scene.number} — 04</span>
               <p className="eyebrow">{scene.kicker}</p>
-              <h2>{scene.title}</h2>
+              <h2 className="kineticTitle storyKineticTitle"><KineticWords text={scene.title} /></h2>
               <p>{scene.copy}</p>
 
               <div className="storyActions">
