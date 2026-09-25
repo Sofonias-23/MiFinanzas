@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useCallback, useEffect, useState } from 'react';
+import { Suspense, FormEvent, useCallback, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 
@@ -43,7 +43,7 @@ function money(value: number) {
   }).format(value);
 }
 
-export default function ChatGastoPage() {
+function ChatGastoContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const expenseId = searchParams.get('id');
@@ -301,5 +301,14 @@ export default function ChatGastoPage() {
         </form>
       </section>
     </main>
+  );
+}
+
+
+export default function ChatGastoPage() {
+  return (
+    <Suspense fallback={<main className="dashboardLoading"><p>Cargando chat...</p></main>}>
+      <ChatGastoContent />
+    </Suspense>
   );
 }
