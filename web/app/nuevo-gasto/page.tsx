@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { Suspense, FormEvent, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 
@@ -32,7 +32,7 @@ function parseAmount(value: string) {
   return Number(value.replace(',', '.'));
 }
 
-export default function NuevoGastoPage() {
+function NuevoGastoContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sharedMode = searchParams.get('type') === 'compartido';
@@ -550,5 +550,14 @@ export default function NuevoGastoPage() {
         </form>
       </section>
     </main>
+  );
+}
+
+
+export default function NuevoGastoPage() {
+  return (
+    <Suspense fallback={<main className="dashboardLoading"><p>Cargando formulario...</p></main>}>
+      <NuevoGastoContent />
+    </Suspense>
   );
 }
