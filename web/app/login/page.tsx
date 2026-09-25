@@ -1,4 +1,37 @@
+'use client';
+
+import { FormEvent, useState } from 'react';
+import { useRouter } from 'next/navigation';
+
+import { supabase } from '@/lib/supabase';
+
 export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setErrorMessage('');
+    setLoading(true);
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+
+    setLoading(false);
+
+    if (error) {
+      setErrorMessage('No se pudo iniciar sesión. Revisa tu correo y contraseña.');
+      return;
+    }
+
+    router.replace('/dashboard');
+  }
+
   return (
     <main className="authPage">
       <a className="brand authBrand" href="/">
@@ -15,22 +48,41 @@ export default function LoginPage() {
           Usa la misma cuenta de MiFinanzas que utilizas en la app.
         </p>
 
-        <form>
+        <form onSubmit={handleSubmit}>
           <label>
             Correo
-            <input type="email" placeholder="correo@ejemplo.com" />
+            <input
+              type="email"
+              placeholder="correo@ejemplo.com"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              autoComplete="email"
+              required
+            />
           </label>
+
           <label>
             Contraseña
-            <input type="password" placeholder="••••••••" />
+            <input
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              autoComplete="current-password"
+              minLength={6}
+              required
+            />
           </label>
-          <a className="primaryButton authSubmit" href="/dashboard">
-            Ingresar
-          </a>
+
+          {errorMessage ? <p className="formError">{errorMessage}</p> : null}
+
+          <button className="primaryButton authSubmit authButton" type="submit" disabled={loading}>
+            {loading ? 'Ingresando...' : 'Ingresar'}
+          </button>
         </form>
 
         <p className="authFoot">
-          En la siguiente etapa conectaremos este formulario con Supabase Auth.
+          La web y la app móvil usan la misma cuenta y los mismos datos de Supabase.
         </p>
       </section>
     </main>
