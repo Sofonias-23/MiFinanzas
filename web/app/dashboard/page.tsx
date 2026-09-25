@@ -274,6 +274,7 @@ export default function DashboardPage() {
           <a href="/estadisticas">◫ Estadísticas</a>
           <a href="/categorias">◇ Categorías</a>
           <a href="/metodos-pago">▤ Métodos de pago</a>
+          <a href="/perfil">◉ Perfil</a>
           <a href="/espacio">↔ Cambiar espacio</a>
         </nav>
 
@@ -289,7 +290,10 @@ export default function DashboardPage() {
             <h1>Hola, {displayName}</h1>
             <p>Tu resumen personal del mes.</p>
           </div>
-          <a className="moneyProfileButton" href="/espacio">Cambiar espacio</a>
+          <div className="moneyHeaderLinks">
+            <a className="moneyProfileButton" href="/perfil">Perfil</a>
+            <a className="moneyProfileButton" href="/espacio">Cambiar espacio</a>
+          </div>
         </header>
 
         <section className="moneyBalanceCard">
