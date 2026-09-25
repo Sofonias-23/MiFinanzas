@@ -7341,3 +7341,237 @@ footer div { display: flex; gap: 26px; }
     letter-spacing:normal!important;
   }
 }
+
+
+/* Motion Narrative: stronger visible movement across the whole section */
+.motionNarrative{
+  isolation:isolate;
+}
+.motionNarrativeEnergy{
+  position:absolute;
+  inset:0;
+  z-index:1;
+  overflow:hidden;
+  pointer-events:none;
+}
+.motionEnergyOrb{
+  position:absolute;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(151,196,238,.12);
+  border-radius:50%;
+  color:rgba(205,226,247,.24);
+  background:radial-gradient(circle at 35% 30%,rgba(116,180,241,.16),rgba(25,48,72,.05) 60%,transparent 72%);
+  box-shadow:0 0 80px rgba(63,125,185,.08);
+  backdrop-filter:blur(3px);
+}
+.motionEnergyOrb span{
+  font-weight:950;
+  text-shadow:0 0 24px rgba(115,181,245,.12);
+}
+.energyOrbOne{
+  width:170px;
+  height:170px;
+  left:48%;
+  top:5%;
+  font-size:48px;
+  animation:energyOrbOne 7s ease-in-out infinite;
+}
+.energyOrbTwo{
+  width:115px;
+  height:115px;
+  right:6%;
+  top:24%;
+  color:rgba(117,233,222,.2);
+  font-size:18px;
+  animation:energyOrbTwo 6.2s ease-in-out infinite;
+}
+.energyOrbThree{
+  width:92px;
+  height:92px;
+  left:35%;
+  bottom:8%;
+  color:rgba(191,158,255,.2);
+  font-size:28px;
+  animation:energyOrbThree 5.6s ease-in-out infinite;
+}
+.motionEnergyLine{
+  position:absolute;
+  display:block;
+  height:1px;
+  transform-origin:left center;
+  background:linear-gradient(90deg,transparent,rgba(127,178,230,.18),rgba(127,178,230,.02),transparent);
+}
+.lineOne{
+  width:52%;
+  left:18%;
+  top:25%;
+  transform:rotate(-17deg);
+  animation:energyLineSweepOne 4.8s ease-in-out infinite;
+}
+.lineTwo{
+  width:44%;
+  right:8%;
+  top:58%;
+  transform:rotate(21deg);
+  animation:energyLineSweepTwo 5.6s ease-in-out infinite;
+}
+.lineThree{
+  width:36%;
+  left:7%;
+  bottom:18%;
+  transform:rotate(8deg);
+  animation:energyLineSweepThree 6.4s ease-in-out infinite;
+}
+.motionGhostWord{
+  position:absolute;
+  color:rgba(225,236,247,.035);
+  font-size:clamp(86px,13vw,220px);
+  line-height:.8;
+  font-weight:950;
+  letter-spacing:-.08em;
+  white-space:nowrap;
+  user-select:none;
+}
+.ghostFlow{
+  right:-3%;
+  top:8%;
+  animation:ghostFlowMove 12s ease-in-out infinite;
+}
+.ghostMoney{
+  left:-4%;
+  top:46%;
+  animation:ghostMoneyMove 13s ease-in-out infinite;
+}
+.ghostBalance{
+  right:4%;
+  bottom:3%;
+  font-size:clamp(72px,10vw,170px);
+  animation:ghostBalanceMove 11s ease-in-out infinite;
+}
+.motionNarrativeCopy{
+  animation:motionCopyFloat 5.2s ease-in-out infinite;
+}
+.motionNarrativeFrame{
+  animation:motionFrameFloat 4.8s ease-in-out infinite;
+}
+.motionNarrativeFrame:hover{
+  box-shadow:0 48px 120px rgba(2,10,20,.34);
+}
+.motionNarrativeFrame:hover .motionPhone{
+  animation-duration:2.6s;
+}
+.motionNarrativeFrame:hover .motionBadge{
+  filter:brightness(1.12);
+}
+.motionNarrativeTitle .kineticWord{
+  animation:motionTitleBreathe 4.8s ease-in-out infinite;
+}
+.motionNarrativeTitle .kineticWord:nth-child(2){animation-delay:.18s}
+.motionNarrativeTitle .kineticWord:nth-child(3){animation-delay:.36s}
+.motionNarrativeTitle .kineticWord:nth-child(4){animation-delay:.54s}
+.motionNarrativeTitle .kineticWord:nth-child(5){animation-delay:.72s}
+.motionNarrativeTitle .kineticWord:nth-child(6){animation-delay:.9s}
+.motionNarrativeTitle:hover .kineticWord{
+  color:#ffffff;
+  text-shadow:0 14px 40px rgba(106,171,239,.16);
+}
+.motionNarrativeBullets>div:hover{
+  transform:translateX(12px);
+  opacity:1;
+  border-bottom-color:rgba(154,193,232,.22);
+}
+.motionNarrativeBullets>div:hover span{
+  color:#9ac7ee;
+}
+.motionNarrativeBullets>div:hover p{
+  color:#f0f6fb;
+}
+.motionNarrativeCaption{
+  animation:motionCaptionDrift 5.8s ease-in-out infinite;
+}
+.motionFinanceStage{
+  animation:motionStageBreath 6.5s ease-in-out infinite;
+}
+.motionPhoneRows span{
+  transition:transform .2s ease,background .2s ease;
+}
+.motionPhoneRows span:hover{
+  transform:translateX(5px);
+  background:rgba(255,255,255,.07);
+}
+
+@keyframes energyOrbOne{
+  0%,100%{transform:translate3d(0,0,0) rotate(-8deg) scale(.95)}
+  50%{transform:translate3d(55px,-26px,0) rotate(8deg) scale(1.08)}
+}
+@keyframes energyOrbTwo{
+  0%,100%{transform:translate3d(0,0,0) rotate(6deg)}
+  50%{transform:translate3d(-42px,30px,0) rotate(-9deg)}
+}
+@keyframes energyOrbThree{
+  0%,100%{transform:translate3d(0,0,0) scale(.92)}
+  50%{transform:translate3d(30px,-38px,0) scale(1.1)}
+}
+@keyframes energyLineSweepOne{
+  0%,100%{opacity:.18;transform:rotate(-17deg) scaleX(.55)}
+  50%{opacity:.6;transform:rotate(-17deg) scaleX(1.1)}
+}
+@keyframes energyLineSweepTwo{
+  0%,100%{opacity:.14;transform:rotate(21deg) scaleX(.62)}
+  50%{opacity:.5;transform:rotate(21deg) scaleX(1.08)}
+}
+@keyframes energyLineSweepThree{
+  0%,100%{opacity:.12;transform:rotate(8deg) scaleX(.6)}
+  50%{opacity:.42;transform:rotate(8deg) scaleX(1.05)}
+}
+@keyframes ghostFlowMove{
+  0%,100%{transform:translate3d(0,0,0) rotate(-2deg)}
+  50%{transform:translate3d(-70px,28px,0) rotate(2deg)}
+}
+@keyframes ghostMoneyMove{
+  0%,100%{transform:translate3d(0,0,0) rotate(1deg)}
+  50%{transform:translate3d(82px,-20px,0) rotate(-2deg)}
+}
+@keyframes ghostBalanceMove{
+  0%,100%{transform:translate3d(0,0,0)}
+  50%{transform:translate3d(-54px,-18px,0)}
+}
+@keyframes motionCopyFloat{
+  0%,100%{transform:translate3d(0,0,0)}
+  50%{transform:translate3d(0,-8px,0)}
+}
+@keyframes motionFrameFloat{
+  0%,100%{transform:perspective(1400px) translate3d(var(--kinetic-x),var(--kinetic-y),0) rotateX(var(--kinetic-rx)) rotateY(var(--kinetic-ry)) translateY(0)}
+  50%{transform:perspective(1400px) translate3d(var(--kinetic-x),var(--kinetic-y),0) rotateX(var(--kinetic-rx)) rotateY(var(--kinetic-ry)) translateY(-12px)}
+}
+@keyframes motionTitleBreathe{
+  0%,100%{filter:brightness(.96);transform:translateY(0)}
+  50%{filter:brightness(1.08);transform:translateY(-3px)}
+}
+@keyframes motionCaptionDrift{
+  0%,100%{transform:translateX(0)}
+  50%{transform:translateX(8px)}
+}
+@keyframes motionStageBreath{
+  0%,100%{filter:saturate(.96) brightness(.98)}
+  50%{filter:saturate(1.08) brightness(1.04)}
+}
+
+/* Keep motion clearly visible in this specific showcase even when reduced-motion is enabled */
+@media(prefers-reduced-motion:reduce){
+  .motionNarrativeEnergy .motionEnergyOrb,
+  .motionNarrativeEnergy .motionEnergyLine,
+  .motionNarrativeEnergy .motionGhostWord{
+    animation-duration:18s!important;
+    animation-iteration-count:infinite!important;
+  }
+  .motionNarrativeCopy,
+  .motionNarrativeFrame,
+  .motionNarrativeTitle .kineticWord,
+  .motionNarrativeCaption,
+  .motionFinanceStage{
+    animation-duration:12s!important;
+    animation-iteration-count:infinite!important;
+  }
+}
