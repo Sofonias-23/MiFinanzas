@@ -87,6 +87,7 @@ export default function EspacioPage() {
 
         <div className="spaceHeaderActions">
           <span>{displayName}</span>
+          <a href="/perfil">Perfil</a>
           <button type="button" onClick={handleLogout}>Cerrar sesión</button>
         </div>
       </header>
