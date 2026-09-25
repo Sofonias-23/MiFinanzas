@@ -428,3 +428,47 @@ footer div { display: flex; gap: 26px; }
   .dashboardHeader { align-items: start; flex-direction: column; }
   .sidebar nav { grid-template-columns: 1fr 1fr; }
 }
+
+
+.formError {
+  margin: 0;
+  color: #ff8da0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.authButton {
+  border: 0;
+  width: 100%;
+  cursor: pointer;
+}
+.authButton:disabled {
+  opacity: .66;
+  cursor: wait;
+}
+.dashboardLoading {
+  min-height: 100vh;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 18px;
+  color: var(--muted);
+}
+.logoutButton {
+  width: 100%;
+  margin-top: 30px;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: #c8d5e9;
+  background: rgba(11, 21, 41, .75);
+  cursor: pointer;
+}
+.logoutButton:hover {
+  border-color: rgba(125, 168, 255, .45);
+  color: white;
+}
+.emptyState {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
