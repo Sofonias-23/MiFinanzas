@@ -361,6 +361,18 @@ export default function HomePage() {
       </section>
 
       <section className="motionNarrative">
+        <div className="motionNarrativeEnergy" aria-hidden="true">
+          <div className="motionEnergyOrb energyOrbOne"><span>$</span></div>
+          <div className="motionEnergyOrb energyOrbTwo"><span>S/</span></div>
+          <div className="motionEnergyOrb energyOrbThree"><span>%</span></div>
+          <i className="motionEnergyLine lineOne" />
+          <i className="motionEnergyLine lineTwo" />
+          <i className="motionEnergyLine lineThree" />
+          <span className="motionGhostWord ghostFlow">FLOW</span>
+          <span className="motionGhostWord ghostMoney">MONEY</span>
+          <span className="motionGhostWord ghostBalance">BALANCE</span>
+        </div>
+
         <div className="motionNarrativeCopy">
           <p className="eyebrow">MOTION NARRATIVE</p>
           <h2 className="kineticTitle motionNarrativeTitle">
