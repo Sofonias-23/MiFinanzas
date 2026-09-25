@@ -47,6 +47,10 @@ export default function HomePage() {
 
       root.style.setProperty('--home-pointer-x', x.toFixed(4));
       root.style.setProperty('--home-pointer-y', y.toFixed(4));
+      root.style.setProperty('--home-parallax-x', (x * 24).toFixed(2) + 'px');
+      root.style.setProperty('--home-parallax-y', (y * 18).toFixed(2) + 'px');
+      root.style.setProperty('--home-parallax-x-reverse', (x * -15).toFixed(2) + 'px');
+      root.style.setProperty('--home-parallax-y-reverse', (y * -12).toFixed(2) + 'px');
     };
 
     const revealTargets = Array.from(
