@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 
@@ -61,7 +61,7 @@ function normalizeScope(value: string | null): BudgetScope {
   return value === 'pareja' ? 'pareja' : 'personal';
 }
 
-export default function PresupuestosPage() {
+function PresupuestosContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -534,5 +534,14 @@ export default function PresupuestosPage() {
         </section>
       </section>
     </main>
+  );
+}
+
+
+export default function PresupuestosPage() {
+  return (
+    <Suspense fallback={<main className="dashboardLoading"><p>Cargando presupuestos...</p></main>}>
+      <PresupuestosContent />
+    </Suspense>
   );
 }
