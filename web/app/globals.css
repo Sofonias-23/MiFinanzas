@@ -7575,3 +7575,109 @@ footer div { display: flex; gap: 26px; }
     animation-iteration-count:infinite!important;
   }
 }
+
+
+/* True scroll-linked movement for Motion Narrative and story scenes */
+.motionNarrative{
+  --mn-copy-scroll-y:0px;
+  --mn-frame-scroll-y:0px;
+  --mn-frame-scroll-x:0px;
+  --mn-frame-scroll-rotate:0deg;
+  --mn-frame-scroll-scale:1;
+  --mn-ghost-scroll-x:0px;
+  --mn-orb-scroll-y:0px;
+  --mn-line-progress:1;
+  min-height:145vh;
+  align-items:start;
+  padding-top:14vh;
+  padding-bottom:18vh;
+}
+.motionNarrativeCopy,
+.motionNarrativeFrame{
+  position:sticky;
+  top:110px;
+  align-self:start;
+}
+.motionNarrativeCopy{
+  translate:0 var(--mn-copy-scroll-y);
+}
+.motionNarrativeFrame{
+  translate:var(--mn-frame-scroll-x) var(--mn-frame-scroll-y);
+  rotate:var(--mn-frame-scroll-rotate);
+  scale:var(--mn-frame-scroll-scale);
+}
+.motionNarrativeEnergy .energyOrbOne,
+.motionNarrativeEnergy .energyOrbTwo,
+.motionNarrativeEnergy .energyOrbThree{
+  translate:0 var(--mn-orb-scroll-y);
+}
+.motionNarrativeEnergy .ghostFlow,
+.motionNarrativeEnergy .ghostMoney,
+.motionNarrativeEnergy .ghostBalance{
+  translate:var(--mn-ghost-scroll-x) 0;
+}
+.motionNarrativeEnergy .motionEnergyLine{
+  scale:var(--mn-line-progress) 1;
+}
+.motionFinanceStage{
+  translate:0 calc(var(--mn-frame-scroll-y) * -.12);
+}
+.motionPhone{
+  translate:calc(var(--mn-frame-scroll-x) * -.22) calc(var(--mn-frame-scroll-y) * -.08);
+}
+.motionBadge.badgeOne{translate:calc(var(--mn-frame-scroll-x) * -.45) calc(var(--mn-frame-scroll-y) * -.18)}
+.motionBadge.badgeTwo{translate:calc(var(--mn-frame-scroll-x) * .3) calc(var(--mn-frame-scroll-y) * -.14)}
+.motionBadge.badgeThree{translate:calc(var(--mn-frame-scroll-x) * .18) calc(var(--mn-frame-scroll-y) * .2)}
+.motionBadge.badgeFour{translate:calc(var(--mn-frame-scroll-x) * -.28) calc(var(--mn-frame-scroll-y) * .16)}
+
+.publicHome .publicStoryScene{
+  --scene-scroll-y:0px;
+  --scene-copy-scroll-y:0px;
+  --scene-top-scroll-x:0px;
+}
+.publicHome .publicStoryVisual{
+  translate:0 var(--scene-scroll-y);
+}
+.publicHome .publicStoryCopy{
+  translate:0 var(--scene-copy-scroll-y);
+}
+.publicHome .storySceneTop{
+  translate:var(--scene-top-scroll-x) 0;
+}
+
+@media(max-width:1050px){
+  .motionNarrative{
+    min-height:auto;
+    padding-top:80px;
+    padding-bottom:90px;
+  }
+  .motionNarrativeCopy,
+  .motionNarrativeFrame{
+    position:relative;
+    top:auto;
+    translate:none;
+    rotate:none;
+    scale:none;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .motionNarrativeCopy,
+  .motionNarrativeFrame,
+  .motionNarrativeEnergy .energyOrbOne,
+  .motionNarrativeEnergy .energyOrbTwo,
+  .motionNarrativeEnergy .energyOrbThree,
+  .motionNarrativeEnergy .ghostFlow,
+  .motionNarrativeEnergy .ghostMoney,
+  .motionNarrativeEnergy .ghostBalance,
+  .motionFinanceStage,
+  .motionPhone,
+  .motionBadge,
+  .publicHome .publicStoryVisual,
+  .publicHome .publicStoryCopy,
+  .publicHome .storySceneTop{
+    translate:none!important;
+    rotate:none!important;
+    scale:none!important;
+  }
+}
