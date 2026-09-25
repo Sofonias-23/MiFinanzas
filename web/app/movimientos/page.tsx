@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 
@@ -61,7 +61,7 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
-export default function MovimientosPage() {
+function MovimientosContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [user, setUser] = useState<User | null>(null);
@@ -314,5 +314,14 @@ export default function MovimientosPage() {
         </div>
       </section>
     </main>
+  );
+}
+
+
+export default function MovimientosPage() {
+  return (
+    <Suspense fallback={<main className="dashboardLoading"><p>Cargando movimientos...</p></main>}>
+      <MovimientosContent />
+    </Suspense>
   );
 }
