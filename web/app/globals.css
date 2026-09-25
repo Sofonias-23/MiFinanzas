@@ -5798,3 +5798,94 @@ footer div { display: flex; gap: 26px; }
     translate:none!important;
   }
 }
+
+
+/* Make the hero globe rotation unmistakably visible */
+.publicHome .cinemaPlanet{
+  overflow:hidden;
+  isolation:isolate;
+}
+.publicHome .cinemaPlanet::before{
+  content:"";
+  position:absolute;
+  inset:3%;
+  z-index:2;
+  border-radius:50%;
+  pointer-events:none;
+  opacity:.5;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 52px,
+      rgba(145,205,255,.16) 53px 55px,
+      transparent 56px 104px
+    );
+  background-size:208px 100%;
+  mix-blend-mode:screen;
+  animation:globeLongitudeTravel 5.5s linear infinite;
+}
+.publicHome .cinemaPlanet::after{
+  content:"";
+  position:absolute;
+  inset:5%;
+  z-index:2;
+  border-radius:50%;
+  pointer-events:none;
+  background:
+    radial-gradient(ellipse at 18% 34%,rgba(114,196,255,.22) 0 5%,transparent 6%),
+    radial-gradient(ellipse at 42% 21%,rgba(103,181,255,.16) 0 7%,transparent 8%),
+    radial-gradient(ellipse at 66% 48%,rgba(82,165,246,.18) 0 8%,transparent 9%),
+    radial-gradient(ellipse at 82% 67%,rgba(109,216,214,.15) 0 5%,transparent 6%),
+    radial-gradient(ellipse at 32% 73%,rgba(105,173,255,.14) 0 7%,transparent 8%);
+  background-size:140% 100%;
+  background-repeat:repeat-x;
+  animation:globeLandTravel 8s linear infinite;
+}
+.publicHome .worldSpinLayer{
+  z-index:3;
+  animation:worldSpinLayerVisible 9s linear infinite;
+}
+.publicHome .worldLongitude{
+  border-color:rgba(178,220,255,.28);
+}
+.publicHome .worldLatitude,
+.publicHome .worldEquator{
+  border-color:rgba(141,211,255,.22);
+}
+.publicHome .planetSurface{
+  z-index:1;
+  opacity:.68;
+  animation:planetSurfaceSpinVisible 10s linear infinite;
+}
+@keyframes globeLongitudeTravel{
+  from{background-position-x:0}
+  to{background-position-x:208px}
+}
+@keyframes globeLandTravel{
+  from{background-position-x:0}
+  to{background-position-x:-140%}
+}
+@keyframes worldSpinLayerVisible{
+  0%{transform:rotateZ(-2deg) scaleX(.98)}
+  25%{transform:rotateZ(0deg) scaleX(.76)}
+  50%{transform:rotateZ(2deg) scaleX(.98)}
+  75%{transform:rotateZ(0deg) scaleX(.76)}
+  100%{transform:rotateZ(-2deg) scaleX(.98)}
+}
+@keyframes planetSurfaceSpinVisible{
+  from{transform:rotate(0deg) scale(1.02)}
+  to{transform:rotate(360deg) scale(1.02)}
+}
+
+/* The user explicitly asked for the globe to keep moving. Keep only this slow rotation in reduced-motion mode. */
+@media(prefers-reduced-motion:reduce){
+  .publicHome .worldSpinLayer{
+    animation:worldSpinLayerVisible 18s linear infinite!important;
+  }
+  .publicHome .cinemaPlanet::before{
+    animation:globeLongitudeTravel 12s linear infinite!important;
+  }
+  .publicHome .cinemaPlanet::after{
+    animation:globeLandTravel 18s linear infinite!important;
+  }
+}
