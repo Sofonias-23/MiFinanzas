@@ -1,35 +1,34 @@
 'use client';
 
 import { FormEvent, useState } from 'react';
-import { useRouter } from 'next/navigation';
 
 import { supabase } from '@/lib/supabase';
 
-export default function LoginPage() {
-  const router = useRouter();
+export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [sent, setSent] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage('');
+    setSent(false);
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
+    const redirectTo = `${window.location.origin}/reset-password`;
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo,
     });
 
     setLoading(false);
 
     if (error) {
-      setErrorMessage('No se pudo iniciar sesión. Revisa tu correo y contraseña.');
+      setErrorMessage('No pudimos enviar el correo de recuperación. Inténtalo nuevamente.');
       return;
     }
 
-    router.replace('/dashboard');
+    setSent(true);
   }
 
   return (
@@ -42,10 +41,10 @@ export default function LoginPage() {
       </a>
 
       <section className="authCard">
-        <p className="eyebrow">BIENVENIDO</p>
-        <h1>Iniciar sesión</h1>
+        <p className="eyebrow">RECUPERAR ACCESO</p>
+        <h1>Restablece tu contraseña</h1>
         <p className="authIntro">
-          Usa la misma cuenta de MiFinanzas que utilizas en la app.
+          Ingresa el correo de tu cuenta MiFinanzas. Te enviaremos un enlace para crear una contraseña nueva.
         </p>
 
         <form onSubmit={handleSubmit}>
@@ -61,34 +60,21 @@ export default function LoginPage() {
             />
           </label>
 
-          <label>
-            <span className="authLabelRow">
-              <span>Contraseña</span>
-              <a className="secondaryLink" href="/forgot-password">
-                ¿Olvidaste tu contraseña?
-              </a>
-            </span>
-            <input
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              autoComplete="current-password"
-              minLength={6}
-              required
-            />
-          </label>
-
           {errorMessage ? <p className="formError">{errorMessage}</p> : null}
+          {sent ? (
+            <p className="formSuccess">
+              Correo enviado. Revisa tu bandeja de entrada y también la carpeta de spam.
+            </p>
+          ) : null}
 
           <button className="primaryButton authSubmit authButton" type="submit" disabled={loading}>
-            {loading ? 'Ingresando...' : 'Ingresar'}
+            {loading ? 'Enviando...' : 'Enviar enlace de recuperación'}
           </button>
         </form>
 
-        <p className="authFoot">
-          La web y la app móvil usan la misma cuenta y los mismos datos de Supabase.
-        </p>
+        <div className="authBottomLink">
+          <a className="secondaryLink" href="/login">← Volver a iniciar sesión</a>
+        </div>
       </section>
     </main>
   );

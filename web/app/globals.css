@@ -472,3 +472,51 @@ footer div { display: flex; gap: 26px; }
   font-size: 14px;
   line-height: 1.5;
 }
+
+
+.authLabelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.secondaryLink {
+  color: #77baff;
+  font-size: 13px;
+  font-weight: 700;
+}
+.secondaryLink:hover {
+  color: #b6ddff;
+}
+.formSuccess {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(68, 210, 141, .28);
+  border-radius: 12px;
+  background: rgba(68, 210, 141, .08);
+  color: #8be7b9;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.authBottomLink {
+  margin-top: 24px;
+  text-align: center;
+}
+.recoveryWarning {
+  margin-top: 24px;
+  padding: 16px;
+  border: 1px solid rgba(255, 141, 160, .24);
+  border-radius: 14px;
+  background: rgba(255, 111, 131, .06);
+  color: #c7d2e7;
+}
+.recoveryWarning p {
+  margin-top: 0;
+}
+@media (max-width: 520px) {
+  .authLabelRow {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+}
