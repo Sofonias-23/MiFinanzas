@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import AdSenseSlot from '@/components/AdSenseSlot';
 
 function numberValue(value: string) {
   const parsed = Number(value.replace(',', '.'));
@@ -171,6 +172,8 @@ export default function CalculadorasPage() {
         </div>
       </section>
 
+      <AdSenseSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_CALCULATORS} className="adSensePublic" />
+
       <section id="pareja" className="calcSection">
         <div className="calcSectionCopy">
           <span>03</span>
@@ -226,7 +229,7 @@ export default function CalculadorasPage() {
           <span className="brandMark" aria-hidden="true"><span className="brandDollar">$</span></span>
           <span>MiFinanzas</span>
         </a>
-        <div><a href="/">Inicio</a><a href="/guias">Guías</a><a href="/login">Entrar</a></div>
+        <div><a href="/">Inicio</a><a href="/guias">Guías</a><a href="/privacidad">Privacidad</a><a href="/cookies">Cookies</a><a href="/terminos">Términos</a><a href="/login">Entrar</a></div>
         <span>© 2026 MiFinanzas</span>
       </footer>
     </main>
