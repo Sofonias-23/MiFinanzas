@@ -37,7 +37,7 @@ export default function GuiasPage() {
       <header className="topbar publicTopbar">
         <a className="brand" href="/">
           <span className="brandMark" aria-hidden="true"><span className="brandDollar">$</span></span>
-          <span>MiFinanzas</span>
+          <span>SFIQ</span>
         </a>
 
         <nav className="navLinks">
@@ -103,10 +103,10 @@ export default function GuiasPage() {
       <footer className="publicFooter">
         <a className="brand" href="/">
           <span className="brandMark" aria-hidden="true"><span className="brandDollar">$</span></span>
-          <span>MiFinanzas</span>
+          <span>SFIQ</span>
         </a>
         <div><a href="/">Inicio</a><a href="/calculadoras">Calculadoras</a><a href="/privacidad">Privacidad</a><a href="/cookies">Cookies</a><a href="/terminos">Términos</a><a href="/login">Entrar</a></div>
-        <span>© 2026 MiFinanzas</span>
+        <span>© 2026 SFIQ</span>
       </footer>
     </main>
   );
