@@ -298,11 +298,11 @@ export default function HomePage() {
       <div className="motionGrain" aria-hidden="true" />
 
       <header className="topbar publicTopbar">
-        <a className="brand" href="#inicio" aria-label="MiFinanzas">
+        <a className="brand" href="#inicio" aria-label="SFIQ">
           <span className="brandMark" aria-hidden="true">
             <span className="brandDollar">$</span>
           </span>
-          <span>MiFinanzas</span>
+          <span>SFIQ</span>
         </a>
 
         <nav className="navLinks" aria-label="Navegación principal">
@@ -334,7 +334,7 @@ export default function HomePage() {
           </p>
 
           <div className="cinemaActions">
-            <a className="primaryButton kineticButton" href="/login">Entrar a MiFinanzas →</a>
+            <a className="primaryButton kineticButton" href="/login">Entrar a SFIQ →</a>
             <a className="ghostButton kineticButton" href="#historia">Explorar</a>
           </div>
 
@@ -432,7 +432,7 @@ export default function HomePage() {
             </div>
 
             <div className="motionPhone">
-              <div className="motionPhoneHeader"><span>$</span><b>MiFinanzas</b><i /></div>
+              <div className="motionPhoneHeader"><span>$</span><b>SFIQ</b><i /></div>
               <div className="motionPhoneBalance">
                 <small>Saldo del mes</small>
                 <strong>{showcaseStep === 0 ? 'S/ 1,240' : showcaseStep === 1 ? 'S/ 1,154' : showcaseStep === 2 ? 'S/ 1,136' : 'S/ 1,196'}</strong>
@@ -822,7 +822,7 @@ export default function HomePage() {
           <p className="eyebrow">TU SIGUIENTE MES</p>
           <h2>Más visible. Más ordenado. Más fácil de conversar.</h2>
         </div>
-        <a className="primaryButton kineticButton" href="/login">Abrir MiFinanzas →</a>
+        <a className="primaryButton kineticButton" href="/login">Abrir SFIQ →</a>
       </section>
 
       {activeDemo !== null ? (
@@ -841,7 +841,7 @@ export default function HomePage() {
               <div className="demoPhoneFrame">
                 <div className="demoPhoneTop">
                   <span className="demoPhoneBrand">$</span>
-                  <small>MiFinanzas</small>
+                  <small>SFIQ</small>
                   <i />
                 </div>
 
@@ -928,7 +928,7 @@ export default function HomePage() {
       <footer className="publicFooter">
         <a className="brand" href="#inicio">
           <span className="brandMark" aria-hidden="true"><span className="brandDollar">$</span></span>
-          <span>MiFinanzas</span>
+          <span>SFIQ</span>
         </a>
 
         <div>
@@ -940,7 +940,7 @@ export default function HomePage() {
           <a href="/login">Entrar</a>
         </div>
 
-        <span>© 2026 MiFinanzas</span>
+        <span>© 2026 SFIQ</span>
       </footer>
     </main>
   );
