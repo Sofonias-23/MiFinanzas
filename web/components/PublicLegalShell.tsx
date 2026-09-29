@@ -13,7 +13,7 @@ export default function PublicLegalShell({ kicker, title, intro, children }: Pro
       <header className="topbar publicTopbar">
         <a className="brand" href="/">
           <span className="brandMark" aria-hidden="true"><span className="brandDollar">$</span></span>
-          <span>MiFinanzas</span>
+          <span>SFIQ</span>
         </a>
 
         <nav className="navLinks" aria-label="Navegación legal">
@@ -42,7 +42,7 @@ export default function PublicLegalShell({ kicker, title, intro, children }: Pro
       <footer className="publicFooter legalFooter">
         <a className="brand" href="/">
           <span className="brandMark" aria-hidden="true"><span className="brandDollar">$</span></span>
-          <span>MiFinanzas</span>
+          <span>SFIQ</span>
         </a>
         <div>
           <a href="/privacidad">Privacidad</a>
@@ -50,7 +50,7 @@ export default function PublicLegalShell({ kicker, title, intro, children }: Pro
           <a href="/terminos">Términos</a>
           <a href="/login">Entrar</a>
         </div>
-        <span>© 2026 MiFinanzas</span>
+        <span>© 2026 SFIQ</span>
       </footer>
     </main>
   );
