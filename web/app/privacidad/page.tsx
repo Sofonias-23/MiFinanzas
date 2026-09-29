@@ -1,8 +1,8 @@
 import PublicLegalShell from '@/components/PublicLegalShell';
 
 export const metadata = {
-  title: 'Política de privacidad | MiFinanzas',
-  description: 'Cómo MiFinanzas trata la información de sus usuarios.',
+  title: 'Política de privacidad | SFIQ',
+  description: 'Cómo SFIQ trata la información de sus usuarios.',
 };
 
 export default function PrivacidadPage() {
@@ -10,10 +10,10 @@ export default function PrivacidadPage() {
     <PublicLegalShell
       kicker="LEGAL · PRIVACIDAD"
       title="Política de privacidad"
-      intro="Esta política explica qué información utiliza MiFinanzas, para qué se usa y qué controles tiene el usuario."
+      intro="Esta política explica qué información utiliza SFIQ, para qué se usa y qué controles tiene el usuario."
     >
       <article>
-        <h2>1. Información que puede tratar MiFinanzas</h2>
+        <h2>1. Información que puede tratar SFIQ</h2>
         <p>
           Para prestar el servicio podemos tratar datos de cuenta como correo electrónico, nombre de perfil y
           avatar; información financiera que el usuario registra voluntariamente, como gastos, ingresos,
@@ -43,7 +43,7 @@ export default function PrivacidadPage() {
       <article>
         <h2>4. Proveedores tecnológicos</h2>
         <p>
-          MiFinanzas utiliza proveedores de infraestructura para prestar el servicio. Actualmente se usa Supabase
+          SFIQ utiliza proveedores de infraestructura para prestar el servicio. Actualmente se usa Supabase
           para autenticación, base de datos y almacenamiento, y Railway para alojar la aplicación web. Estos
           proveedores pueden procesar información técnica necesaria para operar sus servicios.
         </p>
@@ -52,7 +52,7 @@ export default function PrivacidadPage() {
       <article>
         <h2>5. Cookies y publicidad</h2>
         <p>
-          MiFinanzas puede utilizar almacenamiento local o cookies necesarias para mantener preferencias y sesión.
+          SFIQ puede utilizar almacenamiento local o cookies necesarias para mantener preferencias y sesión.
           Si en el futuro se habilita Google AdSense, los componentes publicitarios solo se cargarán después de la
           elección de consentimiento implementada en el sitio. Consulta la <a href="/cookies">Política de cookies</a>.
         </p>
@@ -81,7 +81,7 @@ export default function PrivacidadPage() {
         <p>
           Esta política puede actualizarse cuando cambien las funciones, proveedores o requisitos aplicables. La
           fecha de actualización se mostrará al inicio de esta página. Para consultas de privacidad, utiliza el
-          canal de contacto que MiFinanzas publique en el sitio.
+          canal de contacto que SFIQ publique en el sitio.
         </p>
       </article>
     </PublicLegalShell>
