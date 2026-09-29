@@ -1,8 +1,8 @@
 import PublicLegalShell from '@/components/PublicLegalShell';
 
 export const metadata = {
-  title: 'Términos de uso | MiFinanzas',
-  description: 'Condiciones generales para utilizar MiFinanzas.',
+  title: 'Términos de uso | SFIQ',
+  description: 'Condiciones generales para utilizar SFIQ.',
 };
 
 export default function TerminosPage() {
@@ -10,12 +10,12 @@ export default function TerminosPage() {
     <PublicLegalShell
       kicker="LEGAL · TÉRMINOS"
       title="Términos de uso"
-      intro="Estas condiciones regulan el uso de la web, las herramientas públicas y las funciones privadas de MiFinanzas."
+      intro="Estas condiciones regulan el uso de la web, las herramientas públicas y las funciones privadas de SFIQ."
     >
       <article>
         <h2>1. Uso del servicio</h2>
         <p>
-          MiFinanzas permite registrar y organizar información financiera personal y compartida, consultar
+          SFIQ permite registrar y organizar información financiera personal y compartida, consultar
           estadísticas, utilizar calculadoras y acceder a contenidos educativos. El usuario debe utilizar el
           servicio de manera lícita y proporcionar información sobre la que tenga derecho de uso.
         </p>
@@ -33,7 +33,7 @@ export default function TerminosPage() {
       <article>
         <h2>3. Información financiera</h2>
         <p>
-          MiFinanzas es una herramienta de organización y educación financiera. Los cálculos, estadísticas,
+          SFIQ es una herramienta de organización y educación financiera. Los cálculos, estadísticas,
           presupuestos y contenidos no constituyen asesoría financiera, contable, tributaria, legal o de inversión.
           Las decisiones finales corresponden al usuario.
         </p>
@@ -60,7 +60,7 @@ export default function TerminosPage() {
         <h2>6. Contenido y publicidad</h2>
         <p>
           Las páginas públicas pueden incluir contenidos educativos y, cuando se habilite, espacios publicitarios.
-          La presencia de un anuncio no implica que MiFinanzas recomiende o garantice el producto o servicio
+          La presencia de un anuncio no implica que SFIQ recomiende o garantice el producto o servicio
           anunciado.
         </p>
       </article>
