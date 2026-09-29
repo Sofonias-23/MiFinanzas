@@ -1,8 +1,8 @@
 import PublicLegalShell from '@/components/PublicLegalShell';
 
 export const metadata = {
-  title: 'Política de cookies | MiFinanzas',
-  description: 'Información sobre cookies, almacenamiento local y publicidad en MiFinanzas.',
+  title: 'Política de cookies | SFIQ',
+  description: 'Información sobre cookies, almacenamiento local y publicidad en SFIQ.',
 };
 
 export default function CookiesPage() {
@@ -10,7 +10,7 @@ export default function CookiesPage() {
     <PublicLegalShell
       kicker="LEGAL · COOKIES"
       title="Política de cookies"
-      intro="Aquí explicamos qué tecnologías de almacenamiento puede usar MiFinanzas y cómo puedes controlar la publicidad."
+      intro="Aquí explicamos qué tecnologías de almacenamiento puede usar SFIQ y cómo puedes controlar la publicidad."
     >
       <article>
         <h2>1. Cookies y almacenamiento esencial</h2>
@@ -24,7 +24,7 @@ export default function CookiesPage() {
       <article>
         <h2>2. Preferencia de publicidad</h2>
         <p>
-          Cuando la integración publicitaria esté activa, MiFinanzas guardará localmente si el usuario aceptó o
+          Cuando la integración publicitaria esté activa, SFIQ guardará localmente si el usuario aceptó o
           rechazó la carga de publicidad. Esta elección puede modificarse desde el botón de Cookies que aparece en
           el sitio cuando dicha integración está habilitada.
         </p>
@@ -33,7 +33,7 @@ export default function CookiesPage() {
       <article>
         <h2>3. Google AdSense</h2>
         <p>
-          MiFinanzas está preparado para utilizar Google AdSense en páginas públicas como guías y calculadoras.
+          SFIQ está preparado para utilizar Google AdSense en páginas públicas como guías y calculadoras.
           Cuando esté habilitado, Google puede utilizar cookies u otras tecnologías para medir, limitar o
           personalizar anuncios de acuerdo con sus propias políticas y la elección de consentimiento del usuario.
         </p>
