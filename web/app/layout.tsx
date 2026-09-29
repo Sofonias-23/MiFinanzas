@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import AdSenseBootstrap from "../components/AdSenseBootstrap";
+import CookieConsent from "../components/CookieConsent";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -12,7 +14,11 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="es">
-      <body>{children}</body>
+      <body>
+        <AdSenseBootstrap />
+        {children}
+        <CookieConsent />
+      </body>
     </html>
   );
 }
