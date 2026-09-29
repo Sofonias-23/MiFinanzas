@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import AdSenseSlot from '@/components/AdSenseSlot';
 
 const demos = [
   {
@@ -782,6 +783,8 @@ export default function HomePage() {
         </div>
       </section>
 
+      <AdSenseSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_HOME} className="adSenseHome" />
+
       <section className="publicGuidesPreview">
         <div className="guidesPreviewHead">
           <div>
@@ -931,6 +934,9 @@ export default function HomePage() {
         <div>
           <a href="/calculadoras">Calculadoras</a>
           <a href="/guias">Guías</a>
+          <a href="/privacidad">Privacidad</a>
+          <a href="/cookies">Cookies</a>
+          <a href="/terminos">Términos</a>
           <a href="/login">Entrar</a>
         </div>
 
