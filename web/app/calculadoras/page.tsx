@@ -66,7 +66,7 @@ export default function CalculadorasPage() {
       <header className="topbar publicTopbar">
         <a className="brand" href="/">
           <span className="brandMark" aria-hidden="true"><span className="brandDollar">$</span></span>
-          <span>MiFinanzas</span>
+          <span>SFIQ</span>
         </a>
 
         <nav className="navLinks">
@@ -219,18 +219,18 @@ export default function CalculadorasPage() {
       <section className="calcCta">
         <div>
           <p className="eyebrow">GUARDA ESTO AUTOMÁTICAMENTE</p>
-          <h2>MiFinanzas hace estos cálculos dentro de tu cuenta.</h2>
+          <h2>SFIQ hace estos cálculos dentro de tu cuenta.</h2>
         </div>
-        <a className="primaryButton" href="/login">Entrar a MiFinanzas →</a>
+        <a className="primaryButton" href="/login">Entrar a SFIQ →</a>
       </section>
 
       <footer className="publicFooter">
         <a className="brand" href="/">
           <span className="brandMark" aria-hidden="true"><span className="brandDollar">$</span></span>
-          <span>MiFinanzas</span>
+          <span>SFIQ</span>
         </a>
         <div><a href="/">Inicio</a><a href="/guias">Guías</a><a href="/privacidad">Privacidad</a><a href="/cookies">Cookies</a><a href="/terminos">Términos</a><a href="/login">Entrar</a></div>
-        <span>© 2026 MiFinanzas</span>
+        <span>© 2026 SFIQ</span>
       </footer>
     </main>
   );
