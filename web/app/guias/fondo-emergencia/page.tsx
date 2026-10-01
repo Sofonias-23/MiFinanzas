@@ -1,13 +1,56 @@
 import type { Metadata } from 'next';
 
+const description =
+  'Aprende a crear un fondo de emergencia por etapas, separar tu reserva del gasto cotidiano y definir una meta sostenible.';
+
 export const metadata: Metadata = {
   title: 'Fondo de emergencia: cómo empezar y cuánto ahorrar',
-  description: 'Aprende a crear un fondo de emergencia por etapas, separar tu reserva del gasto cotidiano y definir una meta sostenible.',
+  description,
+  alternates: {
+    canonical: '/guias/fondo-emergencia',
+  },
+  openGraph: {
+    type: 'article',
+    url: 'https://sfiq.app/guias/fondo-emergencia',
+    title: 'Fondo de emergencia: cómo empezar y cuánto ahorrar | SFIQ',
+    description,
+    siteName: 'SFIQ',
+    locale: 'es_PE',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Fondo de emergencia: cómo empezar y cuánto ahorrar | SFIQ',
+    description,
+  },
+};
+
+const articleSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: 'Cómo construir un fondo de emergencia sin descuidar tu mes actual.',
+  description,
+  mainEntityOfPage: 'https://sfiq.app/guias/fondo-emergencia',
+  url: 'https://sfiq.app/guias/fondo-emergencia',
+  inLanguage: 'es',
+  author: {
+    '@type': 'Organization',
+    name: 'SFIQ',
+    url: 'https://sfiq.app/',
+  },
+  publisher: {
+    '@type': 'Organization',
+    name: 'SFIQ',
+    url: 'https://sfiq.app/',
+  },
 };
 
 export default function FondoEmergenciaPage() {
   return (
     <main className="articlePage">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+      />
       <ArticleHeader />
       <article className="articleWrap">
         <header className="articleHero">
