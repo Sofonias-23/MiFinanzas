@@ -1,3 +1,10 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Fondo de emergencia: cómo empezar y cuánto ahorrar',
+  description: 'Aprende a crear un fondo de emergencia por etapas, separar tu reserva del gasto cotidiano y definir una meta sostenible.',
+};
+
 export default function FondoEmergenciaPage() {
   return (
     <main className="articlePage">
@@ -55,8 +62,8 @@ export default function FondoEmergenciaPage() {
 }
 
 function ArticleHeader() {
-  return <header className="articleTop"><a className="brand" href="/"><span className="brandMark"><span className="brandDollar">$</span></span><span>MiFinanzas</span></a><a href="/guias">← Guías</a></header>;
+  return <header className="articleTop"><a className="brand" href="/"><span className="brandMark"><span className="brandDollar">$</span></span><span>SFIQ</span></a><a href="/guias">← Guías</a></header>;
 }
 function ArticleFooter() {
-  return <footer className="publicFooter"><a className="brand" href="/"><span className="brandMark"><span className="brandDollar">$</span></span><span>MiFinanzas</span></a><div><a href="/guias">Guías</a><a href="/calculadoras">Calculadoras</a></div><span>© 2026 MiFinanzas</span></footer>;
+  return <footer className="publicFooter"><a className="brand" href="/"><span className="brandMark"><span className="brandDollar">$</span></span><span>SFIQ</span></a><div><a href="/guias">Guías</a><a href="/calculadoras">Calculadoras</a></div><span>© 2026 SFIQ</span></footer>;
 }
