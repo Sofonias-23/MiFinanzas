@@ -54,6 +54,27 @@ const guides = [
     href: '/guias/control-gastos-mensuales',
     read: '6 min',
   },
+  {
+    category: 'PRESUPUESTO',
+    title: 'Cómo hacer un presupuesto mensual paso a paso',
+    excerpt: 'Ordena ingresos, gastos fijos y variables, fija límites y revisa el resultado sin complicar tu mes.',
+    href: '/guias/presupuesto-mensual',
+    read: '7 min',
+  },
+  {
+    category: 'AHORRO',
+    title: 'Cuánto ahorrar al mes: cómo definir una meta realista',
+    excerpt: 'Calcula tu margen disponible y convierte una meta de ahorro en un monto mensual que puedas sostener.',
+    href: '/guias/cuanto-ahorrar-al-mes',
+    read: '6 min',
+  },
+  {
+    category: 'CONTROL',
+    title: 'Gastos hormiga: qué son, ejemplos y cómo controlarlos',
+    excerpt: 'Detecta compras pequeñas que se repiten, mide su impacto y reduce frecuencia sin eliminar todos tus gustos.',
+    href: '/guias/gastos-hormiga',
+    read: '6 min',
+  },
 ];
 
 const guidesSchema = {
