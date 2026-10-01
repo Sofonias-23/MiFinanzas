@@ -7883,3 +7883,30 @@ footer div { display: flex; gap: 26px; }
     grid-template-columns:1fr;
   }
 }
+
+
+/* Guide ad placements */
+.articleBody .guideAdSlot{
+  width:100%;
+  max-width:100%;
+  margin:42px 0;
+  padding:14px 0;
+}
+.articleBody .guideAdSlot-mid{
+  margin-top:46px;
+  margin-bottom:46px;
+}
+.articleBody .guideAdSlot-end{
+  margin-top:50px;
+  margin-bottom:34px;
+}
+.articleBody .guideAdSlot>span{
+  color:#61748e;
+  font-size:8px;
+  letter-spacing:.14em;
+}
+@media(max-width:760px){
+  .articleBody .guideAdSlot{
+    margin:34px 0;
+  }
+}
