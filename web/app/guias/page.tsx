@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     locale: 'es_PE',
   },
   twitter: {
-    card: 'summary',
+    card: 'summary_large_image',
     title: 'Guías de finanzas personales | SFIQ',
     description,
   },
