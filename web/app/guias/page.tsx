@@ -1,10 +1,28 @@
 import type { Metadata } from 'next';
 import AdSenseSlot from '@/components/AdSenseSlot';
 
+const description =
+  'Guías prácticas sobre presupuesto, ahorro, control de gastos y dinero en pareja para tomar mejores decisiones financieras con SFIQ.';
+
 export const metadata: Metadata = {
   title: 'Guías de finanzas personales, ahorro y gastos en pareja',
-  description:
-    'Guías prácticas sobre presupuesto, ahorro, control de gastos y dinero en pareja para tomar mejores decisiones financieras con SFIQ.',
+  description,
+  alternates: {
+    canonical: '/guias',
+  },
+  openGraph: {
+    type: 'website',
+    url: 'https://sfiq.app/guias',
+    title: 'Guías de finanzas personales, ahorro y gastos en pareja | SFIQ',
+    description,
+    siteName: 'SFIQ',
+    locale: 'es_PE',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Guías de finanzas personales | SFIQ',
+    description,
+  },
 };
 
 const guides = [
@@ -38,9 +56,32 @@ const guides = [
   },
 ];
 
+const guidesSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'Guías de finanzas personales de SFIQ',
+  url: 'https://sfiq.app/guias',
+  description,
+  inLanguage: 'es',
+  mainEntity: {
+    '@type': 'ItemList',
+    itemListElement: guides.map((guide, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: guide.title,
+      url: `https://sfiq.app${guide.href}`,
+    })),
+  },
+};
+
 export default function GuiasPage() {
   return (
-    <main className="guidesPage">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(guidesSchema) }}
+      />
+      <main className="guidesPage">
       <header className="topbar publicTopbar">
         <a className="brand" href="/">
           <span className="brandMark" aria-hidden="true"><span className="brandDollar">$</span></span>
@@ -115,6 +156,7 @@ export default function GuiasPage() {
         <div><a href="/">Inicio</a><a href="/calculadoras">Calculadoras</a><a href="/privacidad">Privacidad</a><a href="/cookies">Cookies</a><a href="/terminos">Términos</a><a href="/login">Entrar</a></div>
         <span>© 2026 SFIQ</span>
       </footer>
-    </main>
+      </main>
+    </>
   );
 }
