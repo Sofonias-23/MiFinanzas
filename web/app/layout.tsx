@@ -16,6 +16,7 @@ export const metadata: Metadata = {
   },
 };
 
+// Google Analytics (GA4): G-1RGXFC91JC
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
