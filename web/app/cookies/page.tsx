@@ -22,11 +22,11 @@ export default function CookiesPage() {
       </article>
 
       <article>
-        <h2>2. Preferencia de publicidad</h2>
+        <h2>2. Consentimiento para publicidad</h2>
         <p>
-          Cuando la integración publicitaria esté activa, SFIQ guardará localmente si el usuario aceptó o
-          rechazó la carga de publicidad. Esta elección puede modificarse desde el botón de Cookies que aparece en
-          el sitio cuando dicha integración está habilitada.
+          SFIQ utiliza la plataforma de gestión de consentimiento de Google para mostrar, cuando corresponda,
+          mensajes de privacidad y publicidad a visitantes del Espacio Económico Europeo, Reino Unido y Suiza.
+          Las opciones disponibles dependen de la configuración publicada en Google AdSense y de la región del usuario.
         </p>
       </article>
 
@@ -49,10 +49,11 @@ export default function CookiesPage() {
       </article>
 
       <article>
-        <h2>5. Cómo retirar tu elección</h2>
+        <h2>5. Cómo gestionar tu elección</h2>
         <p>
-          Puedes volver a abrir las preferencias desde el control de Cookies del sitio cuando la publicidad esté
-          habilitada. También puedes eliminar los datos del sitio desde la configuración de tu navegador.
+          Cuando Google muestre un mensaje de consentimiento, podrás usar las opciones incluidas en ese mensaje
+          para aceptar, rechazar o administrar tus preferencias. También puedes eliminar cookies y datos del sitio
+          desde la configuración de tu navegador.
         </p>
       </article>
 
