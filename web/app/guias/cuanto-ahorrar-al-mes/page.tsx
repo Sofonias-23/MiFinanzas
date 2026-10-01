@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import GuideAdSlot from '@/components/GuideAdSlot';
 
 const description =
   'Descubre cómo definir cuánto ahorrar al mes según tus ingresos, gastos, deudas y objetivos, sin depender de un porcentaje rígido.';
@@ -69,6 +70,7 @@ export default function CuantoAhorrarPage() {
               <div className="articleCallout"><b>Ejemplo</b><p>Con ingresos de S/ 3,000, ahorrar 10% equivale a S/ 300. Si esa cifra afecta pagos esenciales, puedes empezar con una cantidad menor y aumentar después.</p></div>
             </section>
 
+            <GuideAdSlot position="mid" />
             <section id="objetivo">
               <h2>3. Una meta concreta ayuda a elegir la cantidad</h2>
               <p>No es lo mismo ahorrar para un fondo de emergencia que para unas vacaciones o una compra. Divide el objetivo total entre el número de meses disponibles para obtener una referencia mensual.</p>
@@ -86,6 +88,7 @@ export default function CuantoAhorrarPage() {
               <p>Si todavía no tienes una reserva para imprevistos, revisa también la guía de <a href="/guias/fondo-emergencia">fondo de emergencia</a>.</p>
             </section>
 
+            <GuideAdSlot position="end" />
             <div className="articleNext">
               <span>CALCULA</span>
               <h3>Compara tus ingresos, gastos y margen disponible antes de elegir una meta.</h3>
