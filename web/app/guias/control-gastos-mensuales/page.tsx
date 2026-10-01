@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     locale: 'es_PE',
   },
   twitter: {
-    card: 'summary',
+    card: 'summary_large_image',
     title: 'Cómo controlar gastos mensuales y organizar tu presupuesto | SFIQ',
     description,
   },
