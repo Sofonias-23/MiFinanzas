@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+// Railway deploy trigger: Google Analytics
 import Script from "next/script";
 import AdSenseBootstrap from "../components/AdSenseBootstrap";
 import "./globals.css";
