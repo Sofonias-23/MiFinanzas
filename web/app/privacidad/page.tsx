@@ -53,8 +53,9 @@ export default function PrivacidadPage() {
         <h2>5. Cookies y publicidad</h2>
         <p>
           SFIQ puede utilizar almacenamiento local o cookies necesarias para mantener preferencias y sesión.
-          Si en el futuro se habilita Google AdSense, los componentes publicitarios solo se cargarán después de la
-          elección de consentimiento implementada en el sitio. Consulta la <a href="/cookies">Política de cookies</a>.
+          La integración publicitaria utiliza Google AdSense en páginas públicas. Para visitantes de las regiones
+          donde corresponda, Google puede mostrar su plataforma de gestión de consentimiento antes de utilizar
+          determinadas tecnologías publicitarias. Consulta la <a href="/cookies">Política de cookies</a>.
         </p>
       </article>
 
