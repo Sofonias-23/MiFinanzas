@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     locale: 'es_PE',
   },
   twitter: {
-    card: 'summary',
+    card: 'summary_large_image',
     title: 'Cómo dividir gastos en pareja: 50/50, porcentajes y balance | SFIQ',
     description,
   },
