@@ -2,36 +2,54 @@
 
 import { useEffect } from 'react';
 
-const STORAGE_KEY = 'mifinanzas-cookie-consent';
-const SCRIPT_ID = 'mifinanzas-adsense-script';
+const ADSENSE_CLIENT =
+  process.env.NEXT_PUBLIC_ADSENSE_CLIENT || 'ca-pub-2118685293203157';
+
+const SCRIPT_ID = 'sfiq-adsense-script';
+
+const PRIVATE_ROUTES = [
+  '/login',
+  '/forgot-password',
+  '/reset-password',
+  '/espacio',
+  '/dashboard',
+  '/pareja',
+  '/nuevo-gasto',
+  '/nuevo-ingreso',
+  '/movimientos',
+  '/presupuestos',
+  '/estadisticas',
+  '/categorias',
+  '/metodos-pago',
+  '/deudas',
+  '/saldar-deuda',
+  '/detalle-gasto',
+  '/chat-gasto',
+  '/perfil',
+  '/ajustes',
+  '/datos',
+];
+
+function isPrivateRoute(pathname: string) {
+  return PRIVATE_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(route + '/')
+  );
+}
 
 export default function AdSenseBootstrap() {
   useEffect(() => {
-    const client = process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
-    if (!client) return;
+    if (isPrivateRoute(window.location.pathname)) return;
+    if (document.getElementById(SCRIPT_ID)) return;
 
-    const load = () => {
-      const consent = window.localStorage.getItem(STORAGE_KEY);
-      if (consent !== 'accepted') return;
-      if (document.getElementById(SCRIPT_ID)) return;
+    const script = document.createElement('script');
+    script.id = SCRIPT_ID;
+    script.async = true;
+    script.crossOrigin = 'anonymous';
+    script.src =
+      'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' +
+      encodeURIComponent(ADSENSE_CLIENT);
 
-      const script = document.createElement('script');
-      script.id = SCRIPT_ID;
-      script.async = true;
-      script.crossOrigin = 'anonymous';
-      script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + encodeURIComponent(client);
-      script.onload = () => window.dispatchEvent(new Event('mifinanzas-adsense-ready'));
-      document.head.appendChild(script);
-    };
-
-    const onConsent = (event: Event) => {
-      const detail = (event as CustomEvent<string>).detail;
-      if (detail === 'accepted') load();
-    };
-
-    load();
-    window.addEventListener('mifinanzas-consent-changed', onConsent);
-    return () => window.removeEventListener('mifinanzas-consent-changed', onConsent);
+    document.head.appendChild(script);
   }, []);
 
   return null;
