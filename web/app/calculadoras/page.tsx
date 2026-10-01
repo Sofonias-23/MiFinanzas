@@ -1,7 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import AdSenseSlot from '@/components/AdSenseSlot';
+import { trackEvent } from '@/lib/analytics';
 
 function numberValue(value: string) {
   const parsed = Number(value.replace(',', '.'));
@@ -17,6 +18,14 @@ function money(value: number) {
 }
 
 export default function CalculadorasPage() {
+  const trackedCalculators = useRef<Set<string>>(new Set());
+
+  function trackCalculatorOnce(calculator: string) {
+    if (trackedCalculators.current.has(calculator)) return;
+    trackedCalculators.current.add(calculator);
+    trackEvent('calculator_used', { calculator });
+  }
+
   const [income, setIncome] = useState('3000');
   const [fixed, setFixed] = useState('1200');
   const [variable, setVariable] = useState('700');
@@ -107,15 +116,15 @@ export default function CalculadorasPage() {
           <div className="calcInputs">
             <label>
               Ingreso mensual
-              <div><span>S/</span><input value={income} onChange={(e) => setIncome(e.target.value)} inputMode="decimal" /></div>
+              <div><span>S/</span><input value={income} onChange={(e) => { setIncome(e.target.value); trackCalculatorOnce('monthly_budget'); }} inputMode="decimal" /></div>
             </label>
             <label>
               Gastos fijos
-              <div><span>S/</span><input value={fixed} onChange={(e) => setFixed(e.target.value)} inputMode="decimal" /></div>
+              <div><span>S/</span><input value={fixed} onChange={(e) => { setFixed(e.target.value); trackCalculatorOnce('monthly_budget'); }} inputMode="decimal" /></div>
             </label>
             <label>
               Gastos variables
-              <div><span>S/</span><input value={variable} onChange={(e) => setVariable(e.target.value)} inputMode="decimal" /></div>
+              <div><span>S/</span><input value={variable} onChange={(e) => { setVariable(e.target.value); trackCalculatorOnce('monthly_budget'); }} inputMode="decimal" /></div>
             </label>
           </div>
 
@@ -145,7 +154,7 @@ export default function CalculadorasPage() {
           <div className="calcSingleInput">
             <label>
               Ingreso mensual
-              <div><span>S/</span><input value={income503020} onChange={(e) => setIncome503020(e.target.value)} inputMode="decimal" /></div>
+              <div><span>S/</span><input value={income503020} onChange={(e) => { setIncome503020(e.target.value); trackCalculatorOnce('rule_50_30_20'); }} inputMode="decimal" /></div>
             </label>
           </div>
 
@@ -186,11 +195,11 @@ export default function CalculadorasPage() {
           <div className="calcInputs coupleCalcInputs">
             <label>
               Gasto total
-              <div><span>S/</span><input value={sharedTotal} onChange={(e) => setSharedTotal(e.target.value)} inputMode="decimal" /></div>
+              <div><span>S/</span><input value={sharedTotal} onChange={(e) => { setSharedTotal(e.target.value); trackCalculatorOnce('shared_expense'); }} inputMode="decimal" /></div>
             </label>
             <label>
               Tu porcentaje
-              <div><input value={sharedPercent} onChange={(e) => setSharedPercent(e.target.value)} inputMode="decimal" /><span>%</span></div>
+              <div><input value={sharedPercent} onChange={(e) => { setSharedPercent(e.target.value); trackCalculatorOnce('shared_expense'); }} inputMode="decimal" /><span>%</span></div>
             </label>
           </div>
 
