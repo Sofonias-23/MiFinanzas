@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 
 import { supabase } from '@/lib/supabase';
+import { trackEvent } from '@/lib/analytics';
 
 type ExpenseRow = {
   id: string;
@@ -216,6 +217,8 @@ export default function DeudasPage() {
       setErrorMessage(error.message || 'No se pudo guardar la deuda.');
       return;
     }
+
+    trackEvent('debt_created');
 
     setPerson('');
     setAmount('');
