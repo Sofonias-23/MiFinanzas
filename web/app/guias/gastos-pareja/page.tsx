@@ -1,13 +1,56 @@
 import type { Metadata } from 'next';
 
+const description =
+  'Aprende a dividir gastos en pareja con 50/50, porcentajes personalizados, registro de quién pagó y un balance claro entre ambos.';
+
 export const metadata: Metadata = {
   title: 'Cómo dividir gastos en pareja: 50/50, porcentajes y balance',
-  description: 'Aprende a dividir gastos en pareja con 50/50, porcentajes personalizados, registro de quién pagó y un balance claro entre ambos.',
+  description,
+  alternates: {
+    canonical: '/guias/gastos-pareja',
+  },
+  openGraph: {
+    type: 'article',
+    url: 'https://sfiq.app/guias/gastos-pareja',
+    title: 'Cómo dividir gastos en pareja: 50/50, porcentajes y balance | SFIQ',
+    description,
+    siteName: 'SFIQ',
+    locale: 'es_PE',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Cómo dividir gastos en pareja: 50/50, porcentajes y balance | SFIQ',
+    description,
+  },
+};
+
+const articleSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: 'Cómo dividir gastos en pareja sin asumir que todo debe ser 50/50.',
+  description,
+  mainEntityOfPage: 'https://sfiq.app/guias/gastos-pareja',
+  url: 'https://sfiq.app/guias/gastos-pareja',
+  inLanguage: 'es',
+  author: {
+    '@type': 'Organization',
+    name: 'SFIQ',
+    url: 'https://sfiq.app/',
+  },
+  publisher: {
+    '@type': 'Organization',
+    name: 'SFIQ',
+    url: 'https://sfiq.app/',
+  },
 };
 
 export default function GastosParejaPage() {
   return (
     <main className="articlePage">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+      />
       <ArticleHeader />
       <article className="articleWrap">
         <header className="articleHero articleHeroPink">
