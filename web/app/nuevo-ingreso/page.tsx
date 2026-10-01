@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 
 import { supabase } from '@/lib/supabase';
+import { trackEvent } from '@/lib/analytics';
 
 function parseAmount(value: string) {
   return Number(value.replace(',', '.'));
@@ -93,6 +94,7 @@ export default function NuevoIngresoPage() {
       return;
     }
 
+    trackEvent('income_created');
     router.replace('/dashboard?created=income');
     router.refresh();
   }
