@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     locale: "es_PE",
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "SFIQ | Control de gastos y finanzas personales en pareja",
     description,
   },
