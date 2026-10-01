@@ -8,46 +8,46 @@ type Props = {
   className?: string;
 };
 
-const STORAGE_KEY = 'mifinanzas-cookie-consent';
+function getAdSenseClient() {
+  return document
+    .querySelector('meta[name="google-adsense-account"]')
+    ?.getAttribute('content')
+    ?.trim();
+}
 
-export default function AdSenseSlot({ slot, format = 'auto', className = '' }: Props) {
-  const client = process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
-  const [allowed, setAllowed] = useState(false);
+export default function AdSenseSlot({
+  slot,
+  format = 'auto',
+  className = '',
+}: Props) {
+  const [client, setClient] = useState<string | null>(null);
+
+  useEffect(() => {
+    const account = getAdSenseClient();
+    if (account?.startsWith('ca-pub-')) {
+      setClient(account);
+    }
+  }, []);
 
   useEffect(() => {
     if (!client || !slot) return;
 
-    const refreshConsent = () => {
-      setAllowed(window.localStorage.getItem(STORAGE_KEY) === 'accepted');
-    };
-
-    refreshConsent();
-    window.addEventListener('mifinanzas-consent-changed', refreshConsent);
-    return () => window.removeEventListener('mifinanzas-consent-changed', refreshConsent);
-  }, [client, slot]);
-
-  useEffect(() => {
-    if (!allowed || !client || !slot) return;
-
-    const renderAd = () => {
+    const timer = window.setTimeout(() => {
       try {
-        const adsWindow = window as unknown as { adsbygoogle?: Record<string, unknown>[] };
+        const adsWindow = window as unknown as {
+          adsbygoogle?: Record<string, unknown>[];
+        };
         adsWindow.adsbygoogle = adsWindow.adsbygoogle || [];
         adsWindow.adsbygoogle.push({});
       } catch {
-        // AdSense puede tardar en estar disponible durante el primer render.
+        // AdSense completará el render cuando su script esté disponible.
       }
-    };
+    }, 250);
 
-    const timer = window.setTimeout(renderAd, 150);
-    window.addEventListener('mifinanzas-adsense-ready', renderAd);
-    return () => {
-      window.clearTimeout(timer);
-      window.removeEventListener('mifinanzas-adsense-ready', renderAd);
-    };
-  }, [allowed, client, slot]);
+    return () => window.clearTimeout(timer);
+  }, [client, slot]);
 
-  if (!allowed || !client || !slot) return null;
+  if (!client || !slot) return null;
 
   return (
     <aside className={'adSenseWrap ' + className} aria-label="Publicidad">
