@@ -4,9 +4,13 @@ import CookieConsent from "../components/CookieConsent";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "SFIQ | Smart Financial Intelligence",
+  metadataBase: new URL("https://sfiq.app"),
+  title: {
+    default: "SFIQ | Control de gastos y finanzas personales en pareja",
+    template: "%s | SFIQ",
+  },
   description:
-    "Organiza tus gastos personales, gastos en pareja, deudas, metas y estadísticas en un solo lugar.",
+    "Organiza ingresos, gastos, presupuestos y gastos en pareja. Controla tu dinero, divide gastos y entiende mejor tus finanzas con SFIQ.",
 };
 
 export default function RootLayout({
