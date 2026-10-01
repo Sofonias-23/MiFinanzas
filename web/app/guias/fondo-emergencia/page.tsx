@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     locale: 'es_PE',
   },
   twitter: {
-    card: 'summary',
+    card: 'summary_large_image',
     title: 'Fondo de emergencia: cómo empezar y cuánto ahorrar | SFIQ',
     description,
   },
