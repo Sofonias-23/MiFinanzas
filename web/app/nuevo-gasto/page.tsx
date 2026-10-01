@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 
 import { supabase } from '@/lib/supabase';
+import { trackEvent } from '@/lib/analytics';
 
 type CategoryRow = {
   id: string;
@@ -251,6 +252,7 @@ function NuevoGastoContent() {
       return;
     }
 
+    trackEvent('expense_created', { expense_type: sharedMode ? 'shared' : 'personal' });
     router.replace(sharedMode ? '/pareja?created=expense' : '/dashboard?created=expense');
     router.refresh();
   }
