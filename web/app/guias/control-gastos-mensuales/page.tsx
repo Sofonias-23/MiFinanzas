@@ -1,3 +1,10 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Cómo controlar gastos mensuales y organizar tu presupuesto',
+  description: 'Revisa tus gastos mensuales por categorías, detecta variaciones importantes y convierte el análisis del mes en acciones concretas.',
+};
+
 export default function ControlGastosPage() {
   return (
     <main className="articlePage">
@@ -24,5 +31,5 @@ export default function ControlGastosPage() {
     </main>
   );
 }
-function ArticleHeader(){return <header className="articleTop"><a className="brand" href="/"><span className="brandMark"><span className="brandDollar">$</span></span><span>MiFinanzas</span></a><a href="/guias">← Guías</a></header>}
-function ArticleFooter(){return <footer className="publicFooter"><a className="brand" href="/"><span className="brandMark"><span className="brandDollar">$</span></span><span>MiFinanzas</span></a><div><a href="/guias">Guías</a><a href="/calculadoras">Calculadoras</a></div><span>© 2026 MiFinanzas</span></footer>}
+function ArticleHeader(){return <header className="articleTop"><a className="brand" href="/"><span className="brandMark"><span className="brandDollar">$</span></span><span>SFIQ</span></a><a href="/guias">← Guías</a></header>}
+function ArticleFooter(){return <footer className="publicFooter"><a className="brand" href="/"><span className="brandMark"><span className="brandDollar">$</span></span><span>SFIQ</span></a><div><a href="/guias">Guías</a><a href="/calculadoras">Calculadoras</a></div><span>© 2026 SFIQ</span></footer>}
