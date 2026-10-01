@@ -1,13 +1,56 @@
 import type { Metadata } from 'next';
 
+const description =
+  'Revisa tus gastos mensuales por categorías, detecta variaciones importantes y convierte el análisis del mes en acciones concretas.';
+
 export const metadata: Metadata = {
   title: 'Cómo controlar gastos mensuales y organizar tu presupuesto',
-  description: 'Revisa tus gastos mensuales por categorías, detecta variaciones importantes y convierte el análisis del mes en acciones concretas.',
+  description,
+  alternates: {
+    canonical: '/guias/control-gastos-mensuales',
+  },
+  openGraph: {
+    type: 'article',
+    url: 'https://sfiq.app/guias/control-gastos-mensuales',
+    title: 'Cómo controlar gastos mensuales y organizar tu presupuesto | SFIQ',
+    description,
+    siteName: 'SFIQ',
+    locale: 'es_PE',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Cómo controlar gastos mensuales y organizar tu presupuesto | SFIQ',
+    description,
+  },
+};
+
+const articleSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: 'Cómo revisar tus gastos mensuales sin analizar cada compra una por una.',
+  description,
+  mainEntityOfPage: 'https://sfiq.app/guias/control-gastos-mensuales',
+  url: 'https://sfiq.app/guias/control-gastos-mensuales',
+  inLanguage: 'es',
+  author: {
+    '@type': 'Organization',
+    name: 'SFIQ',
+    url: 'https://sfiq.app/',
+  },
+  publisher: {
+    '@type': 'Organization',
+    name: 'SFIQ',
+    url: 'https://sfiq.app/',
+  },
 };
 
 export default function ControlGastosPage() {
   return (
     <main className="articlePage">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+      />
       <ArticleHeader />
       <article className="articleWrap">
         <header className="articleHero">
