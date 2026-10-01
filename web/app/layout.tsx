@@ -11,6 +11,9 @@ export const metadata: Metadata = {
   },
   description:
     "Organiza ingresos, gastos, presupuestos y gastos en pareja. Controla tu dinero, divide gastos y entiende mejor tus finanzas con SFIQ.",
+  other: {
+    "google-adsense-account": "ca-pub-2118685293203157",
+  },
 };
 
 export default function RootLayout({
