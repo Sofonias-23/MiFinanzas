@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import GuideAdSlot from '@/components/GuideAdSlot';
 
 const description =
   'Qué son los gastos hormiga, cómo detectarlos y cómo reducirlos sin eliminar todos tus gustos. Aprende a medir su impacto mensual.';
@@ -68,6 +69,7 @@ export default function GastosHormigaPage() {
               <p>No significa que todos sean innecesarios. La clave es saber cuánto suman y decidir cuáles realmente disfrutas o necesitas.</p>
             </section>
 
+            <GuideAdSlot position="mid" />
             <section id="impacto">
               <h2>3. Multiplica el gasto por su frecuencia</h2>
               <p>Un gasto de S/ 8 puede parecer pequeño. Si ocurre 20 veces en un mes, suma S/ 160. Al anualizarlo, la cifra ayuda a entender mejor el impacto del hábito.</p>
@@ -85,6 +87,7 @@ export default function GastosHormigaPage() {
               <p>Para una revisión más general, consulta la guía de <a href="/guias/control-gastos-mensuales">control de gastos mensuales</a>.</p>
             </section>
 
+            <GuideAdSlot position="end" />
             <div className="articleNext">
               <span>SIGUIENTE PASO</span>
               <h3>Calcula cuánto margen te queda después de tus gastos principales.</h3>
