@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import GuideAdSlot from '@/components/GuideAdSlot';
 
 const description =
   'Aprende a dividir gastos en pareja con 50/50, porcentajes personalizados, registro de quién pagó y un balance claro entre ambos.';
@@ -69,11 +70,13 @@ export default function GastosParejaPage() {
           </aside>
 
           <div>
-            <section id="clasificar"><h2>1. Primero definan qué gastos son compartidos</h2><p>Alquiler, compras del hogar o una salida juntos pueden entrar al espacio compartido. Un gasto personal no necesita convertirse en un gasto de pareja solo porque ambos conocen su existencia.</p></section>
-            <section id="regla"><h2>2. Elijan una regla que puedan repetir</h2><p>50/50 es simple, pero no es la única opción. También pueden usar porcentajes distintos o montos específicos. Lo importante es que ambos entiendan cómo se calcula cada parte.</p><div className="articleCallout pink"><b>Ejemplo</b><p>En un gasto de S/ 200 con reparto 60/40, una parte sería S/ 120 y la otra S/ 80.</p></div></section>
-            <section id="pago"><h2>3. Registrar quién pagó evita confundir reparto con desembolso</h2><p>Que un gasto sea 50/50 no significa que ambos hayan pagado en el momento. Si una persona cubre el total, el balance debe reflejar cuánto le corresponde recuperar de la otra.</p></section>
-            <section id="revision"><h2>4. Revisen el balance, no cada operación aislada</h2><p>Compensar varios gastos entre sí suele ser más claro que realizar un pago por cada compra. Un balance acumulado reduce movimientos innecesarios y facilita cerrar cuentas cuando ambos quieran.</p></section>
+            <section id="clasificar"><h2>1. Primero definan qué gastos son compartidos</h2><p>Alquiler, compras del hogar o una salida juntos pueden entrar al espacio compartido. Un gasto personal no necesita convertirse en un gasto de pareja solo porque ambos conocen su existencia.</p><p>Conviene acordar esta clasificación antes de discutir porcentajes. Cuando una compra cambia de “personal” a “compartida” sin una regla previa, el problema suele ser de criterio y no de cálculo.</p></section>
+            <section id="regla"><h2>2. Elijan una regla que puedan repetir</h2><p>50/50 es simple, pero no es la única opción. También pueden usar porcentajes distintos o montos específicos. Lo importante es que ambos entiendan cómo se calcula cada parte.</p><p>Si los ingresos son diferentes, algunas parejas prefieren repartir ciertos gastos de manera proporcional. No existe una fórmula universal: la regla útil es la que ambos pueden explicar, aplicar y revisar sin recalcular cada compra desde cero.</p><div className="articleCallout pink"><b>Ejemplo</b><p>En un gasto de S/ 200 con reparto 60/40, una parte sería S/ 120 y la otra S/ 80.</p></div></section>
+            <GuideAdSlot position="mid" />
+            <section id="pago"><h2>3. Registrar quién pagó evita confundir reparto con desembolso</h2><p>Que un gasto sea 50/50 no significa que ambos hayan pagado en el momento. Si una persona cubre el total, el balance debe reflejar cuánto le corresponde recuperar de la otra.</p><p>Por ejemplo, si una persona paga S/ 120 y el reparto es 50/50, la otra no “gastó cero”: tiene una participación de S/ 60 que debe quedar reflejada en el balance compartido.</p></section>
+            <section id="revision"><h2>4. Revisen el balance, no cada operación aislada</h2><p>Compensar varios gastos entre sí suele ser más claro que realizar un pago por cada compra. Un balance acumulado reduce movimientos innecesarios y facilita cerrar cuentas cuando ambos quieran.</p><p>Una revisión semanal o mensual suele ser suficiente. El objetivo es conservar claridad, no convertir cada salida o compra del hogar en una liquidación inmediata.</p></section>
 
+            <GuideAdSlot position="end" />
             <div className="articleNext"><span>PRUÉBALO</span><h3>Divide un gasto con 50/50 o con porcentajes personalizados.</h3><a href="/calculadoras#pareja">Abrir calculadora de pareja →</a></div>
           </div>
         </div>
