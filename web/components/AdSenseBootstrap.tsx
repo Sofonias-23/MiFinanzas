@@ -2,9 +2,6 @@
 
 import { useEffect } from 'react';
 
-const ADSENSE_CLIENT =
-  process.env.NEXT_PUBLIC_ADSENSE_CLIENT || 'ca-pub-2118685293203157';
-
 const SCRIPT_ID = 'sfiq-adsense-script';
 
 const PRIVATE_ROUTES = [
@@ -36,10 +33,20 @@ function isPrivateRoute(pathname: string) {
   );
 }
 
+function getAdSenseClient() {
+  return document
+    .querySelector('meta[name="google-adsense-account"]')
+    ?.getAttribute('content')
+    ?.trim();
+}
+
 export default function AdSenseBootstrap() {
   useEffect(() => {
     if (isPrivateRoute(window.location.pathname)) return;
     if (document.getElementById(SCRIPT_ID)) return;
+
+    const client = getAdSenseClient();
+    if (!client?.startsWith('ca-pub-')) return;
 
     const script = document.createElement('script');
     script.id = SCRIPT_ID;
@@ -47,7 +54,7 @@ export default function AdSenseBootstrap() {
     script.crossOrigin = 'anonymous';
     script.src =
       'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' +
-      encodeURIComponent(ADSENSE_CLIENT);
+      encodeURIComponent(client);
 
     document.head.appendChild(script);
   }, []);
