@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import GuideAdSlot from '@/components/GuideAdSlot';
 
 const description =
   'Aprende a crear un fondo de emergencia por etapas, separar tu reserva del gasto cotidiano y definir una meta sostenible.';
@@ -72,6 +73,7 @@ export default function FondoEmergenciaPage() {
             <section id="objetivo">
               <h2>1. Define para qué existe ese dinero</h2>
               <p>Un fondo de emergencia sirve para absorber gastos imprevistos importantes sin depender de crédito o desordenar por completo tu presupuesto del mes.</p>
+              <p>Ejemplos típicos pueden ser una reparación urgente, un gasto de salud no previsto o un periodo temporal sin ingresos. Una compra planificada o unas vacaciones pertenecen a otra meta de ahorro.</p>
               <div className="articleCallout"><b>Idea clave</b><p>No mezcles “ahorro para vacaciones” con “dinero para una emergencia”. Son objetivos distintos.</p></div>
             </section>
 
@@ -79,18 +81,23 @@ export default function FondoEmergenciaPage() {
               <h2>2. Divide la meta en etapas</h2>
               <p>En lugar de pensar solo en una meta final, empieza con una primera reserva pequeña y concreta. Después aumenta el objetivo progresivamente según tus gastos esenciales y estabilidad de ingresos.</p>
               <p>Ese enfoque reduce la fricción inicial y permite ajustar la meta con información real de tus gastos mensuales.</p>
+              <p>Una forma práctica es crear primero una reserva inicial y, una vez alcanzada, ampliar progresivamente la cobertura según tus gastos esenciales. La cifra final depende de tu contexto y de la estabilidad de tus ingresos.</p>
             </section>
+            <GuideAdSlot position="mid" />
 
             <section id="separado">
               <h2>3. Mantenlo fuera del gasto cotidiano</h2>
               <p>Si el dinero está mezclado con el saldo que utilizas para compras diarias, es más fácil consumirlo sin darte cuenta. Una separación clara ayuda a tratarlo como reserva, no como saldo disponible.</p>
+              <p>La separación puede ser física o simplemente contable, pero debe permitirte saber cuánto corresponde a emergencias sin confundirlo con el presupuesto habitual.</p>
             </section>
 
             <section id="reponer">
               <h2>4. Si lo usas, vuelve a construirlo</h2>
               <p>Usar el fondo para una emergencia real no significa que el plan falló. Significa que cumplió su función. Después del evento, incorpora su reposición como una nueva meta del presupuesto.</p>
+              <p>Si necesitas reconstruirlo, puedes reducir temporalmente otros objetivos y volver a aportar de forma gradual. La prioridad es recuperar una reserva que vuelva a darte margen ante el siguiente imprevisto.</p>
             </section>
 
+            <GuideAdSlot position="end" />
             <div className="articleNext">
               <span>SIGUIENTE PASO</span>
               <h3>Calcula cuánto margen tienes cada mes antes de fijar tu aporte.</h3>
