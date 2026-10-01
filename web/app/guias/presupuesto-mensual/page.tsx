@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import GuideAdSlot from '@/components/GuideAdSlot';
 
 const description =
   'Aprende cómo hacer un presupuesto mensual paso a paso, ordenar ingresos y gastos, fijar límites y revisar tu dinero sin complicarte.';
@@ -69,6 +70,7 @@ export default function PresupuestoMensualPage() {
               <div className="articleCallout"><b>Ejemplo simple</b><p>Si ingresan S/ 3,000 y tus gastos fijos suman S/ 1,500, todavía no tienes S/ 1,500 libres: faltan los gastos variables, ahorro y obligaciones ocasionales.</p></div>
             </section>
 
+            <GuideAdSlot position="mid" />
             <section id="limites">
               <h2>3. Define límites por categoría antes de gastar</h2>
               <p>Un presupuesto funciona mejor cuando decides un límite antes de que termine el mes. En lugar de revisar después cuánto gastaste en comida o salidas, asigna un monto máximo y compara tu avance durante el mes.</p>
@@ -87,6 +89,7 @@ export default function PresupuestoMensualPage() {
               <p>No necesitas que cada monto coincida de forma exacta. Lo importante es que el presupuesto te permita anticipar decisiones y detectar rápidamente cuándo una categoría se está desviando.</p>
             </section>
 
+            <GuideAdSlot position="end" />
             <div className="articleNext">
               <span>PRUÉBALO</span>
               <h3>Calcula cuánto te queda después de tus gastos fijos y variables.</h3>
