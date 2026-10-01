@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     locale: 'es_PE',
   },
   twitter: {
-    card: 'summary',
+    card: 'summary_large_image',
     title: 'Regla 50/30/20: cómo calcular y adaptar tu presupuesto | SFIQ',
     description,
   },
