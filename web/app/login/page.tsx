@@ -4,6 +4,7 @@ import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { supabase } from '@/lib/supabase';
+import { trackEvent } from '@/lib/analytics';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -29,6 +30,7 @@ export default function LoginPage() {
       return;
     }
 
+    trackEvent('login', { method: 'email' });
     router.replace('/espacio');
   }
 
