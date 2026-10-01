@@ -1,13 +1,56 @@
 import type { Metadata } from 'next';
 
+const description =
+  'Entiende cómo funciona la regla 50/30/20, calcula necesidades, deseos y ahorro, y adapta los porcentajes a tu realidad financiera.';
+
 export const metadata: Metadata = {
   title: 'Regla 50/30/20: cómo calcular y adaptar tu presupuesto',
-  description: 'Entiende cómo funciona la regla 50/30/20, calcula necesidades, deseos y ahorro, y adapta los porcentajes a tu realidad financiera.',
+  description,
+  alternates: {
+    canonical: '/guias/regla-50-30-20',
+  },
+  openGraph: {
+    type: 'article',
+    url: 'https://sfiq.app/guias/regla-50-30-20',
+    title: 'Regla 50/30/20: cómo calcular y adaptar tu presupuesto | SFIQ',
+    description,
+    siteName: 'SFIQ',
+    locale: 'es_PE',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Regla 50/30/20: cómo calcular y adaptar tu presupuesto | SFIQ',
+    description,
+  },
+};
+
+const articleSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: 'Regla 50/30/20: úsala como referencia, no como obligación.',
+  description,
+  mainEntityOfPage: 'https://sfiq.app/guias/regla-50-30-20',
+  url: 'https://sfiq.app/guias/regla-50-30-20',
+  inLanguage: 'es',
+  author: {
+    '@type': 'Organization',
+    name: 'SFIQ',
+    url: 'https://sfiq.app/',
+  },
+  publisher: {
+    '@type': 'Organization',
+    name: 'SFIQ',
+    url: 'https://sfiq.app/',
+  },
 };
 
 export default function ReglaPage() {
   return (
     <main className="articlePage">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+      />
       <ArticleHeader />
       <article className="articleWrap">
         <header className="articleHero">
