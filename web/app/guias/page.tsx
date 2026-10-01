@@ -1,4 +1,11 @@
+import type { Metadata } from 'next';
 import AdSenseSlot from '@/components/AdSenseSlot';
+
+export const metadata: Metadata = {
+  title: 'Guías de finanzas personales, ahorro y gastos en pareja',
+  description:
+    'Guías prácticas sobre presupuesto, ahorro, control de gastos y dinero en pareja para tomar mejores decisiones financieras con SFIQ.',
+};
 
 const guides = [
   {
@@ -54,7 +61,7 @@ export default function GuiasPage() {
 
       <section className="guidesHero">
         <div>
-          <p className="eyebrow">BIBLIOTECA MIFINANZAS</p>
+          <p className="eyebrow">BIBLIOTECA SFIQ</p>
           <h1>Ideas simples para decisiones financieras cotidianas.</h1>
           <p>
             Guías prácticas sobre presupuesto, ahorro y dinero en pareja. Sin convertir cada tema en una clase de economía.
