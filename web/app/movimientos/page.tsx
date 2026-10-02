@@ -133,7 +133,7 @@ function MovimientosContent() {
       .filter((expense) => {
         if (filter === 'personal' && expense.type !== 'personal') return false;
         if (filter === 'compartido' && expense.type !== 'compartido') return false;
-        if (categoryFilter && expense.category !== categoryFilter) return false;
+        if (categoryFilter && (expense.category || 'otros') !== categoryFilter) return false;
         if (query && !expense.description.toLowerCase().includes(query)) return false;
         return true;
       })
