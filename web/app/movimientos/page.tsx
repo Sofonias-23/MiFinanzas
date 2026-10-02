@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 
 import { supabase } from '@/lib/supabase';
+import { isInMonth, monthLabel, normalizeMonthKey } from '@/lib/months';
 
 type Filter = 'todos' | 'personal' | 'compartido';
 
@@ -71,6 +72,8 @@ function MovimientosContent() {
   const [paymentMethods, setPaymentMethods] = useState<PaymentRow[]>([]);
   const [filter, setFilter] = useState<Filter>(() => normalizeFilter(searchParams.get('filter')));
   const categoryFilter = searchParams.get('category');
+  const monthParam = searchParams.get('month');
+  const selectedMonth = monthParam ? normalizeMonthKey(monthParam) : null;
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -134,6 +137,7 @@ function MovimientosContent() {
         if (filter === 'personal' && expense.type !== 'personal') return false;
         if (filter === 'compartido' && expense.type !== 'compartido') return false;
         if (categoryFilter && (expense.category || 'otros') !== categoryFilter) return false;
+        if (selectedMonth && !isInMonth(expense.created_at, selectedMonth)) return false;
         if (query && !expense.description.toLowerCase().includes(query)) return false;
         return true;
       })
@@ -168,9 +172,10 @@ function MovimientosContent() {
       filter === 'compartido' || categoryFilter
         ? []
         : incomes
-            .filter((income) =>
-              query ? income.description.toLowerCase().includes(query) : true,
-            )
+            .filter((income) => {
+              if (selectedMonth && !isInMonth(income.created_at, selectedMonth)) return false;
+              return query ? income.description.toLowerCase().includes(query) : true;
+            })
             .map((income) => ({
               id: 'income-' + income.id,
               kind: 'income' as const,
@@ -186,7 +191,7 @@ function MovimientosContent() {
     return [...expenseMovements, ...incomeMovements].sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
-  }, [expenses, incomes, categories, paymentMethods, filter, search, user, categoryFilter]);
+  }, [expenses, incomes, categories, paymentMethods, filter, search, user, categoryFilter, selectedMonth]);
 
   const totals = useMemo(() => {
     let income = 0;
@@ -253,8 +258,31 @@ function MovimientosContent() {
             <span>
               Categoría: {categories.find((item) => item.slug === categoryFilter)?.name || categoryFilter}
             </span>
-            <button type="button" onClick={() => router.replace('/movimientos?filter=personal')}>
+            <button
+              type="button"
+              onClick={() => {
+                const params = new URLSearchParams(searchParams.toString());
+                params.delete('category');
+                router.replace('/movimientos?' + params.toString());
+              }}
+            >
               Quitar filtro
+            </button>
+          </div>
+        ) : null}
+
+        {selectedMonth ? (
+          <div className="movementActiveFilter">
+            <span>Periodo: {monthLabel(selectedMonth)}</span>
+            <button
+              type="button"
+              onClick={() => {
+                const params = new URLSearchParams(searchParams.toString());
+                params.delete('month');
+                router.replace('/movimientos?' + params.toString());
+              }}
+            >
+              Ver todos los meses
             </button>
           </div>
         ) : null}
