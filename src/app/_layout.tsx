@@ -26,6 +26,7 @@ export default function RootLayout() {
         <Stack.Screen name="nuevo-gasto" options={{ presentation: 'card' }} />
         <Stack.Screen name="dividir-gasto" options={{ presentation: 'card' }} />
         <Stack.Screen name="detalle-gasto" options={{ presentation: 'card' }} />
+        <Stack.Screen name="detalle-ingreso" options={{ presentation: 'card' }} />
         <Stack.Screen name="chat-gasto" options={{ presentation: 'card' }} />
         <Stack.Screen name="nuevo-ingreso" options={{ presentation: 'card' }} />
         <Stack.Screen name="categorias" options={{ presentation: 'card' }} />
