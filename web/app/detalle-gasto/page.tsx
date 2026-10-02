@@ -28,6 +28,12 @@ type ReactionRow = { id: string; user_id: string; emoji: string };
 
 const REACTIONS = ['👍', '❤️', '😂', '🎉', '👀'];
 
+function toDateTimeLocal(value: string) {
+  const date = new Date(value);
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 16);
+}
+
 function money(value: number) {
   return new Intl.NumberFormat('es-PE', {
     style: 'currency',
@@ -57,6 +63,7 @@ function DetalleGastoContent() {
   const [payerId, setPayerId] = useState('');
   const [myShare, setMyShare] = useState('');
   const [partnerShare, setPartnerShare] = useState('');
+  const [dateTime, setDateTime] = useState('');
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
@@ -128,6 +135,7 @@ function DetalleGastoContent() {
       setPayerId(row.payer_id);
       setMyShare(Number(row.my_share || 0).toFixed(2));
       setPartnerShare(Number(row.partner_share || 0).toFixed(2));
+      setDateTime(toDateTimeLocal(row.created_at));
     }
 
     setLoading(false);
@@ -180,6 +188,7 @@ function DetalleGastoContent() {
     const parsedAmount = Number(amount.replace(',', '.'));
     const mine = Number(myShare.replace(',', '.'));
     const partner = Number(partnerShare.replace(',', '.'));
+    const parsedDate = new Date(dateTime);
 
     if (!description.trim()) {
       setErrorMessage('Escribe una descripción.');
@@ -187,6 +196,10 @@ function DetalleGastoContent() {
     }
     if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
       setErrorMessage('El monto debe ser mayor a cero.');
+      return;
+    }
+    if (!dateTime || Number.isNaN(parsedDate.getTime())) {
+      setErrorMessage('Selecciona una fecha y hora válida.');
       return;
     }
     if (
@@ -208,6 +221,7 @@ function DetalleGastoContent() {
         payer_id: shared ? payerId : user.id,
         my_share: shared ? Math.round(mine * 100) / 100 : Math.round(parsedAmount * 100) / 100,
         partner_share: shared ? Math.round(partner * 100) / 100 : 0,
+        created_at: parsedDate.toISOString(),
       })
       .eq('id', expense.id)
       .eq('created_by', user.id);
@@ -363,6 +377,16 @@ function DetalleGastoContent() {
               <select value={paymentMethod} onChange={(event) => setPaymentMethod(event.target.value)}>
                 {paymentMethods.map((item) => <option key={item.id} value={item.slug}>{item.icon} {item.name}</option>)}
               </select>
+            </label>
+
+            <label className="detailDateField">
+              Fecha y hora
+              <input
+                type="datetime-local"
+                value={dateTime}
+                onChange={(event) => setDateTime(event.target.value)}
+                required
+              />
             </label>
 
             {shared ? (
