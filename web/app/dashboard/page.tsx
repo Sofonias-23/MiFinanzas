@@ -188,6 +188,7 @@ export default function DashboardPage() {
   const recentMovements = useMemo(() => {
     const expenseMovements = expenses.map((expense) => ({
       id: `expense-${expense.id}`,
+      recordId: expense.id,
       kind: 'expense' as const,
       description: expense.description,
       amount: Number(expense.amount || 0),
@@ -204,6 +205,7 @@ export default function DashboardPage() {
 
     const incomeMovements = incomes.map((income) => ({
       id: `income-${income.id}`,
+      recordId: income.id,
       kind: 'income' as const,
       description: income.description,
       amount: Number(income.amount || 0),
@@ -221,18 +223,24 @@ export default function DashboardPage() {
     const totals = new Map<string, number>();
 
     monthExpenses.forEach((expense) => {
+      const categorySlug = expense.category || 'otros';
       const categoryName =
-        categories.find((item) => item.slug === expense.category)?.name ||
-        expense.category ||
+        categories.find((item) => item.slug === categorySlug)?.name ||
+        categorySlug ||
         'Otros';
-      totals.set(categoryName, (totals.get(categoryName) ?? 0) + Number(expense.amount || 0));
+      const current = totals.get(categorySlug) ?? { name: categoryName, amount: 0 };
+      totals.set(categorySlug, {
+        name: current.name,
+        amount: current.amount + Number(expense.amount || 0),
+      });
     });
 
     return Array.from(totals.entries())
-      .map(([name, amount]) => ({
-        name,
-        amount,
-        percentage: totalExpense > 0 ? Math.round((amount / totalExpense) * 100) : 0,
+      .map(([slug, data]) => ({
+        slug,
+        name: data.name,
+        amount: data.amount,
+        percentage: totalExpense > 0 ? Math.round((data.amount / totalExpense) * 100) : 0,
       }))
       .sort((a, b) => b.amount - a.amount)
       .slice(0, 4);
@@ -354,7 +362,18 @@ export default function DashboardPage() {
             <div className="moneyMovementList">
               {recentMovements.length ? (
                 recentMovements.map((movement) => (
-                  <div className="moneyMovement" key={movement.id}>
+                  <button
+                    type="button"
+                    className="moneyMovement"
+                    key={movement.id}
+                    onClick={() =>
+                      router.push(
+                        movement.kind === 'expense'
+                          ? '/detalle-gasto?id=' + movement.recordId
+                          : '/detalle-ingreso?id=' + movement.recordId,
+                      )
+                    }
+                  >
                     <span className={movement.kind === 'income' ? 'movementIcon incomeIcon' : 'movementIcon'}>
                       {movement.kind === 'income' ? '↑' : '↓'}
                     </span>
@@ -367,7 +386,7 @@ export default function DashboardPage() {
                     <strong className={movement.kind === 'income' ? 'moneyIncome' : 'moneyExpense'}>
                       {movement.kind === 'income' ? '+' : '-'} {formatMoney(movement.amount)}
                     </strong>
-                  </div>
+                  </button>
                 ))
               ) : (
                 <div className="moneyEmpty">
@@ -392,11 +411,18 @@ export default function DashboardPage() {
               <div className="legend">
                 {categoryTotals.length ? (
                   categoryTotals.map((category, index) => (
-                    <span key={category.name}>
+                    <button
+                      type="button"
+                      className="categoryLegendItem"
+                      key={category.slug}
+                      onClick={() =>
+                        router.push('/movimientos?filter=personal&category=' + encodeURIComponent(category.slug))
+                      }
+                    >
                       <i className={'dot d' + ((index % 4) + 1)} />
                       {category.name}
                       <b>{category.percentage}%</b>
-                    </span>
+                    </button>
                   ))
                 ) : (
                   <span className="emptyState">Aún no hay gastos este mes.</span>
