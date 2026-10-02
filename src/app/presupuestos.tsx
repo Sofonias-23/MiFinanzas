@@ -12,7 +12,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { MonthNavigator } from '@/components/month-navigator';
 import { useFinance } from '@/context/finance-context';
+import { isInMonth, monthLabel, normalizeMonthKey, shiftMonthKey } from '@/lib/months';
 import { supabase } from '@/lib/supabase';
 
 type BudgetScope = 'personal' | 'pareja';
@@ -31,22 +33,6 @@ type PartnerStatus = {
   household_id: string | null;
   member_count: number;
 };
-
-function currentMonthKey() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  return `${year}-${month}-01`;
-}
-
-function isCurrentMonth(dateValue: string) {
-  const date = new Date(dateValue);
-  const now = new Date();
-  return (
-    date.getFullYear() === now.getFullYear() &&
-    date.getMonth() === now.getMonth()
-  );
-}
 
 function BudgetProgress({ value, tone }: { value: number; tone: 'ok' | 'warn' | 'danger' }) {
   const animated = useRef(new Animated.Value(0)).current;
@@ -80,7 +66,7 @@ function BudgetProgress({ value, tone }: { value: number; tone: 'ok' | 'warn' | 
 }
 
 export default function PresupuestosScreen() {
-  const params = useLocalSearchParams<{ scope?: string }>();
+  const params = useLocalSearchParams<{ scope?: string; month?: string | string[] }>();
   const {
     user,
     authLoading,
@@ -92,6 +78,7 @@ export default function PresupuestosScreen() {
   const [scope, setScope] = useState<BudgetScope>(
     params.scope === 'pareja' ? 'pareja' : 'personal'
   );
+  const [selectedMonth, setSelectedMonth] = useState(() => normalizeMonthKey(params.month));
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [householdId, setHouseholdId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -99,6 +86,7 @@ export default function PresupuestosScreen() {
   const [amount, setAmount] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [copying, setCopying] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) router.replace('/login');
@@ -109,6 +97,10 @@ export default function PresupuestosScreen() {
       setScope(params.scope);
     }
   }, [params.scope]);
+
+  useEffect(() => {
+    setSelectedMonth(normalizeMonthKey(params.month));
+  }, [params.month]);
 
   useEffect(() => {
     if (!category && categories.length > 0) {
@@ -132,7 +124,7 @@ export default function PresupuestosScreen() {
     const { data, error } = await supabase
       .from('budgets')
       .select('id, scope, user_id, household_id, category, amount, month')
-      .eq('month', currentMonthKey())
+      .eq('month', selectedMonth)
       .order('created_at', { ascending: true });
 
     if (error) {
@@ -146,7 +138,7 @@ export default function PresupuestosScreen() {
         amount: Number(row.amount),
       }))
     );
-  }, [user]);
+  }, [user, selectedMonth]);
 
   useFocusEffect(
     useCallback(() => {
@@ -182,7 +174,7 @@ export default function PresupuestosScreen() {
     const result: Record<string, number> = {};
 
     for (const expense of expenses) {
-      if (!isCurrentMonth(expense.createdAt)) continue;
+      if (!isInMonth(expense.createdAt, selectedMonth)) continue;
 
       if (scope === 'personal' && expense.type !== 'personal') continue;
       if (scope === 'pareja' && expense.type !== 'compartido') continue;
@@ -192,7 +184,7 @@ export default function PresupuestosScreen() {
     }
 
     return result;
-  }, [expenses, scope]);
+  }, [expenses, scope, selectedMonth]);
 
   const totalBudget = useMemo(
     () => visibleBudgets.reduce((total, item) => total + item.amount, 0),
@@ -210,10 +202,7 @@ export default function PresupuestosScreen() {
 
   const overallPercent = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
 
-  const monthLabel = new Intl.DateTimeFormat('es-PE', {
-    month: 'long',
-    year: 'numeric',
-  }).format(new Date());
+  const selectedMonthLabel = monthLabel(selectedMonth);
 
   const resetForm = () => {
     setEditingId(null);
@@ -285,7 +274,7 @@ export default function PresupuestosScreen() {
           household_id: null,
           category,
           amount: parsedAmount,
-          month: currentMonthKey(),
+          month: selectedMonth,
           created_by: user.id,
         });
 
@@ -301,7 +290,7 @@ export default function PresupuestosScreen() {
           household_id: householdId,
           category,
           amount: parsedAmount,
-          month: currentMonthKey(),
+          month: selectedMonth,
           created_by: user.id,
         });
 
@@ -317,6 +306,85 @@ export default function PresupuestosScreen() {
       );
     } finally {
       setBusy(false);
+    }
+  };
+
+  const copyPreviousMonthBudgets = async () => {
+    if (!user) return;
+
+    if (scope === 'pareja' && !householdId) {
+      Alert.alert(
+        'Pareja no vinculada',
+        'Primero vincula a tu pareja para copiar presupuestos compartidos.'
+      );
+      return;
+    }
+
+    try {
+      setCopying(true);
+      const previousMonth = shiftMonthKey(selectedMonth, -1);
+
+      let query = supabase
+        .from('budgets')
+        .select('category, amount')
+        .eq('scope', scope)
+        .eq('month', previousMonth);
+
+      if (scope === 'personal') {
+        query = query.eq('user_id', user.id);
+      } else if (householdId) {
+        query = query.eq('household_id', householdId);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      const existing = new Set(visibleBudgets.map((item) => item.category));
+      const source = (data ?? []).filter((item: any) => !existing.has(item.category));
+
+      if (!source.length) {
+        Alert.alert(
+          'Nada para copiar',
+          data?.length
+            ? 'Los presupuestos del mes anterior ya están copiados en este periodo.'
+            : 'El mes anterior no tiene presupuestos para copiar.'
+        );
+        return;
+      }
+
+      const rows = source.map((item: any) =>
+        scope === 'personal'
+          ? {
+              scope: 'personal',
+              user_id: user.id,
+              household_id: null,
+              category: item.category,
+              amount: Number(item.amount),
+              month: selectedMonth,
+              created_by: user.id,
+            }
+          : {
+              scope: 'pareja',
+              user_id: null,
+              household_id: householdId,
+              category: item.category,
+              amount: Number(item.amount),
+              month: selectedMonth,
+              created_by: user.id,
+            }
+      );
+
+      const { error: insertError } = await supabase.from('budgets').insert(rows);
+      if (insertError) throw insertError;
+
+      await loadBudgets();
+    } catch (error: any) {
+      Alert.alert(
+        'No se pudieron copiar',
+        error?.message ?? 'Inténtalo nuevamente.'
+      );
+    } finally {
+      setCopying(false);
     }
   };
 
@@ -379,8 +447,10 @@ export default function PresupuestosScreen() {
 
         <Text style={styles.title}>Presupuestos</Text>
         <Text style={styles.subtitle}>
-          Controla cuánto quieres gastar durante {monthLabel}.
+          Controla cuánto quieres gastar durante {selectedMonthLabel}.
         </Text>
+
+        <MonthNavigator month={selectedMonth} onChange={setSelectedMonth} />
 
         <View style={styles.tabs}>
           <TouchableOpacity
@@ -407,6 +477,20 @@ export default function PresupuestosScreen() {
             </Text>
           </TouchableOpacity>
         </View>
+
+        <TouchableOpacity
+          style={[styles.copyButton, copying && styles.disabled]}
+          activeOpacity={0.82}
+          disabled={copying || (scope === 'pareja' && !householdId)}
+          onPress={copyPreviousMonthBudgets}
+        >
+          <Text style={styles.copyButtonText}>
+            {copying ? 'Copiando...' : 'Copiar presupuesto del mes anterior'}
+          </Text>
+          <Text style={styles.copyButtonSub}>
+            Origen: {monthLabel(shiftMonthKey(selectedMonth, -1))}
+          </Text>
+        </TouchableOpacity>
 
         <View style={styles.summaryCard}>
           <Text style={styles.summaryLabel}>
@@ -620,6 +704,9 @@ const styles = StyleSheet.create({
   tabPartner: { backgroundColor: '#A82E5B' },
   tabText: { color: '#64748B', fontSize: 11, fontWeight: '900' },
   tabTextActive: { color: '#FFFFFF' },
+  copyButton: { marginTop: 10, backgroundColor: '#0E1A2A', borderRadius: 14, paddingHorizontal: 14, paddingVertical: 11, borderWidth: 1, borderColor: '#1B2B40' },
+  copyButtonText: { color: '#60A5FA', fontSize: 11, fontWeight: '900' },
+  copyButtonSub: { color: '#64748B', fontSize: 8, marginTop: 3, textTransform: 'capitalize' },
   summaryCard: {
     backgroundColor: '#0E1A2A',
     borderRadius: 20,
