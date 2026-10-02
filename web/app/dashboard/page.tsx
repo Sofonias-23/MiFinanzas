@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 
+import MonthNavigator from '@/components/MonthNavigator';
 import { supabase } from '@/lib/supabase';
+import { isInMonth, monthLabel, normalizeMonthKey } from '@/lib/months';
 
 type ExpenseRow = {
   id: string;
@@ -38,17 +40,6 @@ type BudgetRow = {
   amount: number;
 };
 
-function isCurrentMonth(value: string) {
-  const date = new Date(value);
-  const now = new Date();
-  return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
-}
-
-function monthKey() {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
-}
-
 function formatMoney(value: number) {
   return new Intl.NumberFormat('es-PE', {
     style: 'currency',
@@ -64,8 +55,10 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
-export default function DashboardPage() {
+function DashboardContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const selectedMonth = normalizeMonthKey(searchParams.get('month'));
   const [user, setUser] = useState<User | null>(null);
   const [displayName, setDisplayName] = useState('Usuario');
   const [expenses, setExpenses] = useState<ExpenseRow[]>([]);
@@ -118,7 +111,7 @@ export default function DashboardPage() {
             .from('budgets')
             .select('category, amount')
             .eq('scope', 'personal')
-            .eq('month', monthKey()),
+            .eq('month', selectedMonth),
         ]);
 
       if (!active) return;
@@ -142,16 +135,16 @@ export default function DashboardPage() {
     return () => {
       active = false;
     };
-  }, [router]);
+  }, [router, selectedMonth]);
 
   const monthExpenses = useMemo(
-    () => expenses.filter((expense) => isCurrentMonth(expense.created_at)),
-    [expenses],
+    () => expenses.filter((expense) => isInMonth(expense.created_at, selectedMonth)),
+    [expenses, selectedMonth],
   );
 
   const monthIncomes = useMemo(
-    () => incomes.filter((income) => isCurrentMonth(income.created_at)),
-    [incomes],
+    () => incomes.filter((income) => isInMonth(income.created_at, selectedMonth)),
+    [incomes, selectedMonth],
   );
 
   const totalExpense = useMemo(
@@ -186,7 +179,7 @@ export default function DashboardPage() {
     budgetTotal > 0 ? Math.min(100, Math.round((budgetSpent / budgetTotal) * 100)) : 0;
 
   const recentMovements = useMemo(() => {
-    const expenseMovements = expenses.map((expense) => ({
+    const expenseMovements = monthExpenses.map((expense) => ({
       id: `expense-${expense.id}`,
       recordId: expense.id,
       kind: 'expense' as const,
@@ -203,7 +196,7 @@ export default function DashboardPage() {
         'Sin especificar',
     }));
 
-    const incomeMovements = incomes.map((income) => ({
+    const incomeMovements = monthIncomes.map((income) => ({
       id: `income-${income.id}`,
       recordId: income.id,
       kind: 'income' as const,
@@ -217,7 +210,7 @@ export default function DashboardPage() {
     return [...expenseMovements, ...incomeMovements]
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, 6);
-  }, [expenses, incomes, categories, paymentMethods]);
+  }, [monthExpenses, monthIncomes, categories, paymentMethods]);
 
   const categoryTotals = useMemo(() => {
     const totals = new Map<string, { name: string; amount: number }>();
@@ -304,13 +297,15 @@ export default function DashboardPage() {
           </div>
         </header>
 
+        <MonthNavigator month={selectedMonth} />
+
         <section className="moneyBalanceCard">
           <div className="moneyBalanceTop">
             <div>
               <span>Saldo actual</span>
               <strong>{formatMoney(balance)}</strong>
             </div>
-            <span className="moneyMonth">Este mes</span>
+            <span className="moneyMonth">{monthLabel(selectedMonth)}</span>
           </div>
           <div className="moneyMetrics">
             <div>
@@ -340,7 +335,7 @@ export default function DashboardPage() {
           </div>
           <div className="moneyBudgetRight">
             <b>{budgetTotal > 0 ? `${budgetPercent}%` : '→'}</b>
-            <a href="/presupuestos">Gestionar</a>
+            <a href={'/presupuestos?month=' + selectedMonth}>Gestionar</a>
           </div>
           {budgetTotal > 0 ? (
             <div className="moneyBudgetTrack">
@@ -403,7 +398,7 @@ export default function DashboardPage() {
                 <p className="eyebrow">ESTADÍSTICAS</p>
                 <h2>Gastos por categoría</h2>
               </div>
-              <a href="/estadisticas">Ver detalle</a>
+              <a href={'/estadisticas?month=' + selectedMonth}>Ver detalle</a>
             </div>
 
             <div className="categorySummary">
@@ -416,7 +411,7 @@ export default function DashboardPage() {
                       className="categoryLegendItem"
                       key={category.slug}
                       onClick={() =>
-                        router.push('/movimientos?filter=personal&category=' + encodeURIComponent(category.slug))
+                        router.push('/movimientos?filter=personal&category=' + encodeURIComponent(category.slug) + '&month=' + selectedMonth)
                       }
                     >
                       <i className={'dot d' + ((index % 4) + 1)} />
@@ -433,5 +428,14 @@ export default function DashboardPage() {
         </div>
       </section>
     </main>
+  );
+}
+
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<main className="dashboardLoading"><p>Cargando Mi dinero...</p></main>}>
+      <DashboardContent />
+    </Suspense>
   );
 }
