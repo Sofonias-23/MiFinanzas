@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BottomNav } from '@/components/bottom-nav';
 import { useFinance } from '@/context/finance-context';
+import { isInMonth, monthLabel, normalizeMonthKey } from '@/lib/months';
 
 type Filter = 'todos' | 'personal' | 'compartido';
 
@@ -33,8 +34,11 @@ export default function MovimientosScreen() {
     refreshIncomes,
   } = useFinance();
 
-  const params = useLocalSearchParams<{ filter?: string | string[] }>();
+  const params = useLocalSearchParams<{ filter?: string | string[]; category?: string | string[]; month?: string | string[] }>();
   const [filter, setFilter] = useState<Filter>(() => normalizeFilter(params.filter));
+  const categoryFilter = Array.isArray(params.category) ? params.category[0] : params.category;
+  const monthParam = Array.isArray(params.month) ? params.month[0] : params.month;
+  const selectedMonth = monthParam ? normalizeMonthKey(monthParam) : null;
   const [search, setSearch] = useState('');
 
   useEffect(() => {
@@ -59,6 +63,8 @@ export default function MovimientosScreen() {
       .filter((expense) => {
         if (filter === 'personal' && expense.type !== 'personal') return false;
         if (filter === 'compartido' && expense.type !== 'compartido') return false;
+        if (categoryFilter && (expense.category || 'otros') !== categoryFilter) return false;
+        if (selectedMonth && !isInMonth(expense.createdAt, selectedMonth)) return false;
         if (query && !expense.description.toLowerCase().includes(query)) return false;
         return true;
       })
@@ -75,6 +81,7 @@ export default function MovimientosScreen() {
         return {
           id: `expense-${expense.id}`,
           expenseId: expense.id,
+          incomeId: null,
           kind: 'expense' as const,
           description: expense.description,
           amount: myPart,
@@ -89,15 +96,17 @@ export default function MovimientosScreen() {
       });
 
     const incomeMovements =
-      filter === 'compartido'
+      filter === 'compartido' || categoryFilter
         ? []
         : incomes
-            .filter((income) =>
-              query ? income.description.toLowerCase().includes(query) : true
-            )
+            .filter((income) => {
+              if (selectedMonth && !isInMonth(income.createdAt, selectedMonth)) return false;
+              return query ? income.description.toLowerCase().includes(query) : true;
+            })
             .map((income) => ({
               id: `income-${income.id}`,
               expenseId: null,
+              incomeId: income.id,
               kind: 'income' as const,
               description: income.description,
               amount: income.amount,
@@ -110,7 +119,7 @@ export default function MovimientosScreen() {
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
-  }, [expenses, incomes, categories, paymentMethods, filter, search, user]);
+  }, [expenses, incomes, categories, paymentMethods, filter, search, user, categoryFilter, selectedMonth]);
 
   if (authLoading || !user) return null;
 
@@ -132,6 +141,42 @@ export default function MovimientosScreen() {
           style={styles.search}
         />
       </View>
+
+      {categoryFilter ? (
+        <View style={styles.activeFilter}>
+          <Text style={styles.activeFilterText}>
+            Categoría: {categories.find((item) => item.slug === categoryFilter)?.name ?? categoryFilter}
+          </Text>
+          <TouchableOpacity
+            onPress={() =>
+              router.replace(
+                selectedMonth
+                  ? `/movimientos?filter=personal&month=${selectedMonth}` as any
+                  : '/movimientos?filter=personal' as any
+              )
+            }
+          >
+            <Text style={styles.activeFilterAction}>Quitar</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
+
+      {selectedMonth ? (
+        <View style={styles.activeFilter}>
+          <Text style={styles.activeFilterText}>Periodo: {monthLabel(selectedMonth)}</Text>
+          <TouchableOpacity
+            onPress={() =>
+              router.replace(
+                categoryFilter
+                  ? `/movimientos?filter=${filter}&category=${encodeURIComponent(categoryFilter)}` as any
+                  : `/movimientos?filter=${filter}` as any
+              )
+            }
+          >
+            <Text style={styles.activeFilterAction}>Todos los meses</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
 
       <View style={styles.filters}>
         {[
@@ -198,28 +243,26 @@ export default function MovimientosScreen() {
                     >
                       {movement.kind === 'income' ? '+' : '-'} S/ {movement.amount.toFixed(2)}
                     </Text>
-                    {movement.kind === 'expense' ? (
-                      <Text style={styles.rowArrow}>›</Text>
-                    ) : null}
+                    <Text style={styles.rowArrow}>›</Text>
                   </View>
                 </>
               );
 
-              return movement.kind === 'expense' && movement.expenseId ? (
+              return (
                 <TouchableOpacity
                   key={movement.id}
                   style={styles.row}
                   activeOpacity={0.82}
-                  onPress={() =>
-                    router.push(`/detalle-gasto?id=${movement.expenseId}` as any)
-                  }
+                  onPress={() => {
+                    if (movement.kind === 'expense' && movement.expenseId) {
+                      router.push(`/detalle-gasto?id=${movement.expenseId}` as any);
+                    } else if (movement.kind === 'income' && movement.incomeId) {
+                      router.push(`/detalle-ingreso?id=${movement.incomeId}` as any);
+                    }
+                  }}
                 >
                   {content}
                 </TouchableOpacity>
-              ) : (
-                <View key={movement.id} style={styles.row}>
-                  {content}
-                </View>
               );
             })}
           </View>
@@ -256,6 +299,9 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     fontSize: 14,
   },
+  activeFilter: { marginHorizontal: 20, marginTop: 9, paddingHorizontal: 12, paddingVertical: 9, borderRadius: 12, borderWidth: 1, borderColor: '#1E3A5F', backgroundColor: '#0E1A2A', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
+  activeFilterText: { color: '#AFC1D8', fontSize: 9, fontWeight: '800', flex: 1, textTransform: 'capitalize' },
+  activeFilterAction: { color: '#60A5FA', fontSize: 9, fontWeight: '900' },
   filters: {
     flexDirection: 'row',
     gap: 8,
