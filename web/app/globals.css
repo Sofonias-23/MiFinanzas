@@ -7910,3 +7910,88 @@ footer div { display: flex; gap: 26px; }
     margin:34px 0;
   }
 }
+
+
+/* Interactive movement details */
+.moneyMovement {
+  width: 100%;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.moneyMovement:hover,
+.movementRow.clickable:hover {
+  background: rgba(46, 167, 255, .055);
+}
+.moneyMovement:focus-visible,
+.movementRow.clickable:focus-visible,
+.categoryLegendItem:focus-visible {
+  outline: 2px solid rgba(83, 169, 255, .75);
+  outline-offset: 2px;
+}
+.movementRow.clickable {
+  cursor: pointer;
+  transition: background .18s ease;
+}
+.categorySummary .legend .categoryLegendItem {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 18px 1fr auto;
+  align-items: center;
+  gap: 0;
+  padding: 8px 6px;
+  border: 0;
+  border-radius: 9px;
+  color: #a9b7ce;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background .18s ease, color .18s ease;
+}
+.categorySummary .legend .categoryLegendItem:hover {
+  color: #fff;
+  background: rgba(46, 167, 255, .07);
+}
+.categorySummary .legend .categoryLegendItem b {
+  justify-self: end;
+}
+.movementActiveFilter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 16px;
+  padding: 11px 14px;
+  border: 1px solid rgba(46, 167, 255, .18);
+  border-radius: 12px;
+  color: #b9c9dc;
+  background: rgba(31, 140, 255, .07);
+  font-size: 12px;
+}
+.movementActiveFilter button {
+  padding: 7px 10px;
+  border: 1px solid rgba(144, 170, 255, .14);
+  border-radius: 9px;
+  color: #8fc8ff;
+  background: rgba(8, 20, 37, .72);
+  cursor: pointer;
+}
+.incomeDetailPanel {
+  max-width: 760px;
+}
+.detailDateField {
+  grid-column: 1 / -1;
+}
+@media (max-width: 620px) {
+  .movementActiveFilter {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .detailDateField {
+    grid-column: auto;
+  }
+}
