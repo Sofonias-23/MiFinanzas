@@ -12,7 +12,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppIcon } from '@/components/app-icon';
 import { PaymentBrandIcon } from '@/components/payment-brand-icon';
 import { BottomNav } from '@/components/bottom-nav';
+import { MonthNavigator } from '@/components/month-navigator';
 import { useFinance } from '@/context/finance-context';
+import { isInMonth, monthLabel, normalizeMonthKey } from '@/lib/months';
 import { supabase } from '@/lib/supabase';
 
 type Scope = 'personal' | 'pareja';
@@ -24,14 +26,8 @@ type PartnerStatus = {
 
 const CHART_COLORS = ['#23A7FF', '#F43F75', '#FFB454', '#8B5CF6', '#54D6C5'];
 
-function isCurrentMonth(value: string) {
-  const date = new Date(value);
-  const now = new Date();
-  return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
-}
-
 export default function EstadisticasScreen() {
-  const params = useLocalSearchParams<{ scope?: string }>();
+  const params = useLocalSearchParams<{ scope?: string; month?: string | string[] }>();
   const {
     user,
     authLoading,
@@ -48,6 +44,7 @@ export default function EstadisticasScreen() {
   const [scope, setScope] = useState<Scope>(
     params.scope === 'pareja' ? 'pareja' : 'personal'
   );
+  const [selectedMonth, setSelectedMonth] = useState(() => normalizeMonthKey(params.month));
   const [partnerName, setPartnerName] = useState('tu pareja');
 
   useEffect(() => {
@@ -59,6 +56,10 @@ export default function EstadisticasScreen() {
       setScope(params.scope);
     }
   }, [params.scope]);
+
+  useEffect(() => {
+    setSelectedMonth(normalizeMonthKey(params.month));
+  }, [params.month]);
 
   const loadPartner = useCallback(async () => {
     if (!user) return;
@@ -82,12 +83,12 @@ export default function EstadisticasScreen() {
     () =>
       expenses.filter(
         (expense) =>
-          isCurrentMonth(expense.createdAt) &&
+          isInMonth(expense.createdAt, selectedMonth) &&
           (scope === 'personal'
             ? expense.type === 'personal'
             : expense.type === 'compartido')
       ),
-    [expenses, scope]
+    [expenses, scope, selectedMonth]
   );
 
   const totalSpent = useMemo(
@@ -99,10 +100,10 @@ export default function EstadisticasScreen() {
     () =>
       scope === 'personal'
         ? incomes
-            .filter((income) => isCurrentMonth(income.createdAt))
+            .filter((income) => isInMonth(income.createdAt, selectedMonth))
             .reduce((sum, income) => sum + income.amount, 0)
         : 0,
-    [incomes, scope]
+    [incomes, scope, selectedMonth]
   );
 
   const paidByMe = useMemo(
@@ -163,9 +164,7 @@ export default function EstadisticasScreen() {
 
   if (authLoading || !user) return null;
 
-  const monthName = new Intl.DateTimeFormat('es-PE', {
-    month: 'long',
-  }).format(new Date());
+  const monthName = monthLabel(selectedMonth, false);
 
   const topCategory = categoryStats[0];
 
@@ -206,6 +205,8 @@ export default function EstadisticasScreen() {
             <Text style={styles.subtitle}>Lo importante, sin números complicados.</Text>
           </View>
         </View>
+
+        <MonthNavigator month={selectedMonth} onChange={setSelectedMonth} />
 
         <View style={styles.tabs}>
           <TouchableOpacity
@@ -325,7 +326,7 @@ export default function EstadisticasScreen() {
 
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>¿En qué gastaron más?</Text>
-          <Text style={styles.period}>Este mes</Text>
+          <Text style={styles.period}>{monthLabel(selectedMonth)}</Text>
         </View>
 
         {categoryStats.length === 0 ? (
@@ -448,7 +449,7 @@ export default function EstadisticasScreen() {
           style={styles.budgetButton}
           onPress={() =>
             router.push(
-              `/presupuestos?scope=${scope === 'pareja' ? 'pareja' : 'personal'}` as any
+              `/presupuestos?scope=${scope === 'pareja' ? 'pareja' : 'personal'}&month=${selectedMonth}` as any
             )
           }
         >
