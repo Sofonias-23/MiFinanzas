@@ -1,4 +1,4 @@
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -12,10 +12,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppIcon } from '@/components/app-icon';
 import { BottomNav } from '@/components/bottom-nav';
+import { MonthNavigator } from '@/components/month-navigator';
 import { ProfileAvatar } from '@/components/profile-avatar';
 import { useFinance } from '@/context/finance-context';
 import { getAvatarUrl, getProfiles } from '@/lib/avatar';
 import { categoryIconName } from '@/lib/icon-map';
+import { isInMonth, monthLabel, normalizeMonthKey } from '@/lib/months';
 import { supabase } from '@/lib/supabase';
 
 type BudgetRow = {
@@ -23,18 +25,10 @@ type BudgetRow = {
   amount: number;
 };
 
-function isCurrentMonth(value: string) {
-  const date = new Date(value);
-  const now = new Date();
-  return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
-}
-
-function monthKey() {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
-}
-
 export default function MiDineroScreen() {
+  const params = useLocalSearchParams<{ month?: string | string[] }>();
+  const [selectedMonth, setSelectedMonth] = useState(() => normalizeMonthKey(params.month));
+
   const {
     user,
     authLoading,
@@ -52,6 +46,10 @@ export default function MiDineroScreen() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
+    setSelectedMonth(normalizeMonthKey(params.month));
+  }, [params.month]);
+
+  useEffect(() => {
     if (!authLoading && !user) router.replace('/login');
   }, [authLoading, user]);
 
@@ -61,13 +59,13 @@ export default function MiDineroScreen() {
       .from('budgets')
       .select('category, amount')
       .eq('scope', 'personal')
-      .eq('month', monthKey());
+      .eq('month', selectedMonth);
 
     setBudgets((data ?? []).map((item: any) => ({
       category: item.category,
       amount: Number(item.amount),
     })));
-  }, [user]);
+  }, [user, selectedMonth]);
 
   const loadAvatar = useCallback(async () => {
     if (!user) return;
@@ -94,13 +92,13 @@ export default function MiDineroScreen() {
   );
 
   const monthExpenses = useMemo(
-    () => personalExpenses.filter((expense) => isCurrentMonth(expense.createdAt)),
-    [personalExpenses]
+    () => personalExpenses.filter((expense) => isInMonth(expense.createdAt, selectedMonth)),
+    [personalExpenses, selectedMonth]
   );
 
   const monthIncomes = useMemo(
-    () => incomes.filter((income) => isCurrentMonth(income.createdAt)),
-    [incomes]
+    () => incomes.filter((income) => isInMonth(income.createdAt, selectedMonth)),
+    [incomes, selectedMonth]
   );
 
   const totalExpense = useMemo(
@@ -134,12 +132,13 @@ export default function MiDineroScreen() {
   const budgetPercent = budgetTotal > 0 ? Math.min(100, (budgetSpent / budgetTotal) * 100) : 0;
 
   const recentMovements = useMemo(() => {
-    const expenseMovements = personalExpenses.map((expense) => {
+    const expenseMovements = monthExpenses.map((expense) => {
       const category = categories.find((item) => item.slug === expense.category);
       const payment = paymentMethods.find((item) => item.slug === expense.paymentMethod);
       return {
         id: `expense-${expense.id}`,
         expenseId: expense.id,
+        incomeId: null,
         kind: 'expense' as const,
         description: expense.description,
         amount: expense.amount,
@@ -149,7 +148,7 @@ export default function MiDineroScreen() {
       };
     });
 
-    const incomeMovements = incomes.map((income) => ({
+    const incomeMovements = monthIncomes.map((income) => ({
       id: `income-${income.id}`,
       expenseId: null,
       kind: 'income' as const,
@@ -163,7 +162,30 @@ export default function MiDineroScreen() {
     return [...expenseMovements, ...incomeMovements]
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, 4);
-  }, [personalExpenses, incomes, categories, paymentMethods]);
+  }, [monthExpenses, monthIncomes, categories, paymentMethods]);
+
+  const categoryTotals = useMemo(() => {
+    const totals = new Map<string, number>();
+
+    monthExpenses.forEach((expense) => {
+      const slug = expense.category || 'otros';
+      totals.set(slug, (totals.get(slug) ?? 0) + expense.amount);
+    });
+
+    return [...totals.entries()]
+      .map(([slug, amount]) => {
+        const category = categories.find((item) => item.slug === slug);
+        return {
+          slug,
+          name: category?.name ?? slug,
+          icon: category?.icon ?? '📦',
+          amount,
+          percent: totalExpense > 0 ? Math.round((amount / totalExpense) * 100) : 0,
+        };
+      })
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 4);
+  }, [monthExpenses, categories, totalExpense]);
 
   if (authLoading || !user) {
     return (
@@ -201,6 +223,8 @@ export default function MiDineroScreen() {
             <AppIcon name="settings" size={20} color="#CBD5E1" />
           </TouchableOpacity>
         </View>
+
+        <MonthNavigator month={selectedMonth} onChange={setSelectedMonth} />
 
         <View style={styles.balanceCard}>
           <View style={styles.balanceTop}>
@@ -241,7 +265,7 @@ export default function MiDineroScreen() {
         <TouchableOpacity
           style={styles.budgetCard}
           activeOpacity={0.85}
-          onPress={() => router.push('/presupuestos?scope=personal' as any)}
+          onPress={() => router.push(`/presupuestos?scope=personal&month=${selectedMonth}` as any)}
         >
           <View style={styles.budgetHeader}>
             <View>
@@ -265,7 +289,7 @@ export default function MiDineroScreen() {
 
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Últimos movimientos</Text>
-          <TouchableOpacity onPress={() => router.push('/movimientos?filter=personal' as any)}>
+          <TouchableOpacity onPress={() => router.push(`/movimientos?filter=personal&month=${selectedMonth}` as any)}>
             <Text style={styles.link}>Ver todos</Text>
           </TouchableOpacity>
         </View>
@@ -282,13 +306,15 @@ export default function MiDineroScreen() {
             {recentMovements.map((movement) => (
               <TouchableOpacity
                 key={movement.id}
-                disabled={movement.kind === 'income'}
                 activeOpacity={0.82}
                 style={styles.row}
-                onPress={() =>
-                  movement.expenseId &&
-                  router.push(`/detalle-gasto?id=${movement.expenseId}` as any)
-                }
+                onPress={() => {
+                  if (movement.kind === 'expense' && movement.expenseId) {
+                    router.push(`/detalle-gasto?id=${movement.expenseId}` as any);
+                  } else if (movement.kind === 'income' && movement.incomeId) {
+                    router.push(`/detalle-ingreso?id=${movement.incomeId}` as any);
+                  }
+                }}
               >
                 <View style={styles.rowLeft}>
                   <View style={styles.iconBox}>
@@ -313,9 +339,47 @@ export default function MiDineroScreen() {
           </View>
         )}
 
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Gastos por categoría</Text>
+          <Text style={styles.periodLabel}>{monthLabel(selectedMonth, false)}</Text>
+        </View>
+
+        {categoryTotals.length ? (
+          <View style={styles.categoryList}>
+            {categoryTotals.map((item) => (
+              <TouchableOpacity
+                key={item.slug}
+                style={styles.categoryRow}
+                activeOpacity={0.82}
+                onPress={() =>
+                  router.push(
+                    `/movimientos?filter=personal&category=${encodeURIComponent(item.slug)}&month=${selectedMonth}` as any
+                  )
+                }
+              >
+                <View style={styles.categoryLeft}>
+                  <Text style={styles.categoryIcon}>{item.icon}</Text>
+                  <View>
+                    <Text style={styles.categoryName}>{item.name}</Text>
+                    <Text style={styles.categoryAmount}>S/ {item.amount.toFixed(2)}</Text>
+                  </View>
+                </View>
+                <View style={styles.categoryRight}>
+                  <Text style={styles.categoryPercent}>{item.percent}%</Text>
+                  <Text style={styles.categoryArrow}>›</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        ) : (
+          <View style={styles.emptyCard}>
+            <Text style={styles.emptyText}>Aún no hay gastos en este periodo.</Text>
+          </View>
+        )}
+
         <TouchableOpacity
           style={styles.statsButton}
-          onPress={() => router.push('/estadisticas?scope=personal' as any)}
+          onPress={() => router.push(`/estadisticas?scope=personal&month=${selectedMonth}` as any)}
         >
           <Text style={styles.statsIcon}>▥</Text>
           <View style={styles.statsText}>
@@ -389,6 +453,16 @@ const styles = StyleSheet.create({
   rowMeta: { color: '#64748B', fontSize: 8, marginTop: 3 },
   amountIncome: { color: '#4ADE80', fontSize: 11, fontWeight: '900', marginLeft: 8 },
   amountExpense: { color: '#F87171', fontSize: 11, fontWeight: '900', marginLeft: 8 },
+  periodLabel: { color: '#64748B', fontSize: 9, fontWeight: '800', textTransform: 'capitalize' },
+  categoryList: { gap: 7 },
+  categoryRow: { backgroundColor: '#0E1A2A', borderRadius: 14, padding: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: '#1B2B40' },
+  categoryLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  categoryIcon: { fontSize: 20 },
+  categoryName: { color: '#FFFFFF', fontSize: 11, fontWeight: '900' },
+  categoryAmount: { color: '#64748B', fontSize: 8, marginTop: 2 },
+  categoryRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  categoryPercent: { color: '#60A5FA', fontSize: 11, fontWeight: '900' },
+  categoryArrow: { color: '#64748B', fontSize: 21 },
   statsButton: { marginTop: 12, backgroundColor: '#0E1A2A', borderRadius: 16, padding: 13, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#1B2B40' },
   statsIcon: { color: '#60A5FA', fontSize: 21, width: 34, textAlign: 'center' },
   statsText: { flex: 1, marginLeft: 7 },
