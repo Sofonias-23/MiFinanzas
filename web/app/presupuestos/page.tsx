@@ -4,7 +4,9 @@ import { Suspense, FormEvent, useCallback, useEffect, useMemo, useState } from '
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 
+import MonthNavigator from '@/components/MonthNavigator';
 import { supabase } from '@/lib/supabase';
+import { isInMonth, monthLabel, normalizeMonthKey, shiftMonthKey } from '@/lib/months';
 
 type BudgetScope = 'personal' | 'pareja';
 
@@ -38,17 +40,6 @@ type PartnerStatus = {
   member_count: number;
 };
 
-function currentMonthKey() {
-  const now = new Date();
-  return now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-01';
-}
-
-function isCurrentMonth(value: string) {
-  const date = new Date(value);
-  const now = new Date();
-  return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
-}
-
 function formatMoney(value: number) {
   return new Intl.NumberFormat('es-PE', {
     style: 'currency',
@@ -64,6 +55,7 @@ function normalizeScope(value: string | null): BudgetScope {
 function PresupuestosContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const selectedMonth = normalizeMonthKey(searchParams.get('month'));
 
   const [user, setUser] = useState<User | null>(null);
   const [scope, setScope] = useState<BudgetScope>(() => normalizeScope(searchParams.get('scope')));
@@ -77,6 +69,7 @@ function PresupuestosContent() {
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [copying, setCopying] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
@@ -96,7 +89,7 @@ function PresupuestosContent() {
       supabase
         .from('budgets')
         .select('id, scope, user_id, household_id, category, amount, month')
-        .eq('month', currentMonthKey())
+        .eq('month', selectedMonth)
         .order('created_at', { ascending: true }),
       supabase
         .from('expense_categories')
@@ -130,7 +123,7 @@ function PresupuestosContent() {
     );
 
     setLoading(false);
-  }, [router]);
+  }, [router, selectedMonth]);
 
   useEffect(() => {
     void loadData();
@@ -173,7 +166,7 @@ function PresupuestosContent() {
     const result: Record<string, number> = {};
 
     for (const expense of expenses) {
-      if (!isCurrentMonth(expense.created_at)) continue;
+      if (!isInMonth(expense.created_at, selectedMonth)) continue;
       if (scope === 'personal' && expense.type !== 'personal') continue;
       if (scope === 'pareja' && expense.type !== 'compartido') continue;
 
@@ -182,7 +175,7 @@ function PresupuestosContent() {
     }
 
     return result;
-  }, [expenses, scope]);
+  }, [expenses, scope, selectedMonth]);
 
   const totalBudget = useMemo(
     () => visibleBudgets.reduce((sum, item) => sum + Number(item.amount || 0), 0),
@@ -199,10 +192,7 @@ function PresupuestosContent() {
   );
 
   const totalPercent = totalBudget > 0 ? Math.min(100, Math.round((totalSpent / totalBudget) * 100)) : 0;
-  const monthLabel = new Intl.DateTimeFormat('es-PE', {
-    month: 'long',
-    year: 'numeric',
-  }).format(new Date());
+  const selectedMonthLabel = monthLabel(selectedMonth);
 
   function resetForm() {
     setEditingId(null);
@@ -277,7 +267,7 @@ function PresupuestosContent() {
         household_id: null,
         category,
         amount: Math.round(parsedAmount * 100) / 100,
-        month: currentMonthKey(),
+        month: selectedMonth,
         created_by: user.id,
       });
       error = result.error;
@@ -288,7 +278,7 @@ function PresupuestosContent() {
         household_id: householdId,
         category,
         amount: Math.round(parsedAmount * 100) / 100,
-        month: currentMonthKey(),
+        month: selectedMonth,
         created_by: user.id,
       });
       error = result.error;
@@ -303,6 +293,86 @@ function PresupuestosContent() {
 
     await loadData();
     resetForm();
+  }
+
+  async function copyPreviousMonthBudgets() {
+    if (!user) return;
+
+    if (scope === 'pareja' && !householdId) {
+      setErrorMessage('Primero vincula a tu pareja para copiar presupuestos compartidos.');
+      return;
+    }
+
+    setErrorMessage('');
+    setCopying(true);
+
+    const previousMonth = shiftMonthKey(selectedMonth, -1);
+    let query = supabase
+      .from('budgets')
+      .select('category, amount')
+      .eq('scope', scope)
+      .eq('month', previousMonth);
+
+    if (scope === 'personal') {
+      query = query.eq('user_id', user.id);
+    } else if (householdId) {
+      query = query.eq('household_id', householdId);
+    }
+
+    const { data: previousBudgets, error: previousError } = await query;
+
+    if (previousError) {
+      setCopying(false);
+      setErrorMessage(previousError.message || 'No se pudo consultar el mes anterior.');
+      return;
+    }
+
+    const existingCategories = new Set(visibleBudgets.map((item) => item.category));
+    const source = (previousBudgets ?? []).filter(
+      (item) => !existingCategories.has(item.category),
+    );
+
+    if (!source.length) {
+      setCopying(false);
+      setErrorMessage(
+        previousBudgets?.length
+          ? 'Los presupuestos del mes anterior ya están copiados en este periodo.'
+          : 'El mes anterior no tiene presupuestos para copiar.',
+      );
+      return;
+    }
+
+    const rows = source.map((item) =>
+      scope === 'personal'
+        ? {
+            scope: 'personal',
+            user_id: user.id,
+            household_id: null,
+            category: item.category,
+            amount: Number(item.amount),
+            month: selectedMonth,
+            created_by: user.id,
+          }
+        : {
+            scope: 'pareja',
+            user_id: null,
+            household_id: householdId,
+            category: item.category,
+            amount: Number(item.amount),
+            month: selectedMonth,
+            created_by: user.id,
+          },
+    );
+
+    const { error } = await supabase.from('budgets').insert(rows);
+    setCopying(false);
+
+    if (error) {
+      setErrorMessage(error.message || 'No se pudieron copiar los presupuestos.');
+      return;
+    }
+
+    await loadData();
   }
 
   async function deleteBudget(item: BudgetRow) {
@@ -338,7 +408,7 @@ function PresupuestosContent() {
           </span>
           <span>MiFinanzas</span>
         </a>
-        <a className="expenseBack" href="/dashboard">← Mi dinero</a>
+        <a className="expenseBack" href={'/dashboard?month=' + selectedMonth}>← Mi dinero</a>
       </header>
 
       <section className="budgetsWrap">
@@ -346,7 +416,7 @@ function PresupuestosContent() {
           <div>
             <p className="eyebrow">PLAN DEL MES</p>
             <h1>Presupuestos</h1>
-            <p>Controla cuánto quieres gastar durante {monthLabel}.</p>
+            <p>Controla cuánto quieres gastar durante {selectedMonthLabel}.</p>
           </div>
 
           <button
@@ -361,12 +431,17 @@ function PresupuestosContent() {
           </button>
         </div>
 
+        <MonthNavigator month={selectedMonth} />
+
         <div className="budgetScopeTabs">
           <button
             type="button"
             className={scope === 'personal' ? 'budgetScope active personal' : 'budgetScope'}
             onClick={() => {
               setScope('personal');
+              const params = new URLSearchParams(searchParams.toString());
+              params.delete('scope');
+              router.replace('/presupuestos?' + params.toString());
               resetForm();
             }}
           >
@@ -377,11 +452,26 @@ function PresupuestosContent() {
             className={scope === 'pareja' ? 'budgetScope active couple' : 'budgetScope'}
             onClick={() => {
               setScope('pareja');
+              const params = new URLSearchParams(searchParams.toString());
+              params.set('scope', 'pareja');
+              router.replace('/presupuestos?' + params.toString());
               resetForm();
             }}
           >
             👥 Pareja
           </button>
+        </div>
+
+        <div className="budgetMonthActions">
+          <button
+            type="button"
+            className="ghostButton"
+            onClick={() => void copyPreviousMonthBudgets()}
+            disabled={copying || (scope === 'pareja' && !householdId)}
+          >
+            {copying ? 'Copiando...' : 'Copiar presupuesto del mes anterior'}
+          </button>
+          <span>Origen: {monthLabel(shiftMonthKey(selectedMonth, -1))}</span>
         </div>
 
         {scope === 'pareja' && !householdId ? (
