@@ -70,6 +70,7 @@ function MovimientosContent() {
   const [categories, setCategories] = useState<CategoryRow[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<PaymentRow[]>([]);
   const [filter, setFilter] = useState<Filter>(() => normalizeFilter(searchParams.get('filter')));
+  const categoryFilter = searchParams.get('category');
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -132,6 +133,7 @@ function MovimientosContent() {
       .filter((expense) => {
         if (filter === 'personal' && expense.type !== 'personal') return false;
         if (filter === 'compartido' && expense.type !== 'compartido') return false;
+        if (categoryFilter && expense.category !== categoryFilter) return false;
         if (query && !expense.description.toLowerCase().includes(query)) return false;
         return true;
       })
@@ -149,6 +151,7 @@ function MovimientosContent() {
           id: 'expense-' + expense.id,
           kind: 'expense' as const,
           expenseId: expense.id,
+          incomeId: null,
           description: expense.description,
           amount,
           createdAt: expense.created_at,
@@ -162,7 +165,7 @@ function MovimientosContent() {
       });
 
     const incomeMovements =
-      filter === 'compartido'
+      filter === 'compartido' || categoryFilter
         ? []
         : incomes
             .filter((income) =>
@@ -172,6 +175,7 @@ function MovimientosContent() {
               id: 'income-' + income.id,
               kind: 'income' as const,
               expenseId: null,
+              incomeId: income.id,
               description: income.description,
               amount: Number(income.amount || 0),
               createdAt: income.created_at,
@@ -182,7 +186,7 @@ function MovimientosContent() {
     return [...expenseMovements, ...incomeMovements].sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
-  }, [expenses, incomes, categories, paymentMethods, filter, search, user]);
+  }, [expenses, incomes, categories, paymentMethods, filter, search, user, categoryFilter]);
 
   const totals = useMemo(() => {
     let income = 0;
@@ -244,6 +248,17 @@ function MovimientosContent() {
           </div>
         </div>
 
+        {categoryFilter ? (
+          <div className="movementActiveFilter">
+            <span>
+              Categoría: {categories.find((item) => item.slug === categoryFilter)?.name || categoryFilter}
+            </span>
+            <button type="button" onClick={() => router.replace('/movimientos?filter=personal')}>
+              Quitar filtro
+            </button>
+          </div>
+        ) : null}
+
         <div className="movementControls">
           <input
             className="movementSearch"
@@ -283,9 +298,15 @@ function MovimientosContent() {
             <div className="movementRows">
               {movements.map((movement) => (
                 <div
-                  className={movement.kind === 'expense' ? 'movementRow clickable' : 'movementRow'}
+                  className="movementRow clickable"
                   key={movement.id}
-                  onClick={() => movement.expenseId && router.push('/detalle-gasto?id=' + movement.expenseId)}
+                  onClick={() => {
+                    if (movement.kind === 'expense' && movement.expenseId) {
+                      router.push('/detalle-gasto?id=' + movement.expenseId);
+                    } else if (movement.kind === 'income' && movement.incomeId) {
+                      router.push('/detalle-ingreso?id=' + movement.incomeId);
+                    }
+                  }}
                 >
                   <div className="movementMain">
                     <span className={movement.kind === 'income' ? 'movementBigIcon incomeIcon' : 'movementBigIcon'}>
