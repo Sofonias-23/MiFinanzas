@@ -270,9 +270,9 @@ function DashboardContent() {
 
         <nav className="moneyNav">
           <a className="active" href="/dashboard">⌂ Mi dinero</a>
-          <a href="/movimientos">▣ Movimientos</a>
-          <a href="/presupuestos">◎ Presupuestos</a>
-          <a href="/estadisticas">◫ Estadísticas</a>
+          <a href={'/movimientos?month=' + selectedMonth}>▣ Movimientos</a>
+          <a href={'/presupuestos?month=' + selectedMonth}>◎ Presupuestos</a>
+          <a href={'/estadisticas?month=' + selectedMonth}>◫ Estadísticas</a>
           <a href="/categorias">◇ Categorías</a>
           <a href="/metodos-pago">▤ Métodos de pago</a>
           <a href="/perfil">◉ Perfil</a>
