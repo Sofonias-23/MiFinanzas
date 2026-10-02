@@ -7995,3 +7995,85 @@ footer div { display: flex; gap: 26px; }
     grid-column: auto;
   }
 }
+
+
+/* Monthly navigation */
+.monthNavigator {
+  width: min(520px, 100%);
+  display: grid;
+  grid-template-columns: 46px 1fr 46px;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0;
+  padding: 10px;
+  border: 1px solid rgba(144, 170, 255, .14);
+  border-radius: 16px;
+  background: rgba(10, 21, 39, .72);
+}
+.monthNavArrow {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(144, 170, 255, .14);
+  border-radius: 12px;
+  color: #dce8f8;
+  background: #0b172a;
+  cursor: pointer;
+  font-size: 18px;
+  transition: border-color .18s ease, background .18s ease, opacity .18s ease;
+}
+.monthNavArrow:hover:not(:disabled) {
+  border-color: rgba(46, 167, 255, .42);
+  background: rgba(31, 140, 255, .1);
+}
+.monthNavArrow:disabled {
+  opacity: .3;
+  cursor: not-allowed;
+}
+.monthNavCurrent {
+  min-width: 0;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+}
+.monthNavCurrent span {
+  color: #6f819d;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.monthNavCurrent strong {
+  color: #f5f8fd;
+  font-size: 15px;
+  text-transform: capitalize;
+}
+.budgetMonthActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 14px 0 6px;
+}
+.budgetMonthActions .ghostButton {
+  min-height: 42px;
+  cursor: pointer;
+}
+.budgetMonthActions .ghostButton:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+.budgetMonthActions > span {
+  color: #6f819d;
+  font-size: 11px;
+  text-transform: capitalize;
+}
+@media (max-width: 620px) {
+  .monthNavigator {
+    width: 100%;
+  }
+  .budgetMonthActions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
