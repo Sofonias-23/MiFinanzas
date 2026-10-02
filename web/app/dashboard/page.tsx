@@ -220,7 +220,7 @@ export default function DashboardPage() {
   }, [expenses, incomes, categories, paymentMethods]);
 
   const categoryTotals = useMemo(() => {
-    const totals = new Map<string, number>();
+    const totals = new Map<string, { name: string; amount: number }>();
 
     monthExpenses.forEach((expense) => {
       const categorySlug = expense.category || 'otros';
