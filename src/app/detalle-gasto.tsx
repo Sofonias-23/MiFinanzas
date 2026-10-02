@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useFinance } from '@/context/finance-context';
+import { editableDateTime, parseEditableDateTime } from '@/lib/months';
 import { supabase } from '@/lib/supabase';
 
 type PartnerStatus = {
@@ -77,6 +78,7 @@ export default function DetalleGastoScreen() {
   const [editPayerId, setEditPayerId] = useState('');
   const [editMyShare, setEditMyShare] = useState('');
   const [editPartnerShare, setEditPartnerShare] = useState('');
+  const [editDateTime, setEditDateTime] = useState('');
 
   useEffect(() => {
     Animated.timing(enter, {
@@ -199,6 +201,7 @@ export default function DetalleGastoScreen() {
     setEditPayerId(expense.payerId);
     setEditMyShare(expense.myShare.toFixed(2));
     setEditPartnerShare(expense.partnerShare.toFixed(2));
+    setEditDateTime(editableDateTime(expense.createdAt));
   }, [expense, editing]);
 
   const category = useMemo(
@@ -332,6 +335,7 @@ export default function DetalleGastoScreen() {
     const amount = Number(editAmount.replace(',', '.'));
     const mine = Number(editMyShare.replace(',', '.'));
     const partner = Number(editPartnerShare.replace(',', '.'));
+    const parsedDate = parseEditableDateTime(editDateTime);
 
     if (!editDescription.trim()) {
       Alert.alert('Falta la descripción', 'Escribe una descripción.');
@@ -340,6 +344,14 @@ export default function DetalleGastoScreen() {
 
     if (!Number.isFinite(amount) || amount <= 0) {
       Alert.alert('Monto inválido', 'El monto debe ser mayor a cero.');
+      return;
+    }
+
+    if (!parsedDate) {
+      Alert.alert(
+        'Fecha inválida',
+        'Usa el formato AAAA-MM-DD HH:mm. Ejemplo: 2026-10-02 14:30.'
+      );
       return;
     }
 
@@ -371,6 +383,7 @@ export default function DetalleGastoScreen() {
           payer_id: shared ? editPayerId : user.id,
           my_share: shared ? mine : amount,
           partner_share: shared ? partner : 0,
+          created_at: parsedDate.toISOString(),
         })
         .eq('id', expense.id)
         .eq('created_by', user.id);
@@ -732,6 +745,17 @@ export default function DetalleGastoScreen() {
                   style={styles.amountInput}
                   placeholderTextColor="#64748B"
                 />
+
+                <Text style={styles.formLabel}>Fecha y hora</Text>
+                <TextInput
+                  value={editDateTime}
+                  onChangeText={setEditDateTime}
+                  style={styles.input}
+                  autoCapitalize="none"
+                  placeholder="2026-10-02 14:30"
+                  placeholderTextColor="#64748B"
+                />
+                <Text style={styles.dateHint}>Formato: AAAA-MM-DD HH:mm</Text>
 
                 <Text style={styles.formLabel}>Categoría</Text>
                 <ScrollView
@@ -1112,6 +1136,7 @@ const styles = StyleSheet.create({
   deleteText: { color: '#F87171', fontSize: 11, fontWeight: '900' },
 
   editTitle: { color: '#FFFFFF', fontSize: 28, fontWeight: '900', marginTop: 21 },
+  dateHint: { color: '#64748B', fontSize: 8, marginTop: 5 },
   editSubtitle: {
     color: '#64748B',
     fontSize: 10,
