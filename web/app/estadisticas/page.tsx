@@ -4,7 +4,9 @@ import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 
+import MonthNavigator from '@/components/MonthNavigator';
 import { supabase } from '@/lib/supabase';
+import { isInMonth, monthLabel, normalizeMonthKey } from '@/lib/months';
 
 type Scope = 'personal' | 'pareja';
 
@@ -56,12 +58,6 @@ type PartnerStatus = {
 
 const PALETTE = ['#23A7FF', '#F43F75', '#FFB454', '#8B5CF6', '#54D6C5'];
 
-function isCurrentMonth(value: string) {
-  const date = new Date(value);
-  const now = new Date();
-  return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
-}
-
 function formatMoney(value: number) {
   return new Intl.NumberFormat('es-PE', {
     style: 'currency',
@@ -77,6 +73,7 @@ function normalizeScope(value: string | null): Scope {
 function EstadisticasContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const selectedMonth = normalizeMonthKey(searchParams.get('month'));
 
   const [user, setUser] = useState<User | null>(null);
   const [scope, setScope] = useState<Scope>(() => normalizeScope(searchParams.get('scope')));
@@ -173,12 +170,12 @@ function EstadisticasContent() {
     () =>
       expenses.filter(
         (expense) =>
-          isCurrentMonth(expense.created_at) &&
+          isInMonth(expense.created_at, selectedMonth) &&
           (scope === 'personal'
             ? expense.type === 'personal'
             : expense.type === 'compartido'),
       ),
-    [expenses, scope],
+    [expenses, scope, selectedMonth],
   );
 
   const totalSpent = useMemo(
@@ -190,10 +187,10 @@ function EstadisticasContent() {
     () =>
       scope === 'personal'
         ? incomes
-            .filter((income) => isCurrentMonth(income.created_at))
+            .filter((income) => isInMonth(income.created_at, selectedMonth))
             .reduce((sum, income) => sum + Number(income.amount || 0), 0)
         : 0,
-    [incomes, scope],
+    [incomes, scope, selectedMonth],
   );
 
   const paidByMe = useMemo(
@@ -311,7 +308,7 @@ function EstadisticasContent() {
     );
   }
 
-  const monthName = new Intl.DateTimeFormat('es-PE', { month: 'long' }).format(new Date());
+  const monthName = monthLabel(selectedMonth, false);
   const topCategory = categoryStats[0];
   const remaining = totalIncome - totalSpent;
 
@@ -324,7 +321,7 @@ function EstadisticasContent() {
           </span>
           <span>MiFinanzas</span>
         </a>
-        <a className="expenseBack" href="/dashboard">← Mi dinero</a>
+        <a className="expenseBack" href={'/dashboard?month=' + selectedMonth}>← Mi dinero</a>
       </header>
 
       <section className="statsWrap">
@@ -339,19 +336,31 @@ function EstadisticasContent() {
             <button
               type="button"
               className={scope === 'personal' ? 'statsScope active personal' : 'statsScope'}
-              onClick={() => setScope('personal')}
+              onClick={() => {
+                setScope('personal');
+                const params = new URLSearchParams(searchParams.toString());
+                params.delete('scope');
+                router.replace('/estadisticas?' + params.toString());
+              }}
             >
               👤 Mi dinero
             </button>
             <button
               type="button"
               className={scope === 'pareja' ? 'statsScope active couple' : 'statsScope'}
-              onClick={() => setScope('pareja')}
+              onClick={() => {
+                setScope('pareja');
+                const params = new URLSearchParams(searchParams.toString());
+                params.set('scope', 'pareja');
+                router.replace('/estadisticas?' + params.toString());
+              }}
             >
               🩷 Pareja
             </button>
           </div>
         </div>
+
+        <MonthNavigator month={selectedMonth} />
 
         {scope === 'pareja' && !partnerLinked ? (
           <div className="budgetPartnerWarning">
@@ -436,7 +445,7 @@ function EstadisticasContent() {
                 <p className="eyebrow">CATEGORÍAS</p>
                 <h2>¿En qué gastaron más?</h2>
               </div>
-              <span>Este mes</span>
+              <span>{monthLabel(selectedMonth)}</span>
             </div>
 
             {categoryStats.length ? (
