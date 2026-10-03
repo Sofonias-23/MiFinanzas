@@ -8499,3 +8499,22 @@ footer div { display: flex; gap: 26px; }
   color: #7cc4ff;
   font-size: 13px;
 }
+
+
+.receiptRegisteredCard {
+  margin-top: 14px;
+  padding: 15px 16px;
+  border: 1px solid rgba(64, 202, 139, .32);
+  border-radius: 14px;
+  background: rgba(13, 43, 32, .75);
+  display: grid;
+  gap: 4px;
+}
+.receiptRegisteredCard b {
+  color: #7ee2aa;
+  font-size: 13px;
+}
+.receiptRegisteredCard span {
+  color: #8fb6a3;
+  font-size: 12px;
+}
