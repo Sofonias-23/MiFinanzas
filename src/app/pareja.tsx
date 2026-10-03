@@ -307,6 +307,18 @@ export default function ParejaScreen() {
               <Text style={styles.newSharedText}>Nuevo gasto</Text>
             </TouchableOpacity>
 
+            <TouchableOpacity
+              style={styles.scanSharedButton}
+              onPress={() => router.push('/escanear-comprobante?scope=pareja' as any)}
+            >
+              <AppIcon name="camera" size={18} color="#FFFFFF" />
+              <View style={styles.scanSharedCopy}>
+                <Text style={styles.scanSharedTitle}>Escanear comprobante</Text>
+                <Text style={styles.scanSharedSub}>Guárdalo desde la cámara y revísalo antes de registrar.</Text>
+              </View>
+              <Text style={styles.scanSharedArrow}>›</Text>
+            </TouchableOpacity>
+
             <View style={styles.actionRow}>
               <TouchableOpacity
                 style={styles.actionTile}
@@ -597,6 +609,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   newSharedText: { color: '#FFFFFF', fontSize: 11, fontWeight: '900' },
+  scanSharedButton: { marginTop: 8, minHeight: 60, borderRadius: 14, backgroundColor: '#321A2B', borderWidth: 1, borderColor: '#7A2F62', paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center' },
+  scanSharedCopy: { flex: 1, marginLeft: 9 },
+  scanSharedTitle: { color: '#FFFFFF', fontSize: 10, fontWeight: '900' },
+  scanSharedSub: { color: '#C084A4', fontSize: 8, lineHeight: 12, marginTop: 2 },
+  scanSharedArrow: { color: '#F472B6', fontSize: 23, marginLeft: 7 },
   actionRow: { flexDirection: 'row', gap: 8, marginTop: 8 },
   actionTile: {
     flex: 1,
