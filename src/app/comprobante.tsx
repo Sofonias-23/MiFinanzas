@@ -309,6 +309,13 @@ export default function ComprobanteScreen() {
 
       await refreshExpenses();
 
+      const expenseMonth = issuedDate
+        ? issuedDate.slice(0, 7) + '-01'
+        : new Date().getFullYear() +
+          '-' +
+          String(new Date().getMonth() + 1).padStart(2, '0') +
+          '-01';
+
       Alert.alert(
         'Gasto registrado',
         expenseCount > 1
@@ -316,8 +323,13 @@ export default function ComprobanteScreen() {
           : `Se registró el gasto por S/ ${registeredTotal.toFixed(2)}.`,
         [
           {
-            text: 'Ver movimientos',
-            onPress: () => router.replace('/movimientos' as any),
+            text: scope === 'pareja' ? 'Ver en Pareja' : 'Ver en Mi dinero',
+            onPress: () =>
+              router.replace(
+                (scope === 'pareja'
+                  ? `/pareja?month=${expenseMonth}`
+                  : `/mi-dinero?month=${expenseMonth}`) as any
+              ),
           },
         ]
       );
