@@ -405,6 +405,7 @@ export default function ParejaPage() {
         <nav className="coupleNav">
           <a className="active" href="/pareja">♥ Pareja</a>
           <a href="/nuevo-gasto?type=compartido">＋ Nuevo gasto</a>
+          <a href="/escanear-comprobante?scope=pareja">📷 Escanear comprobante</a>
           <a href="/movimientos?filter=compartido">▣ Movimientos</a>
           <a href="/presupuestos?scope=pareja">◎ Presupuestos</a>
           <a href="/estadisticas?scope=pareja">◫ Estadísticas</a>
@@ -420,7 +421,10 @@ export default function ParejaPage() {
             <h1>{displayName} + {partnerName}</h1>
             <p>Finanzas compartidas, separadas de lo personal.</p>
           </div>
-          <a className="coupleNewButton" href="/nuevo-gasto?type=compartido">＋ Nuevo gasto</a>
+          <div className="coupleHeaderActions">
+            <a className="coupleScanButton" href="/escanear-comprobante?scope=pareja">📷 Escanear</a>
+            <a className="coupleNewButton" href="/nuevo-gasto?type=compartido">＋ Nuevo gasto</a>
+          </div>
         </header>
 
         <div className="coupleSummaryGrid">
