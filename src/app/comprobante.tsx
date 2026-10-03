@@ -299,7 +299,7 @@ export default function ComprobanteScreen() {
 
       Alert.alert(
         'Revisión guardada',
-        'El comprobante quedó almacenado. El siguiente paso será completar estos datos automáticamente con IA.'
+        'Los datos del comprobante se guardaron correctamente.'
       );
       await load();
     } catch (error: any) {
