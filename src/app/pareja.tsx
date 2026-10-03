@@ -19,7 +19,7 @@ import { ProfileAvatar } from '@/components/profile-avatar';
 import { useFinance } from '@/context/finance-context';
 import { getAvatarUrl, getProfiles } from '@/lib/avatar';
 import { categoryIconName } from '@/lib/icon-map';
-import { isInMonth, normalizeMonthKey } from '@/lib/months';
+import { isInMonth, monthLabel, normalizeMonthKey } from '@/lib/months';
 import { supabase } from '@/lib/supabase';
 
 type PartnerStatus = {
@@ -276,7 +276,7 @@ export default function ParejaScreen() {
 
             <View style={styles.sharedBalanceCard}>
               <View>
-                <Text style={styles.sharedBalanceLabel}>Balance compartido</Text>
+                <Text style={styles.sharedBalanceLabel}>Balance compartido · {monthLabel(selectedMonth, false)}</Text>
                 <Text style={styles.sharedBalanceAmount}>S/ {monthTotal.toFixed(2)}</Text>
               </View>
               <AppIcon name="people" size={21} color="#23A7FF" />
@@ -348,7 +348,7 @@ export default function ParejaScreen() {
             <View style={styles.monthCard}>
               <View style={styles.monthHeader}>
                 <View>
-                  <Text style={styles.monthLabel}>Gastado juntos este mes</Text>
+                  <Text style={styles.monthLabel}>Gastado juntos · {monthLabel(selectedMonth, false)}</Text>
                   <Text style={styles.monthAmount}>S/ {monthTotal.toFixed(2)}</Text>
                 </View>
                 <TouchableOpacity onPress={() => router.push(`/estadisticas?scope=pareja&month=${selectedMonth}` as any)}>
