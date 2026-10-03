@@ -326,8 +326,19 @@ function ComprobanteContent() {
         : `Gasto registrado por S/ ${registeredTotal.toFixed(2)}.`,
     );
 
+    const expenseMonth = issuedDate
+      ? issuedDate.slice(0, 7) + '-01'
+      : new Date().getFullYear() +
+        '-' +
+        String(new Date().getMonth() + 1).padStart(2, '0') +
+        '-01';
+
     setTimeout(() => {
-      router.replace(scope === 'pareja' ? '/pareja' : '/dashboard');
+      router.replace(
+        scope === 'pareja'
+          ? '/pareja?month=' + expenseMonth
+          : '/dashboard?month=' + expenseMonth,
+      );
     }, 900);
   }
 
