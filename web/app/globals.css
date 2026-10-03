@@ -908,7 +908,7 @@ footer div { display: flex; gap: 26px; }
 }
 .moneyQuickActions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 12px;
   margin-top: 14px;
 }
@@ -8075,5 +8075,378 @@ footer div { display: flex; gap: 26px; }
   .budgetMonthActions {
     align-items: flex-start;
     flex-direction: column;
+  }
+}
+
+
+/* Receipt scanner and review */
+.moneyQuickScan {
+  border-color: rgba(51, 212, 255, .34);
+  background: linear-gradient(110deg, rgba(19, 59, 96, .95), rgba(32, 44, 80, .95));
+}
+.coupleHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.coupleScanButton {
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 17px;
+  border-radius: 13px;
+  border: 1px solid rgba(226, 95, 157, .35);
+  background: rgba(76, 31, 58, .62);
+  color: white;
+  font-weight: 800;
+}
+
+.receiptScanPage,
+.receiptReviewPage {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 78% 8%, rgba(33, 133, 255, .13), transparent 26rem),
+    #050914;
+}
+.receiptScanLayout,
+.receiptReviewLayout {
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 118px 0 64px;
+  display: grid;
+  grid-template-columns: .82fr 1.18fr;
+  gap: 28px;
+  align-items: start;
+}
+.receiptScanIntro,
+.receiptImagePanel {
+  position: sticky;
+  top: 104px;
+}
+.receiptScanIntro h1,
+.receiptImagePanel h1 {
+  margin: 10px 0 14px;
+  font-size: clamp(38px, 4vw, 62px);
+  line-height: .98;
+  letter-spacing: -.045em;
+}
+.receiptScanIntro > p:last-of-type,
+.receiptImagePanel > p:last-of-type {
+  color: #91a1ba;
+  line-height: 1.65;
+}
+.receiptScopeSelector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 22px;
+}
+.receiptScopeSelector.compact {
+  margin-top: 0;
+}
+.receiptScope {
+  min-height: 46px;
+  border: 1px solid rgba(144, 170, 255, .16);
+  border-radius: 13px;
+  color: #c9d3e6;
+  background: #101a2c;
+  font-weight: 800;
+  cursor: pointer;
+}
+.receiptScope.active {
+  color: white;
+  border-color: rgba(31, 140, 255, .65);
+  background: linear-gradient(110deg, #1458a6, #1677ff);
+}
+.receiptScope.active.pink {
+  border-color: rgba(244, 63, 117, .65);
+  background: linear-gradient(110deg, #7a204d, #d9366f);
+}
+.receiptScope:disabled {
+  cursor: default;
+  opacity: .6;
+}
+.receiptInfoCard,
+.receiptNextStep {
+  margin-top: 14px;
+  padding: 16px;
+  display: grid;
+  gap: 5px;
+  border: 1px solid rgba(105, 158, 224, .22);
+  border-radius: 16px;
+  background: rgba(13, 35, 60, .75);
+}
+.receiptInfoCard span,
+.receiptNextStep span {
+  color: #91a1ba;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.receiptCapturePanel,
+.receiptReviewForm {
+  padding: 22px;
+  border: 1px solid rgba(144, 170, 255, .17);
+  border-radius: 24px;
+  background: rgba(12, 21, 42, .86);
+  box-shadow: 0 25px 70px rgba(0, 0, 0, .28);
+}
+.receiptDropZone {
+  min-height: 430px;
+  border: 1px dashed rgba(111, 164, 227, .43);
+  border-radius: 20px;
+  background: rgba(7, 17, 31, .78);
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  padding: 30px;
+  text-align: center;
+}
+.receiptDropIcon {
+  font-size: 54px;
+}
+.receiptDropZone b {
+  font-size: 18px;
+}
+.receiptDropZone p {
+  margin: 0;
+  color: #7889a4;
+}
+.receiptPreviewWrap {
+  display: grid;
+  gap: 10px;
+}
+.receiptPreviewWrap span {
+  color: #8495af;
+  font-size: 12px;
+  text-align: center;
+}
+.receiptPreview {
+  width: 100%;
+  max-height: 520px;
+  object-fit: contain;
+  border-radius: 18px;
+  background: #07111f;
+}
+.receiptFileActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+.receiptFileButton {
+  min-height: 50px;
+  border: 1px solid rgba(144, 170, 255, .18);
+  border-radius: 14px;
+  background: #172742;
+  display: grid;
+  place-items: center;
+  color: white;
+  font-weight: 800;
+  cursor: pointer;
+}
+.receiptFileButton.primary {
+  background: linear-gradient(110deg, #1677ff, #4b63ec);
+  border-color: rgba(84, 157, 255, .65);
+}
+.receiptFileButton input {
+  display: none;
+}
+.receiptContinueButton,
+.receiptSaveButton {
+  width: 100%;
+  border: 0;
+  margin-top: 14px;
+  cursor: pointer;
+}
+.receiptContinueButton:disabled,
+.receiptSaveButton:disabled {
+  opacity: .5;
+  cursor: default;
+}
+.receiptStoredPreview {
+  margin-top: 18px;
+  padding: 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(144, 170, 255, .14);
+  background: #08111f;
+}
+.receiptStoredPreview img {
+  width: 100%;
+  max-height: 620px;
+  display: block;
+  object-fit: contain;
+  border-radius: 14px;
+}
+.receiptStoredFallback {
+  height: 360px;
+  margin-top: 18px;
+  border-radius: 20px;
+  background: #0d1727;
+  display: grid;
+  place-items: center;
+  font-size: 54px;
+}
+.receiptFormHeader {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.receiptFormHeader h2 {
+  margin: 6px 0 0;
+  font-size: 28px;
+}
+.receiptStatus {
+  padding: 8px 11px;
+  border-radius: 999px;
+  background: rgba(31, 140, 255, .12);
+  color: #7cc4ff;
+  font-size: 12px;
+  font-weight: 800;
+}
+.receiptField {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+.receiptField > label,
+.receiptField > span {
+  color: #b8c5d9;
+  font-size: 12px;
+  font-weight: 800;
+}
+.receiptField input {
+  min-height: 48px;
+  width: 100%;
+  padding: 0 13px;
+  border: 1px solid rgba(144, 170, 255, .18);
+  border-radius: 12px;
+  color: white;
+  background: #091827;
+  outline: none;
+}
+.receiptField input:focus {
+  border-color: rgba(31, 140, 255, .68);
+}
+.receiptField input:disabled {
+  opacity: .65;
+}
+.receiptTwoColumns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.receiptTypeChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.receiptTypeChips button {
+  padding: 9px 12px;
+  border: 1px solid rgba(144, 170, 255, .16);
+  border-radius: 999px;
+  color: #99a8bf;
+  background: #111d30;
+  cursor: pointer;
+}
+.receiptTypeChips button.active {
+  color: white;
+  border-color: rgba(31, 140, 255, .65);
+  background: #1458a6;
+}
+.receiptPaymentGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.receiptPaymentGrid button {
+  min-height: 72px;
+  padding: 9px;
+  border: 1px solid rgba(144, 170, 255, .15);
+  border-radius: 13px;
+  color: #a7b6ca;
+  background: #111d30;
+  display: grid;
+  place-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+.receiptPaymentGrid button.active {
+  color: white;
+  border-color: rgba(31, 140, 255, .68);
+  background: #102b55;
+}
+.receiptPaymentGrid button span {
+  font-size: 20px;
+}
+.receiptPayerGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.receiptPayerGrid button {
+  min-height: 46px;
+  border: 1px solid rgba(144, 170, 255, .16);
+  border-radius: 12px;
+  color: #c4cee0;
+  background: #111d30;
+  font-weight: 800;
+  cursor: pointer;
+}
+.receiptPayerGrid button.active {
+  color: white;
+  border-color: rgba(31, 140, 255, .66);
+  background: #1458a6;
+}
+.receiptPayerGrid button.active.pink {
+  border-color: rgba(244, 63, 117, .66);
+  background: #7a204d;
+}
+.receiptItemsPlaceholder {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px dashed rgba(111, 164, 227, .35);
+  border-radius: 15px;
+  display: grid;
+  gap: 5px;
+  background: rgba(7, 17, 31, .74);
+}
+.receiptItemsPlaceholder span {
+  color: #7889a4;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.receiptSavedMessage {
+  margin: 12px 0 0;
+  color: #7ee2aa;
+  font-size: 13px;
+}
+
+@media (max-width: 900px) {
+  .moneyQuickActions {
+    grid-template-columns: 1fr;
+  }
+  .receiptScanLayout,
+  .receiptReviewLayout {
+    grid-template-columns: 1fr;
+    width: min(100% - 24px, 720px);
+    padding-top: 96px;
+  }
+  .receiptScanIntro,
+  .receiptImagePanel {
+    position: static;
+  }
+  .receiptFileActions,
+  .receiptTwoColumns {
+    grid-template-columns: 1fr;
+  }
+  .receiptPaymentGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .coupleHeaderActions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
   }
 }
