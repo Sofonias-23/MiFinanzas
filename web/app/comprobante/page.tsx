@@ -212,7 +212,7 @@ function ComprobanteContent() {
         total_amount: parsedTotal,
         payment_method: paymentMethod || null,
         scope,
-        household_id: scope === 'pareja' ? partnerStatus.household_id : null,
+        household_id: scope === 'pareja' ? partnerStatus?.household_id ?? null : null,
         payer_id: scope === 'pareja' ? payerId || user.id : user.id,
         status: 'revisado',
         updated_at: new Date().toISOString(),
