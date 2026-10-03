@@ -263,6 +263,21 @@ export default function MiDineroScreen() {
         </View>
 
         <TouchableOpacity
+          style={styles.scanCard}
+          activeOpacity={0.86}
+          onPress={() => router.push('/escanear-comprobante?scope=personal' as any)}
+        >
+          <View style={styles.scanIcon}>
+            <AppIcon name="camera" size={20} color="#7CC4FF" />
+          </View>
+          <View style={styles.scanCopy}>
+            <Text style={styles.scanTitle}>Escanear comprobante</Text>
+            <Text style={styles.scanSub}>Toma una foto de una boleta, factura, ticket o recibo.</Text>
+          </View>
+          <Text style={styles.scanArrow}>›</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
           style={styles.budgetCard}
           activeOpacity={0.85}
           onPress={() => router.push(`/presupuestos?scope=personal&month=${selectedMonth}` as any)}
@@ -431,6 +446,12 @@ const styles = StyleSheet.create({
   quickExpense: { backgroundColor: '#1677FF' },
   quickIncome: { backgroundColor: '#253A5A' },
   quickText: { color: '#FFFFFF', fontSize: 10, fontWeight: '900' },
+  scanCard: { marginTop: 10, minHeight: 66, borderRadius: 16, backgroundColor: '#0E1A2A', borderWidth: 1, borderColor: '#1E4774', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 13 },
+  scanIcon: { width: 40, height: 40, borderRadius: 13, backgroundColor: '#102B55', alignItems: 'center', justifyContent: 'center' },
+  scanCopy: { flex: 1, marginLeft: 10 },
+  scanTitle: { color: '#FFFFFF', fontSize: 11, fontWeight: '900' },
+  scanSub: { color: '#64748B', fontSize: 8, lineHeight: 12, marginTop: 2 },
+  scanArrow: { color: '#60A5FA', fontSize: 24, marginLeft: 8 },
   budgetCard: { backgroundColor: '#0E1A2A', borderRadius: 17, padding: 15, marginTop: 12, borderWidth: 1, borderColor: '#1B2B40' },
   budgetHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   sectionMini: { color: '#94A3B8', fontSize: 9, fontWeight: '800' },
