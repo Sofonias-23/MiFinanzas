@@ -42,6 +42,17 @@ type PartnerStatus = {
   member_count: number;
 };
 
+type ReceiptItem = {
+  id: string;
+  line_number: number;
+  description: string;
+  quantity: number | null;
+  unit_price: number | null;
+  line_total: number | null;
+  category: string | null;
+  confidence: number | null;
+};
+
 const DOCUMENT_TYPES = ['boleta', 'factura', 'ticket', 'recibo', 'otro'] as const;
 
 function dateInputValue(value: string | null) {
@@ -57,7 +68,7 @@ function dateInputValue(value: string | null) {
 export default function ComprobanteScreen() {
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const receiptId = Array.isArray(params.id) ? params.id[0] : params.id;
-  const { user, authLoading, paymentMethods } = useFinance();
+  const { user, authLoading, paymentMethods, categories } = useFinance();
 
   const [receipt, setReceipt] = useState<ReceiptRow | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -77,6 +88,8 @@ export default function ComprobanteScreen() {
   const [payerId, setPayerId] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [items, setItems] = useState<ReceiptItem[]>([]);
 
   useEffect(() => {
     if (!authLoading && !user) router.replace('/login');
@@ -87,7 +100,7 @@ export default function ComprobanteScreen() {
 
     setLoading(true);
 
-    const [{ data: row, error }, { data: statusData }] = await Promise.all([
+    const [{ data: row, error }, { data: statusData }, itemResult] = await Promise.all([
       supabase
         .from('receipts')
         .select(
@@ -96,6 +109,11 @@ export default function ComprobanteScreen() {
         .eq('id', receiptId)
         .maybeSingle(),
       supabase.rpc('get_partner_status'),
+      supabase
+        .from('receipt_items')
+        .select('id, line_number, description, quantity, unit_price, line_total, category, confidence')
+        .eq('receipt_id', receiptId)
+        .order('line_number', { ascending: true }),
     ]);
 
     if (error || !row) {
@@ -109,6 +127,15 @@ export default function ComprobanteScreen() {
 
     setReceipt(next);
     setPartnerStatus(status);
+    setItems(
+      ((itemResult.data ?? []) as ReceiptItem[]).map((item) => ({
+        ...item,
+        quantity: item.quantity == null ? null : Number(item.quantity),
+        unit_price: item.unit_price == null ? null : Number(item.unit_price),
+        line_total: item.line_total == null ? null : Number(item.line_total),
+        confidence: item.confidence == null ? null : Number(item.confidence),
+      }))
+    );
     setMerchant(next.merchant_name ?? '');
     setTaxId(next.merchant_tax_id ?? '');
     setDocumentType(next.document_type);
@@ -171,6 +198,52 @@ export default function ComprobanteScreen() {
 
     setScope(next);
     if (next === 'personal') setPayerId(user.id);
+  };
+
+  const analyzeWithAI = async () => {
+    if (!user || !receipt) return;
+
+    if (receipt.created_by !== user.id) {
+      Alert.alert('Solo lectura', 'Solo quien subió el comprobante puede analizarlo.');
+      return;
+    }
+
+    try {
+      setAnalyzing(true);
+      const { data, error } = await supabase.functions.invoke('analyze-receipt', {
+        body: { receiptId: receipt.id },
+      });
+
+      if (error) {
+        let message = error.message || 'No se pudo analizar el comprobante.';
+        const context = (error as any)?.context;
+        if (context) {
+          try {
+            const body = await context.json();
+            if (body?.error) message = body.error;
+          } catch {
+            // Keep the original message.
+          }
+        }
+        throw new Error(message);
+      }
+
+      await load();
+
+      Alert.alert(
+        'Análisis completado',
+        data?.itemCount
+          ? `La IA detectó ${data.itemCount} producto(s). Revisa los datos antes de guardar.`
+          : 'La IA completó los datos visibles. Revísalos antes de guardar.'
+      );
+    } catch (error: any) {
+      Alert.alert(
+        'No se pudo analizar',
+        error?.message ?? 'Inténtalo nuevamente.'
+      );
+    } finally {
+      setAnalyzing(false);
+    }
   };
 
   const saveReview = async () => {
@@ -276,11 +349,23 @@ export default function ComprobanteScreen() {
         )}
 
         <View style={styles.aiNote}>
-          <Text style={styles.aiTitle}>Lectura automática</Text>
+          <Text style={styles.aiTitle}>Lectura automática con IA</Text>
           <Text style={styles.aiText}>
-            Esta pantalla ya está preparada para que la IA detecte comercio, fecha, total, productos y
-            categorías. Por ahora puedes revisar o completar los datos manualmente.
+            Analiza la foto para detectar comercio, RUC, fecha, total, método de pago, productos y categorías.
+            Siempre podrás corregir los datos antes de guardarlos.
           </Text>
+          {editable ? (
+            <TouchableOpacity
+              style={[styles.aiButton, analyzing && styles.aiButtonDisabled]}
+              onPress={analyzeWithAI}
+              disabled={analyzing}
+            >
+              <AppIcon name="camera" size={17} color="#FFFFFF" />
+              <Text style={styles.aiButtonText}>
+                {analyzing ? 'Analizando comprobante...' : items.length ? 'Analizar nuevamente' : 'Analizar con IA'}
+              </Text>
+            </TouchableOpacity>
+          ) : null}
         </View>
 
         <Section title="Destino">
@@ -421,10 +506,43 @@ export default function ComprobanteScreen() {
         ) : null}
 
         <View style={styles.pendingCard}>
-          <Text style={styles.pendingTitle}>Productos</Text>
-          <Text style={styles.pendingText}>
-            Los productos individuales aparecerán aquí cuando conectemos la extracción automática.
+          <Text style={styles.pendingTitle}>
+            Productos {items.length ? `(${items.length})` : ''}
           </Text>
+          {items.length ? (
+            <View style={styles.itemList}>
+              {items.map((item) => {
+                const categoryName =
+                  categories.find((category) => category.slug === item.category)?.name ??
+                  item.category ??
+                  'Sin categoría';
+                const amount =
+                  item.line_total != null
+                    ? `S/ ${item.line_total.toFixed(2)}`
+                    : item.unit_price != null
+                    ? `S/ ${item.unit_price.toFixed(2)}`
+                    : '—';
+
+                return (
+                  <View key={item.id} style={styles.itemRow}>
+                    <View style={styles.itemCopy}>
+                      <Text style={styles.itemTitle}>{item.description}</Text>
+                      <Text style={styles.itemMeta}>
+                        {item.quantity != null ? `Cant. ${item.quantity} · ` : ''}
+                        {categoryName}
+                        {item.confidence != null ? ` · ${Math.round(item.confidence * 100)}% confianza` : ''}
+                      </Text>
+                    </View>
+                    <Text style={styles.itemAmount}>{amount}</Text>
+                  </View>
+                );
+              })}
+            </View>
+          ) : (
+            <Text style={styles.pendingText}>
+              Aún no hay productos detectados. Pulsa “Analizar con IA”.
+            </Text>
+          )}
         </View>
 
         {editable ? (
@@ -522,6 +640,18 @@ const styles = StyleSheet.create({
   },
   aiTitle: { color: '#7CC4FF', fontWeight: '900', fontSize: 12 },
   aiText: { color: '#94A3B8', fontSize: 10, lineHeight: 16, marginTop: 5 },
+  aiButton: {
+    marginTop: 11,
+    minHeight: 46,
+    borderRadius: 13,
+    backgroundColor: '#1677FF',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+  },
+  aiButtonDisabled: { opacity: 0.55 },
+  aiButtonText: { color: '#FFFFFF', fontSize: 11, fontWeight: '900' },
   section: {
     marginTop: 13,
     padding: 14,
@@ -596,6 +726,19 @@ const styles = StyleSheet.create({
   },
   pendingTitle: { color: '#FFFFFF', fontWeight: '900', fontSize: 12 },
   pendingText: { color: '#64748B', fontSize: 10, lineHeight: 16, marginTop: 4 },
+  itemList: { marginTop: 9, gap: 7 },
+  itemRow: {
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#1B2B40',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  itemCopy: { flex: 1, paddingRight: 10 },
+  itemTitle: { color: '#FFFFFF', fontSize: 10.5, fontWeight: '900' },
+  itemMeta: { color: '#64748B', fontSize: 8, lineHeight: 12, marginTop: 3 },
+  itemAmount: { color: '#7CC4FF', fontSize: 10, fontWeight: '900' },
   saveButton: {
     marginTop: 15,
     minHeight: 54,
