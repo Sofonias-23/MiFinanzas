@@ -31,6 +31,22 @@ type PaymentRow = {
   icon: string;
 };
 
+type CategoryRow = {
+  slug: string;
+  name: string;
+};
+
+type ReceiptItem = {
+  id: string;
+  line_number: number;
+  description: string;
+  quantity: number | null;
+  unit_price: number | null;
+  line_total: number | null;
+  category: string | null;
+  confidence: number | null;
+};
+
 type PartnerStatus = {
   household_id: string | null;
   partner_name: string | null;
@@ -57,6 +73,8 @@ function ComprobanteContent() {
   const [user, setUser] = useState<User | null>(null);
   const [receipt, setReceipt] = useState<ReceiptRow | null>(null);
   const [payments, setPayments] = useState<PaymentRow[]>([]);
+  const [categories, setCategories] = useState<CategoryRow[]>([]);
+  const [items, setItems] = useState<ReceiptItem[]>([]);
   const [partnerStatus, setPartnerStatus] = useState<PartnerStatus | null>(null);
   const [partnerId, setPartnerId] = useState<string | null>(null);
   const [partnerName, setPartnerName] = useState('Tu pareja');
@@ -74,6 +92,7 @@ function ComprobanteContent() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
   const [savedMessage, setSavedMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -92,7 +111,7 @@ function ComprobanteContent() {
       return;
     }
 
-    const [receiptResult, paymentResult, statusResult] = await Promise.all([
+    const [receiptResult, paymentResult, categoryResult, itemResult, statusResult] = await Promise.all([
       supabase
         .from('receipts')
         .select(
@@ -104,6 +123,15 @@ function ComprobanteContent() {
         .from('payment_methods')
         .select('id, slug, name, icon')
         .order('created_at', { ascending: true }),
+      supabase
+        .from('expense_categories')
+        .select('slug, name')
+        .order('created_at', { ascending: true }),
+      supabase
+        .from('receipt_items')
+        .select('id, line_number, description, quantity, unit_price, line_total, category, confidence')
+        .eq('receipt_id', receiptId)
+        .order('line_number', { ascending: true }),
       supabase.rpc('get_partner_status'),
     ]);
 
@@ -119,6 +147,16 @@ function ComprobanteContent() {
     setUser(currentUser);
     setReceipt(next);
     setPayments((paymentResult.data ?? []) as PaymentRow[]);
+    setCategories((categoryResult.data ?? []) as CategoryRow[]);
+    setItems(
+      ((itemResult.data ?? []) as ReceiptItem[]).map((item) => ({
+        ...item,
+        quantity: item.quantity == null ? null : Number(item.quantity),
+        unit_price: item.unit_price == null ? null : Number(item.unit_price),
+        line_total: item.line_total == null ? null : Number(item.line_total),
+        confidence: item.confidence == null ? null : Number(item.confidence),
+      })),
+    );
     setPartnerStatus(status);
     setPartnerName(status?.partner_name || 'Tu pareja');
 
@@ -174,6 +212,47 @@ function ComprobanteContent() {
     if (next === 'personal') setPayerId(user.id);
   }
 
+  async function analyzeWithAI() {
+    if (!user || !receipt) return;
+
+    if (receipt.created_by !== user.id) {
+      setErrorMessage('Solo quien subió el comprobante puede analizarlo.');
+      return;
+    }
+
+    setAnalyzing(true);
+    setErrorMessage('');
+    setSavedMessage('');
+
+    const { data, error } = await supabase.functions.invoke('analyze-receipt', {
+      body: { receiptId: receipt.id },
+    });
+
+    setAnalyzing(false);
+
+    if (error) {
+      let message = error.message || 'No se pudo analizar el comprobante.';
+      const context = (error as any)?.context;
+      if (context) {
+        try {
+          const body = await context.json();
+          if (body?.error) message = body.error;
+        } catch {
+          // Keep original error.
+        }
+      }
+      setErrorMessage(message);
+      return;
+    }
+
+    setSavedMessage(
+      data?.itemCount
+        ? `IA completada: se detectaron ${data.itemCount} producto(s). Revisa y corrige lo necesario.`
+        : 'IA completada. Revisa y corrige los datos antes de guardar.',
+    );
+    await load();
+  }
+
   async function saveReview() {
     if (!user || !receipt) return;
 
@@ -227,9 +306,7 @@ function ComprobanteContent() {
       return;
     }
 
-    setSavedMessage(
-      'Revisión guardada. El comprobante ya está listo para conectar la lectura automática con IA.',
-    );
+    setSavedMessage('Revisión guardada correctamente.');
     await load();
   }
 
@@ -280,10 +357,20 @@ function ComprobanteContent() {
           )}
 
           <div className="receiptInfoCard">
-            <b>Lectura automática preparada</b>
+            <b>Lectura automática con IA</b>
             <span>
-              La siguiente etapa llenará comercio, fecha, total, productos y categorías mediante IA.
+              Analiza comercio, RUC, fecha, total, método de pago, productos y categorías. Los resultados siempre quedan sujetos a revisión.
             </span>
+            {editable ? (
+              <button
+                className="receiptAiButton"
+                type="button"
+                onClick={() => void analyzeWithAI()}
+                disabled={analyzing}
+              >
+                {analyzing ? 'Analizando comprobante...' : items.length ? '↻ Analizar nuevamente' : '✦ Analizar con IA'}
+              </button>
+            ) : null}
           </div>
         </aside>
 
@@ -439,10 +526,41 @@ function ComprobanteContent() {
           ) : null}
 
           <div className="receiptItemsPlaceholder">
-            <b>Productos del comprobante</b>
-            <span>
-              Aquí aparecerán las líneas individuales cuando activemos la extracción automática.
-            </span>
+            <b>Productos del comprobante {items.length ? `(${items.length})` : ''}</b>
+            {items.length ? (
+              <div className="receiptDetectedItems">
+                {items.map((item) => {
+                  const categoryName =
+                    categories.find((category) => category.slug === item.category)?.name ||
+                    item.category ||
+                    'Sin categoría';
+                  const amount =
+                    item.line_total != null
+                      ? 'S/ ' + item.line_total.toFixed(2)
+                      : item.unit_price != null
+                      ? 'S/ ' + item.unit_price.toFixed(2)
+                      : '—';
+
+                  return (
+                    <div className="receiptDetectedItem" key={item.id}>
+                      <div>
+                        <b>{item.description}</b>
+                        <small>
+                          {item.quantity != null ? 'Cant. ' + item.quantity + ' · ' : ''}
+                          {categoryName}
+                          {item.confidence != null
+                            ? ' · ' + Math.round(item.confidence * 100) + '% confianza'
+                            : ''}
+                        </small>
+                      </div>
+                      <strong>{amount}</strong>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <span>Aún no hay productos detectados. Pulsa “Analizar con IA”.</span>
+            )}
           </div>
 
           {errorMessage ? <p className="formError">{errorMessage}</p> : null}
