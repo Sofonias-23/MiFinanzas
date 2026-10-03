@@ -352,7 +352,7 @@ function DashboardContent() {
                 <p className="eyebrow">MOVIMIENTOS</p>
                 <h2>Últimos movimientos</h2>
               </div>
-              <a href="/movimientos">Ver todos</a>
+              <a href={'/movimientos?filter=personal&month=' + selectedMonth}>Ver todos</a>
             </div>
 
             <div className="moneyMovementList">
