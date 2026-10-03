@@ -8450,3 +8450,52 @@ footer div { display: flex; gap: 26px; }
     justify-content: flex-end;
   }
 }
+
+
+.receiptAiButton {
+  min-height: 44px;
+  margin-top: 11px;
+  padding: 0 15px;
+  border: 1px solid rgba(81, 163, 255, .55);
+  border-radius: 12px;
+  color: white;
+  background: linear-gradient(110deg, #1677ff, #5a67ee);
+  font-weight: 850;
+  cursor: pointer;
+}
+.receiptAiButton:disabled {
+  opacity: .55;
+  cursor: default;
+}
+.receiptDetectedItems {
+  display: grid;
+  gap: 0;
+  margin-top: 10px;
+}
+.receiptDetectedItem {
+  min-height: 62px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 11px 0;
+  border-top: 1px solid rgba(144, 170, 255, .12);
+}
+.receiptDetectedItem > div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+.receiptDetectedItem b {
+  color: #f7fbff;
+  font-size: 13px;
+}
+.receiptDetectedItem small {
+  color: #74869f;
+  line-height: 1.4;
+}
+.receiptDetectedItem strong {
+  flex: 0 0 auto;
+  color: #7cc4ff;
+  font-size: 13px;
+}
