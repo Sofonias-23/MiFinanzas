@@ -1,9 +1,11 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 
+import MonthNavigator from '@/components/MonthNavigator';
+import { isInMonth, normalizeMonthKey } from '@/lib/months';
 import { supabase } from '@/lib/supabase';
 
 type PartnerStatus = {
@@ -46,12 +48,6 @@ type SettlementRow = {
   amount: number;
 };
 
-function isCurrentMonth(value: string) {
-  const date = new Date(value);
-  const now = new Date();
-  return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
-}
-
 function formatMoney(value: number) {
   return new Intl.NumberFormat('es-PE', {
     style: 'currency',
@@ -67,8 +63,10 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
-export default function ParejaPage() {
+function ParejaContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const selectedMonth = normalizeMonthKey(searchParams.get('month'));
 
   const [user, setUser] = useState<User | null>(null);
   const [displayName, setDisplayName] = useState('Tú');
@@ -175,8 +173,8 @@ export default function ParejaPage() {
   const partnerName = status?.partner_name || 'tu pareja';
 
   const monthShared = useMemo(
-    () => expenses.filter((expense) => isCurrentMonth(expense.created_at)),
-    [expenses],
+    () => expenses.filter((expense) => isInMonth(expense.created_at, selectedMonth)),
+    [expenses, selectedMonth],
   );
 
   const monthTotal = useMemo(
@@ -406,9 +404,9 @@ export default function ParejaPage() {
           <a className="active" href="/pareja">♥ Pareja</a>
           <a href="/nuevo-gasto?type=compartido">＋ Nuevo gasto</a>
           <a href="/escanear-comprobante?scope=pareja">📷 Escanear comprobante</a>
-          <a href="/movimientos?filter=compartido">▣ Movimientos</a>
-          <a href="/presupuestos?scope=pareja">◎ Presupuestos</a>
-          <a href="/estadisticas?scope=pareja">◫ Estadísticas</a>
+          <a href={'/movimientos?filter=compartido&month=' + selectedMonth}>▣ Movimientos</a>
+          <a href={'/presupuestos?scope=pareja&month=' + selectedMonth}>◎ Presupuestos</a>
+          <a href={'/estadisticas?scope=pareja&month=' + selectedMonth}>◫ Estadísticas</a>
           <a href="/deudas">↕ Deudas</a>
           <a href="/espacio">↔ Cambiar espacio</a>
         </nav>
@@ -426,6 +424,8 @@ export default function ParejaPage() {
             <a className="coupleNewButton" href="/nuevo-gasto?type=compartido">＋ Nuevo gasto</a>
           </div>
         </header>
+
+        <MonthNavigator month={selectedMonth} />
 
         <div className="coupleSummaryGrid">
           <section className="coupleHeroCard">
@@ -464,12 +464,12 @@ export default function ParejaPage() {
                 <p className="eyebrow">ÚLTIMOS GASTOS</p>
                 <h2>Movimientos compartidos</h2>
               </div>
-              <a href="/movimientos?filter=compartido">Ver todos</a>
+              <a href={'/movimientos?filter=compartido&month=' + selectedMonth}>Ver todos</a>
             </div>
 
             <div className="coupleExpenseList">
-              {expenses.slice(0, 6).length ? (
-                expenses.slice(0, 6).map((expense) => {
+              {monthShared.slice(0, 6).length ? (
+                monthShared.slice(0, 6).map((expense) => {
                   const category = categories.find((item) => item.slug === expense.category);
                   const payment = paymentMethods.find((item) => item.slug === expense.payment_method);
                   const creatorShare =
@@ -506,7 +506,7 @@ export default function ParejaPage() {
                 <p className="eyebrow">ESTE MES</p>
                 <h2>Por categoría</h2>
               </div>
-              <a href="/estadisticas?scope=pareja">Ver estadísticas</a>
+              <a href={'/estadisticas?scope=pareja&month=' + selectedMonth}>Ver estadísticas</a>
             </div>
 
             <div className="coupleCategoryList">
@@ -536,5 +536,14 @@ export default function ParejaPage() {
         </div>
       </section>
     </main>
+  );
+}
+
+
+export default function ParejaPage() {
+  return (
+    <Suspense fallback={<main className="dashboardLoading"><p>Cargando espacio de pareja...</p></main>}>
+      <ParejaContent />
+    </Suspense>
   );
 }
