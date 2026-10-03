@@ -131,17 +131,6 @@ Deno.serve(async (req: Request) => {
 
   const mimeType = String(receipt.mime_type || "image/jpeg").toLowerCase();
 
-  if (["image/heic", "image/heif"].includes(mimeType)) {
-    return json(
-      {
-        error:
-          "Este comprobante está en HEIC/HEIF. Para analizarlo, toma una nueva foto o usa JPG, PNG o WEBP.",
-        code: "UNSUPPORTED_IMAGE_FORMAT",
-      },
-      400,
-    );
-  }
-
   const [imageResult, categoryResult, paymentResult] = await Promise.all([
     supabase.storage.from("receipts").download(receipt.image_path),
     supabase
@@ -292,6 +281,7 @@ Deno.serve(async (req: Request) => {
           type: "image",
           data: base64Image,
           mime_type: mimeType,
+          resolution: "high",
         },
       ],
       generation_config: {
