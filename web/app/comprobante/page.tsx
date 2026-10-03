@@ -299,15 +299,36 @@ function ComprobanteContent() {
       .eq('id', receipt.id)
       .eq('created_by', user.id);
 
-    setSaving(false);
-
     if (error) {
+      setSaving(false);
       setErrorMessage(error.message || 'No se pudo guardar la revisión.');
       return;
     }
 
-    setSavedMessage('Revisión guardada correctamente.');
-    await load();
+    const { data: finalizeData, error: finalizeError } = await supabase.rpc('finalize_receipt', {
+      p_receipt_id: receipt.id,
+    });
+
+    setSaving(false);
+
+    if (finalizeError) {
+      setErrorMessage(finalizeError.message || 'No se pudo registrar el gasto.');
+      return;
+    }
+
+    const result = Array.isArray(finalizeData) ? finalizeData[0] : finalizeData;
+    const expenseCount = Number(result?.expense_count ?? 0);
+    const registeredTotal = Number(result?.registered_total ?? parsedTotal ?? 0);
+
+    setSavedMessage(
+      expenseCount > 1
+        ? `Se registraron ${expenseCount} movimientos por S/ ${registeredTotal.toFixed(2)}.`
+        : `Gasto registrado por S/ ${registeredTotal.toFixed(2)}.`,
+    );
+
+    setTimeout(() => {
+      router.replace(scope === 'pareja' ? '/pareja' : '/dashboard');
+    }, 900);
   }
 
   if (loading || !user) {
@@ -361,7 +382,7 @@ function ComprobanteContent() {
             <span>
               Analiza comercio, RUC, fecha, total, método de pago, productos y categorías. Los resultados siempre quedan sujetos a revisión.
             </span>
-            {editable ? (
+            {editable && receipt.status !== 'procesado' ? (
               <button
                 className="receiptAiButton"
                 type="button"
@@ -381,7 +402,11 @@ function ComprobanteContent() {
               <h2>Datos del comprobante</h2>
             </div>
             <span className="receiptStatus">
-              {receipt.status === 'revisado' ? 'Revisado' : 'Pendiente'}
+              {receipt.status === 'procesado'
+                ? 'Registrado'
+                : receipt.status === 'revisado'
+                ? 'Revisado'
+                : 'Pendiente'}
             </span>
           </div>
 
@@ -566,15 +591,20 @@ function ComprobanteContent() {
           {errorMessage ? <p className="formError">{errorMessage}</p> : null}
           {savedMessage ? <p className="receiptSavedMessage">{savedMessage}</p> : null}
 
-          {editable ? (
+          {editable && receipt.status !== 'procesado' ? (
             <button
               className="primaryButton receiptSaveButton"
               type="button"
               onClick={() => void saveReview()}
               disabled={saving}
             >
-              {saving ? 'Guardando...' : 'Guardar revisión'}
+              {saving ? 'Registrando...' : 'Guardar y registrar gasto'}
             </button>
+          ) : receipt.status === 'procesado' ? (
+            <div className="receiptRegisteredCard">
+              <b>✓ Comprobante registrado</b>
+              <span>Este comprobante ya fue convertido en movimiento(s).</span>
+            </div>
           ) : null}
         </section>
       </section>
