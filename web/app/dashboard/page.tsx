@@ -322,6 +322,7 @@ function DashboardContent() {
         <div className="moneyQuickActions">
           <a className="moneyQuick moneyQuickPrimary" href="/nuevo-gasto">＋ Registrar gasto</a>
           <a className="moneyQuick" href="/nuevo-ingreso">＋ Registrar ingreso</a>
+          <a className="moneyQuick moneyQuickScan" href="/escanear-comprobante?scope=personal">📷 Escanear comprobante</a>
         </div>
 
         <section className="moneyBudgetCard">
