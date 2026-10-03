@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 
 import MonthNavigator from '@/components/MonthNavigator';
-import { isInMonth, normalizeMonthKey } from '@/lib/months';
+import { isInMonth, monthLabel, normalizeMonthKey } from '@/lib/months';
 import { supabase } from '@/lib/supabase';
 
 type PartnerStatus = {
@@ -429,7 +429,7 @@ function ParejaContent() {
 
         <div className="coupleSummaryGrid">
           <section className="coupleHeroCard">
-            <span>Gastado juntos este mes</span>
+            <span>Gastado juntos · {monthLabel(selectedMonth, false)}</span>
             <strong>{formatMoney(monthTotal)}</strong>
             <div className="couplePaidRow">
               <div>
@@ -503,7 +503,7 @@ function ParejaContent() {
           <section className="couplePanel">
             <div className="couplePanelHeader">
               <div>
-                <p className="eyebrow">ESTE MES</p>
+                <p className="eyebrow">{monthLabel(selectedMonth).toUpperCase()}</p>
                 <h2>Por categoría</h2>
               </div>
               <a href={'/estadisticas?scope=pareja&month=' + selectedMonth}>Ver estadísticas</a>
