@@ -20,6 +20,7 @@ export type AppIconName =
   | 'chat'
   | 'settle'
   | 'receipt'
+  | 'camera'
   | 'cash'
   | 'card'
   | 'bank'
@@ -55,6 +56,7 @@ const ICONS: Record<AppIconName, { ios: string; android: string; web: string }> 
   chat: { ios: 'bubble.left.and.bubble.right.fill', android: 'chat', web: 'chat' },
   settle: { ios: 'arrow.left.arrow.right.circle.fill', android: 'sync_alt', web: 'sync_alt' },
   receipt: { ios: 'doc.text.fill', android: 'receipt_long', web: 'receipt_long' },
+  camera: { ios: 'camera.fill', android: 'photo_camera', web: 'photo_camera' },
   cash: { ios: 'banknote.fill', android: 'payments', web: 'payments' },
   card: { ios: 'creditcard.fill', android: 'credit_card', web: 'credit_card' },
   bank: { ios: 'building.columns.fill', android: 'account_balance', web: 'account_balance' },
