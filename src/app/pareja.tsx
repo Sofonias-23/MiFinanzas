@@ -1,4 +1,4 @@
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
@@ -14,10 +14,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppIcon } from '@/components/app-icon';
 import { BottomNav } from '@/components/bottom-nav';
+import { MonthNavigator } from '@/components/month-navigator';
 import { ProfileAvatar } from '@/components/profile-avatar';
 import { useFinance } from '@/context/finance-context';
 import { getAvatarUrl, getProfiles } from '@/lib/avatar';
 import { categoryIconName } from '@/lib/icon-map';
+import { isInMonth, normalizeMonthKey } from '@/lib/months';
 import { supabase } from '@/lib/supabase';
 
 type PartnerStatus = {
@@ -28,13 +30,9 @@ type PartnerStatus = {
   invite_code: string | null;
 };
 
-function isCurrentMonth(value: string) {
-  const date = new Date(value);
-  const now = new Date();
-  return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
-}
-
 export default function ParejaScreen() {
+  const params = useLocalSearchParams<{ month?: string | string[] }>();
+  const [selectedMonth, setSelectedMonth] = useState(() => normalizeMonthKey(params.month));
   const {
     user,
     authLoading,
@@ -51,6 +49,10 @@ export default function ParejaScreen() {
   const [busy, setBusy] = useState(false);
   const [myAvatarUrl, setMyAvatarUrl] = useState<string | null>(null);
   const [partnerAvatarUrl, setPartnerAvatarUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    setSelectedMonth(normalizeMonthKey(params.month));
+  }, [params.month]);
 
   useEffect(() => {
     if (!authLoading && !user) router.replace('/login');
@@ -156,9 +158,9 @@ export default function ParejaScreen() {
     () =>
       expenses.filter(
         (expense) =>
-          expense.type === 'compartido' && isCurrentMonth(expense.createdAt)
+          expense.type === 'compartido' && isInMonth(expense.createdAt, selectedMonth)
       ),
-    [expenses]
+    [expenses, selectedMonth]
   );
 
   const monthTotal = useMemo(
@@ -177,8 +179,8 @@ export default function ParejaScreen() {
   const paidByPartner = Math.max(0, monthTotal - paidByMe);
 
   const recentShared = useMemo(
-    () => expenses.filter((expense) => expense.type === 'compartido').slice(0, 4),
-    [expenses]
+    () => monthShared.slice(0, 4),
+    [monthShared]
   );
 
   const categorySummary = useMemo(() => {
@@ -270,6 +272,8 @@ export default function ParejaScreen() {
               </View>
             </View>
 
+            <MonthNavigator month={selectedMonth} onChange={setSelectedMonth} />
+
             <View style={styles.sharedBalanceCard}>
               <View>
                 <Text style={styles.sharedBalanceLabel}>Balance compartido</Text>
@@ -347,7 +351,7 @@ export default function ParejaScreen() {
                   <Text style={styles.monthLabel}>Gastado juntos este mes</Text>
                   <Text style={styles.monthAmount}>S/ {monthTotal.toFixed(2)}</Text>
                 </View>
-                <TouchableOpacity onPress={() => router.push('/estadisticas?scope=pareja' as any)}>
+                <TouchableOpacity onPress={() => router.push(`/estadisticas?scope=pareja&month=${selectedMonth}` as any)}>
                   <Text style={styles.link}>Ver estadísticas</Text>
                 </TouchableOpacity>
               </View>
@@ -394,7 +398,7 @@ export default function ParejaScreen() {
 
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Últimos gastos</Text>
-              <TouchableOpacity onPress={() => router.push('/movimientos?filter=compartido' as any)}>
+              <TouchableOpacity onPress={() => router.push(`/movimientos?filter=compartido&month=${selectedMonth}` as any)}>
                 <Text style={styles.link}>Ver todos</Text>
               </TouchableOpacity>
             </View>
@@ -453,7 +457,7 @@ export default function ParejaScreen() {
             <View style={styles.shortcutRow}>
               <TouchableOpacity
                 style={styles.shortcut}
-                onPress={() => router.push('/presupuestos?scope=pareja' as any)}
+                onPress={() => router.push(`/presupuestos?scope=pareja&month=${selectedMonth}` as any)}
               >
                 <Text style={styles.shortcutIcon}>📊</Text>
                 <Text style={styles.shortcutText}>Presupuesto</Text>
@@ -467,7 +471,7 @@ export default function ParejaScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.shortcut}
-                onPress={() => router.push('/estadisticas?scope=pareja' as any)}
+                onPress={() => router.push(`/estadisticas?scope=pareja&month=${selectedMonth}` as any)}
               >
                 <Text style={styles.shortcutIcon}>▥</Text>
                 <Text style={styles.shortcutText}>Estadísticas</Text>
