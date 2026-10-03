@@ -68,7 +68,7 @@ function dateInputValue(value: string | null) {
 export default function ComprobanteScreen() {
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const receiptId = Array.isArray(params.id) ? params.id[0] : params.id;
-  const { user, authLoading, paymentMethods, categories } = useFinance();
+  const { user, authLoading, paymentMethods, categories, refreshExpenses } = useFinance();
 
   const [receipt, setReceipt] = useState<ReceiptRow | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -297,11 +297,30 @@ export default function ComprobanteScreen() {
 
       if (error) throw error;
 
+      const { data: finalizeData, error: finalizeError } = await supabase.rpc('finalize_receipt', {
+        p_receipt_id: receipt.id,
+      });
+
+      if (finalizeError) throw finalizeError;
+
+      const result = Array.isArray(finalizeData) ? finalizeData[0] : finalizeData;
+      const expenseCount = Number(result?.expense_count ?? 0);
+      const registeredTotal = Number(result?.registered_total ?? parsedTotal ?? 0);
+
+      await refreshExpenses();
+
       Alert.alert(
-        'Revisión guardada',
-        'Los datos del comprobante se guardaron correctamente.'
+        'Gasto registrado',
+        expenseCount > 1
+          ? `Se registraron ${expenseCount} movimientos por un total de S/ ${registeredTotal.toFixed(2)}.`
+          : `Se registró el gasto por S/ ${registeredTotal.toFixed(2)}.`,
+        [
+          {
+            text: 'Ver movimientos',
+            onPress: () => router.replace('/movimientos' as any),
+          },
+        ]
       );
-      await load();
     } catch (error: any) {
       Alert.alert('No se pudo guardar', error?.message ?? 'Inténtalo nuevamente.');
     } finally {
@@ -333,7 +352,11 @@ export default function ComprobanteScreen() {
           <View style={styles.headerText}>
             <Text style={styles.headerTitle}>Revisar comprobante</Text>
             <Text style={styles.headerSub}>
-              {receipt.status === 'revisado' ? 'Revisión guardada' : 'Pendiente de revisión'}
+              {receipt.status === 'procesado'
+                ? 'Registrado en movimientos'
+                : receipt.status === 'revisado'
+                ? 'Revisión guardada'
+                : 'Pendiente de revisión'}
             </Text>
           </View>
           <View style={styles.headerSpacer} />
@@ -354,7 +377,7 @@ export default function ComprobanteScreen() {
             Analiza la foto para detectar comercio, RUC, fecha, total, método de pago, productos y categorías.
             Siempre podrás corregir los datos antes de guardarlos.
           </Text>
-          {editable ? (
+          {editable && receipt.status !== 'procesado' ? (
             <TouchableOpacity
               style={[styles.aiButton, analyzing && styles.aiButtonDisabled]}
               onPress={analyzeWithAI}
@@ -545,14 +568,21 @@ export default function ComprobanteScreen() {
           )}
         </View>
 
-        {editable ? (
+        {editable && receipt.status !== 'procesado' ? (
           <TouchableOpacity
             style={[styles.saveButton, saving && styles.saveDisabled]}
             onPress={saveReview}
             disabled={saving}
           >
-            <Text style={styles.saveText}>{saving ? 'Guardando...' : 'Guardar revisión'}</Text>
+            <Text style={styles.saveText}>
+              {saving ? 'Registrando...' : 'Guardar y registrar gasto'}
+            </Text>
           </TouchableOpacity>
+        ) : receipt.status === 'procesado' ? (
+          <View style={styles.registeredCard}>
+            <Text style={styles.registeredTitle}>✓ Comprobante registrado</Text>
+            <Text style={styles.registeredText}>Este comprobante ya fue convertido en movimiento(s).</Text>
+          </View>
         ) : null}
       </ScrollView>
     </SafeAreaView>
@@ -749,4 +779,16 @@ const styles = StyleSheet.create({
   },
   saveDisabled: { opacity: 0.5 },
   saveText: { color: '#FFFFFF', fontWeight: '900', fontSize: 13 },
+  registeredCard: {
+    marginTop: 15,
+    minHeight: 58,
+    borderRadius: 16,
+    backgroundColor: '#0D2B20',
+    borderWidth: 1,
+    borderColor: '#1D6B4D',
+    padding: 13,
+    justifyContent: 'center',
+  },
+  registeredTitle: { color: '#7EE2AA', fontSize: 11, fontWeight: '900' },
+  registeredText: { color: '#8FB6A3', fontSize: 9, marginTop: 3 },
 });
