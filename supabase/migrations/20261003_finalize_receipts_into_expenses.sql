@@ -106,13 +106,14 @@ begin
         continue;
       end if;
 
-      v_category := case
-        when item.category = any(array[
-          'comida','transporte','hogar','ocio','salud',
-          'compras','servicios','educacion','otros'
-        ]) then item.category
-        else 'otros'
-      end;
+      select c.slug
+        into v_category
+        from public.expense_categories c
+       where c.user_id = auth.uid()
+         and c.slug = item.category
+       limit 1;
+
+      v_category := coalesce(v_category, 'otros');
 
       v_description := trim(
         both ' ' from
