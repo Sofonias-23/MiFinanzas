@@ -1,0 +1,2 @@
+-- Contact messages are delivered by the send-contact-email Edge Function.
+-- No recipient email or Resend API key is stored in the client or repository.
