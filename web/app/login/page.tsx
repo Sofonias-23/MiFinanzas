@@ -36,9 +36,21 @@ export default function LoginPage() {
       return;
     }
 
+    if (mode === 'register') {
     if (password.length < 6) {
       setErrorMessage('La contraseña debe tener al menos 6 caracteres.');
       return;
+    }
+
+    if (!/[A-Z]/.test(password)) {
+      setErrorMessage('La contraseña debe incluir al menos una letra mayúscula.');
+      return;
+    }
+
+    if (!/[^A-Za-z0-9]/.test(password)) {
+      setErrorMessage('La contraseña debe incluir al menos un carácter especial, por ejemplo: ! @ # $ %.');
+      return;
+    }
     }
 
     if (mode === 'register' && name.trim().length < 2) {
@@ -179,14 +191,22 @@ export default function LoginPage() {
             </span>
             <input
               type="password"
-              placeholder={mode === 'register' ? 'Mínimo 6 caracteres' : '••••••••'}
+              placeholder={mode === 'register' ? '6+ caracteres, mayúscula y símbolo' : '••••••••'}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
               minLength={6}
+              pattern={mode === 'register' ? '(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{6,}' : undefined}
+              title={mode === 'register' ? 'Mínimo 6 caracteres, una mayúscula y un carácter especial.' : undefined}
               required
             />
           </label>
+
+          {mode === 'register' ? (
+            <p className="authPasswordHint">
+              Usa mínimo 6 caracteres, al menos una letra mayúscula y un carácter especial.
+            </p>
+          ) : null}
 
           {errorMessage ? <p className="formError">{errorMessage}</p> : null}
           {successMessage ? <p className="formSuccess">{successMessage}</p> : null}
