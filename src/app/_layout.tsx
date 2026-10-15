@@ -33,6 +33,9 @@ export default function RootLayout() {
         <Stack.Screen name="comprobante" options={{ presentation: 'card' }} />
         <Stack.Screen name="categorias" options={{ presentation: 'card' }} />
         <Stack.Screen name="metodos-pago" options={{ presentation: 'card' }} />
+        <Stack.Screen name="acerca" options={{ presentation: 'card' }} />
+        <Stack.Screen name="politica-editorial" options={{ presentation: 'card' }} />
+        <Stack.Screen name="contacto" options={{ presentation: 'card' }} />
       </Stack>
     </FinanceProvider>
   );
