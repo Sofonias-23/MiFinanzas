@@ -92,6 +92,15 @@ export default function GastosHormigaPage() {
               <p>Para una revisión más general, consulta la guía de <a href="/guias/control-gastos-mensuales">control de gastos mensuales</a>.</p>
             </section>
 
+
+            <section id="priorizar">
+              <h2>6. No todos los gastos pequeños merecen el mismo esfuerzo</h2>
+              <p>Un café diario puede ser importante para ti y seguir cabiendo dentro del presupuesto. El objetivo no es eliminar automáticamente lo pequeño, sino encontrar repeticiones que consumen dinero sin aportar suficiente valor.</p>
+              <p>Prioriza los hábitos que tengan alta frecuencia, poco valor percibido y una alternativa sencilla. Es más sostenible reducir dos patrones claros que prohibirte todas las compras pequeñas.</p>
+              <h3>¿Cómo sé si un gasto hormiga realmente importa?</h3>
+              <p>Suma su costo mensual y anual. Si la cifra compite con una meta que te importa más, entonces merece una decisión consciente.</p>
+            </section>
+
             <GuideAdSlot position="end" />
             <div className="articleNext">
               <span>SIGUIENTE PASO</span>
