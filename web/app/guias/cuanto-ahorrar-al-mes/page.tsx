@@ -93,6 +93,15 @@ export default function CuantoAhorrarPage() {
               <p>Si todavía no tienes una reserva para imprevistos, revisa también la guía de <a href="/guias/fondo-emergencia">fondo de emergencia</a>.</p>
             </section>
 
+
+            <section id="progreso">
+              <h2>6. Mide progreso por constancia y no solo por porcentaje</h2>
+              <p>Un ahorro sostenible debe sobrevivir a varios meses reales. Si una meta obliga a retirar dinero constantemente para pagar gastos cotidianos, probablemente necesita ajustarse.</p>
+              <p>Revisa cada tres meses si tu monto sigue siendo razonable y aumenta de forma gradual cuando suban tus ingresos o bajen obligaciones importantes.</p>
+              <h3>¿Es malo empezar con una cantidad pequeña?</h3>
+              <p>No. Empezar con un monto que puedas mantener crea el hábito y produce información real sobre tu capacidad de ahorro. Después puedes incrementarlo.</p>
+            </section>
+
             <GuideAdSlot position="end" />
             <div className="articleNext">
               <span>CALCULA</span>
