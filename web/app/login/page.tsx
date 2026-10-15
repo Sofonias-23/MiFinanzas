@@ -6,32 +6,103 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { trackEvent } from '@/lib/analytics';
 
+type AuthMode = 'login' | 'register';
+
 export default function LoginPage() {
   const router = useRouter();
+  const [mode, setMode] = useState<AuthMode>('login');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+
+  function changeMode(nextMode: AuthMode) {
+    setMode(nextMode);
+    setErrorMessage('');
+    setSuccessMessage('');
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage('');
+    setSuccessMessage('');
+
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (!cleanEmail.includes('@')) {
+      setErrorMessage('Escribe un correo válido.');
+      return;
+    }
+
+    if (password.length < 6) {
+      setErrorMessage('La contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+
+    if (mode === 'register' && name.trim().length < 2) {
+      setErrorMessage('Escribe tu nombre.');
+      return;
+    }
+
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
+    if (mode === 'login') {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: cleanEmail,
+        password,
+      });
+
+      setLoading(false);
+
+      if (error) {
+        setErrorMessage('No se pudo iniciar sesión. Revisa tu correo y contraseña.');
+        return;
+      }
+
+      trackEvent('login', { method: 'email' });
+      router.replace('/espacio');
+      return;
+    }
+
+    const { data, error } = await supabase.auth.signUp({
+      email: cleanEmail,
       password,
+      options: {
+        data: {
+          display_name: name.trim(),
+        },
+        emailRedirectTo:
+          typeof window !== 'undefined'
+            ? `${window.location.origin}/login`
+            : 'https://sfiq.app/login',
+      },
     });
 
     setLoading(false);
 
     if (error) {
-      setErrorMessage('No se pudo iniciar sesión. Revisa tu correo y contraseña.');
+      setErrorMessage(
+        error.message.toLowerCase().includes('already')
+          ? 'Este correo ya está registrado. Prueba iniciar sesión.'
+          : 'No se pudo crear la cuenta. Revisa los datos e inténtalo nuevamente.',
+      );
       return;
     }
 
-    trackEvent('login', { method: 'email' });
-    router.replace('/espacio');
+    trackEvent('sign_up', { method: 'email' });
+
+    if (data.session) {
+      router.replace('/espacio');
+      return;
+    }
+
+    setSuccessMessage(
+      'Cuenta creada. Revisa tu correo para confirmar la cuenta y luego inicia sesión.',
+    );
+    setPassword('');
+    setMode('login');
   }
 
   return (
@@ -40,17 +111,51 @@ export default function LoginPage() {
         <span className="brandMark" aria-hidden="true">
           <span className="brandDollar">$</span>
         </span>
-        <span>MiFinanzas</span>
+        <span>SFIQ</span>
       </a>
 
       <section className="authCard">
-        <p className="eyebrow">BIENVENIDO</p>
-        <h1>Iniciar sesión</h1>
+        <p className="eyebrow">{mode === 'login' ? 'BIENVENIDO' : 'EMPIEZA EN SFIQ'}</p>
+        <h1>{mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}</h1>
         <p className="authIntro">
-          Usa la misma cuenta de MiFinanzas que utilizas en la app.
+          {mode === 'login'
+            ? 'Usa la misma cuenta de SFIQ que utilizas en la app.'
+            : 'Crea una cuenta y usa los mismos datos tanto en la web como en la app móvil.'}
         </p>
 
+        <div className="authModeSwitch" role="tablist" aria-label="Acceso a SFIQ">
+          <button
+            type="button"
+            className={mode === 'login' ? 'authModeButton active' : 'authModeButton'}
+            onClick={() => changeMode('login')}
+          >
+            Ingresar
+          </button>
+          <button
+            type="button"
+            className={mode === 'register' ? 'authModeButton active' : 'authModeButton'}
+            onClick={() => changeMode('register')}
+          >
+            Crear cuenta
+          </button>
+        </div>
+
         <form onSubmit={handleSubmit}>
+          {mode === 'register' ? (
+            <label>
+              Nombre
+              <input
+                type="text"
+                placeholder="Tu nombre"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                autoComplete="name"
+                maxLength={40}
+                required
+              />
+            </label>
+          ) : null}
+
           <label>
             Correo
             <input
@@ -66,30 +171,39 @@ export default function LoginPage() {
           <label>
             <span className="authLabelRow">
               <span>Contraseña</span>
-              <a className="secondaryLink" href="/forgot-password">
-                ¿Olvidaste tu contraseña?
-              </a>
+              {mode === 'login' ? (
+                <a className="secondaryLink" href="/forgot-password">
+                  ¿Olvidaste tu contraseña?
+                </a>
+              ) : null}
             </span>
             <input
               type="password"
-              placeholder="••••••••"
+              placeholder={mode === 'register' ? 'Mínimo 6 caracteres' : '••••••••'}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              autoComplete="current-password"
+              autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
               minLength={6}
               required
             />
           </label>
 
           {errorMessage ? <p className="formError">{errorMessage}</p> : null}
+          {successMessage ? <p className="formSuccess">{successMessage}</p> : null}
 
           <button className="primaryButton authSubmit authButton" type="submit" disabled={loading}>
-            {loading ? 'Ingresando...' : 'Ingresar'}
+            {loading
+              ? 'Procesando...'
+              : mode === 'login'
+                ? 'Ingresar'
+                : 'Crear cuenta'}
           </button>
         </form>
 
         <p className="authFoot">
-          La web y la app móvil usan la misma cuenta y los mismos datos de Supabase.
+          Al crear una cuenta aceptas los <a className="secondaryLink" href="/terminos">Términos</a> y la{' '}
+          <a className="secondaryLink" href="/privacidad">Política de privacidad</a>. La web y la app móvil
+          usan la misma cuenta y los mismos datos de Supabase.
         </p>
       </section>
     </main>
