@@ -85,10 +85,7 @@ export default function LoginPage() {
         data: {
           display_name: name.trim(),
         },
-        emailRedirectTo:
-          typeof window !== 'undefined'
-            ? `${window.location.origin}/login`
-            : 'https://sfiq.app/login',
+        emailRedirectTo: 'https://sfiq.app/login',
       },
     });
 
