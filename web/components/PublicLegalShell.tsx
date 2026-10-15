@@ -20,6 +20,7 @@ export default function PublicLegalShell({ kicker, title, intro, children }: Pro
           <a href="/">Inicio</a>
           <a href="/calculadoras">Calculadoras</a>
           <a href="/guias">Guías</a>
+          <a href="/acerca">Acerca</a>
         </nav>
 
         <div className="navActions">
@@ -32,7 +33,7 @@ export default function PublicLegalShell({ kicker, title, intro, children }: Pro
         <p className="eyebrow">{kicker}</p>
         <h1>{title}</h1>
         <p>{intro}</p>
-        <span>Última actualización: 29 de septiembre de 2026</span>
+        <span>Última actualización: 15 de octubre de 2026</span>
       </section>
 
       <section className="legalContent">
@@ -45,6 +46,9 @@ export default function PublicLegalShell({ kicker, title, intro, children }: Pro
           <span>SFIQ</span>
         </a>
         <div>
+          <a href="/acerca">Acerca</a>
+          <a href="/contacto">Contacto</a>
+          <a href="/politica-editorial">Política editorial</a>
           <a href="/privacidad">Privacidad</a>
           <a href="/cookies">Cookies</a>
           <a href="/terminos">Términos</a>
