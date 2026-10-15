@@ -24,7 +24,7 @@ body {
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 a { color: inherit; text-decoration: none; }
-button, input { font: inherit; }
+button, input, textarea, select { font: inherit; }
 
 .topbar {
   position: fixed;
@@ -280,7 +280,7 @@ footer {
   color: #7e8ca5;
   border-top: 1px solid var(--line);
 }
-footer div { display: flex; gap: 26px; }
+footer div { display: flex; gap: 26px; flex-wrap: wrap; }
 
 .authPage {
   min-height: 100vh;
@@ -8517,4 +8517,83 @@ footer div { display: flex; gap: 26px; }
 .receiptRegisteredCard span {
   color: #8fb6a3;
   font-size: 12px;
+}
+
+
+.guideTrustBlock {
+  width: min(100%, 920px);
+  margin: 22px 0 34px;
+  padding: 16px 18px;
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 14px;
+  align-items: start;
+  border: 1px solid rgba(144, 170, 255, .17);
+  border-radius: 18px;
+  background: rgba(11, 22, 42, .72);
+}
+.guideTrustAvatar {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  color: white;
+  background: linear-gradient(145deg, #168dff, #6c61ff);
+  font-weight: 900;
+}
+.guideTrustBlock strong { color: #f8fbff; font-size: 13px; }
+.guideTrustBlock p { margin: 4px 0 6px; color: #93a5c0; font-size: 12px; }
+.guideTrustBlock small { display: block; color: #7588a5; font-size: 11px; line-height: 1.55; }
+.guideTrustBlock a { color: #79bbff; font-weight: 750; }
+
+.contactForm {
+  display: grid;
+  gap: 16px;
+  padding: 24px;
+  border: 1px solid rgba(144, 170, 255, .18);
+  border-radius: 22px;
+  background: rgba(10, 20, 38, .8);
+}
+.contactForm label {
+  display: grid;
+  gap: 8px;
+  color: #c7d2e7;
+  font-size: 13px;
+  font-weight: 750;
+}
+.contactFieldGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.contactForm input,
+.contactForm textarea,
+.contactForm select {
+  width: 100%;
+  border: 1px solid rgba(144, 170, 255, .2);
+  border-radius: 13px;
+  outline: none;
+  color: #f8fbff;
+  background: #091528;
+  padding: 13px 14px;
+}
+.contactForm input,
+.contactForm select { min-height: 48px; }
+.contactForm textarea { resize: vertical; min-height: 150px; line-height: 1.55; }
+.contactForm input:focus,
+.contactForm textarea:focus,
+.contactForm select:focus { border-color: rgba(74, 159, 255, .72); }
+.contactSafety { margin: 0; color: #71839f; font-size: 11px; line-height: 1.5; }
+.contactSubmit { width: max-content; border: 0; cursor: pointer; }
+.contactSubmit:disabled { opacity: .55; cursor: wait; }
+.contactHoneypot {
+  position: absolute !important;
+  left: -10000px !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+}
+
+@media (max-width: 700px) {
+  .guideTrustBlock { grid-template-columns: 36px 1fr; padding: 14px; }
+  .guideTrustAvatar { width: 36px; height: 36px; border-radius: 11px; }
+  .contactFieldGrid { grid-template-columns: 1fr; }
+  .contactSubmit { width: 100%; }
 }
