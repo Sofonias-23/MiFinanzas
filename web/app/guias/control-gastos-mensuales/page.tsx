@@ -73,6 +73,15 @@ export default function ControlGastosPage() {
             <GuideAdSlot position="mid" />
             <section id="cambios"><h2>3. Busca variaciones, no perfección</h2><p>Una categoría que normalmente es estable y sube de forma importante merece más atención que una categoría variable que se mantiene dentro de su rango habitual.</p><p>Pregunta qué explica la diferencia: un gasto excepcional, un cambio de precio, una compra que se repetirá o simplemente más frecuencia. Esa causa determina si necesitas modificar el presupuesto del siguiente mes.</p></section>
             <section id="accion"><h2>4. Termina con una sola acción concreta</h2><p>Una buena revisión mensual puede terminar con una decisión tan simple como ajustar un presupuesto, reducir una categoría o aumentar una meta de ahorro.</p><p>Evita intentar corregir todo al mismo tiempo. Una acción medible —por ejemplo, fijar un límite semanal para delivery— es más fácil de comprobar cuando vuelvas a revisar el siguiente mes.</p></section>
+
+            <section id="preguntas">
+              <h2>6. Convierte la revisión en preguntas concretas</h2>
+              <p>En lugar de mirar una lista larga de movimientos, responde tres preguntas: ¿qué categoría subió más?, ¿qué gasto apareció este mes y no el anterior?, ¿qué cambio puedo hacer el próximo mes?</p>
+              <p>Ese enfoque evita revisar por revisar. Una buena revisión mensual debería terminar con una decisión pequeña y medible.</p>
+              <h3>¿Cuántos meses necesito para detectar una tendencia?</h3>
+              <p>Dos meses ya permiten comparar cambios, pero tres o más ayudan a distinguir mejor entre una excepción y un hábito recurrente.</p>
+            </section>
+
             <GuideAdSlot position="end" />
             <div className="articleNext"><span>SIGUIENTE PASO</span><h3>Calcula tu margen mensual con tus cifras actuales.</h3><a href="/calculadoras#presupuesto">Abrir calculadora →</a></div>
           </div>
