@@ -238,6 +238,15 @@ export default function AjustesScreen() {
             gastos de pareja, balance, liquidaciones y presupuestos compartidos.
           </Text>
         </View>
+
+        <Text style={styles.sectionTitle}>Información de SFIQ</Text>
+        <View style={styles.card}>
+          <InfoLink icon="ℹ️" title="Acerca de SFIQ" onPress={() => router.push('/acerca' as any)} />
+          <Divider />
+          <InfoLink icon="✍️" title="Política editorial" onPress={() => router.push('/politica-editorial' as any)} />
+          <Divider />
+          <InfoLink icon="✉️" title="Contacto" onPress={() => router.push('/contacto' as any)} />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -272,6 +281,26 @@ function SettingSwitch({
 
 function Divider() {
   return <View style={styles.divider} />;
+}
+
+function InfoLink({
+  icon,
+  title,
+  onPress,
+}: {
+  icon: string;
+  title: string;
+  onPress: () => void;
+}) {
+  return (
+    <TouchableOpacity style={styles.infoLink} onPress={onPress}>
+      <View style={styles.rowLeft}>
+        <Text style={styles.icon}>{icon}</Text>
+        <Text style={styles.rowTitle}>{title}</Text>
+      </View>
+      <Text style={styles.chevron}>›</Text>
+    </TouchableOpacity>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -364,6 +393,13 @@ const styles = StyleSheet.create({
     marginTop: 9,
   },
   divider: { height: 1, backgroundColor: '#1B2B40', marginLeft: 36 },
+  infoLink: {
+    minHeight: 54,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  chevron: { color: '#64748B', fontSize: 24, fontWeight: '700' },
 
   privacyCard: {
     backgroundColor: '#101A29',
