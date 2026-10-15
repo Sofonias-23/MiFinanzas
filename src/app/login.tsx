@@ -33,9 +33,19 @@ export default function LoginScreen() {
       return;
     }
 
-    if (password.length < 6) {
-      Alert.alert('Contraseña corta', 'Usa al menos 6 caracteres.');
-      return;
+    if (mode === 'register') {
+      if (password.length < 6) {
+        Alert.alert('Contraseña corta', 'Usa al menos 6 caracteres.');
+        return;
+      }
+      if (!/[A-Z]/.test(password)) {
+        Alert.alert('Falta una mayúscula', 'Incluye al menos una letra mayúscula.');
+        return;
+      }
+      if (!/[^A-Za-z0-9]/.test(password)) {
+        Alert.alert('Falta un carácter especial', 'Incluye al menos un símbolo, por ejemplo: ! @ # $ %.');
+        return;
+      }
     }
 
     try {
@@ -124,12 +134,18 @@ export default function LoginScreen() {
           <Text style={styles.label}>Contraseña</Text>
           <TextInput
             style={styles.input}
-            placeholder="Mínimo 6 caracteres"
+            placeholder={mode === 'register' ? '6+ caracteres, mayúscula y símbolo' : 'Contraseña'}
             placeholderTextColor="#64748B"
             secureTextEntry
             value={password}
             onChangeText={setPassword}
           />
+
+          {mode === 'register' ? (
+            <Text style={styles.passwordHint}>
+              Mínimo 6 caracteres, una letra mayúscula y un carácter especial.
+            </Text>
+          ) : null}
 
           <TouchableOpacity style={styles.primaryButton} onPress={submit} disabled={busy}>
             <Text style={styles.primaryButtonText}>
@@ -165,6 +181,7 @@ const styles = StyleSheet.create({
   switchTextActive: { color: '#FFFFFF' },
   label: { color: '#CBD5E1', fontSize: 14, fontWeight: '700', marginTop: 16, marginBottom: 8 },
   input: { backgroundColor: '#111827', color: '#FFFFFF', borderRadius: 15, padding: 16, fontSize: 16 },
+  passwordHint: { color: '#94A3B8', fontSize: 11, lineHeight: 16, marginTop: 8 },
   primaryButton: { backgroundColor: '#2563EB', borderRadius: 16, padding: 18, alignItems: 'center', marginTop: 28 },
   primaryButtonText: { color: '#FFFFFF', fontSize: 17, fontWeight: '800' },
 });
