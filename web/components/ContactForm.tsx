@@ -42,23 +42,28 @@ export default function ContactForm() {
 
     setSending(true);
 
-    const { error } = await supabase.from('contact_messages').insert({
-      name: form.name.trim() || null,
-      email,
-      subject: form.subject,
-      message,
-      source: 'web',
+    const { data, error } = await supabase.functions.invoke('send-contact-email', {
+      body: {
+        name: form.name.trim() || null,
+        email,
+        subject: form.subject,
+        message,
+        source: 'web',
+        website: form.website,
+      },
     });
 
     setSending(false);
 
-    if (error) {
-      setErrorMessage('No se pudo enviar el mensaje. Inténtalo nuevamente en unos minutos.');
+    if (error || !data?.ok) {
+      setErrorMessage(
+        data?.error || error?.message || 'No se pudo enviar el mensaje. Inténtalo nuevamente en unos minutos.',
+      );
       return;
     }
 
     setForm(initialForm);
-    setSuccessMessage('Mensaje enviado. Lo revisaremos lo antes posible.');
+    setSuccessMessage('Mensaje enviado. Te responderemos por correo.');
   }
 
   return (
