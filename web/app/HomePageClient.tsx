@@ -310,6 +310,7 @@ export default function HomePage() {
           <a href="#historia">Funciones</a>
           <a href="/calculadoras">Calculadoras</a>
           <a href="/guias">Guías</a>
+          <a href="/acerca">Acerca</a>
         </nav>
 
         <div className="navActions">
@@ -934,6 +935,9 @@ export default function HomePage() {
         <div>
           <a href="/calculadoras">Calculadoras</a>
           <a href="/guias">Guías</a>
+          <a href="/acerca">Acerca</a>
+          <a href="/contacto">Contacto</a>
+          <a href="/politica-editorial">Política editorial</a>
           <a href="/privacidad">Privacidad</a>
           <a href="/cookies">Cookies</a>
           <a href="/terminos">Términos</a>
