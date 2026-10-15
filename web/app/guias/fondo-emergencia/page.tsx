@@ -102,6 +102,15 @@ export default function FondoEmergenciaPage() {
               <p>Si necesitas reconstruirlo, puedes reducir temporalmente otros objetivos y volver a aportar de forma gradual. La prioridad es recuperar una reserva que vuelva a darte margen ante el siguiente imprevisto.</p>
             </section>
 
+
+            <section id="revision">
+              <h2>5. Revisa la meta cuando cambie tu realidad</h2>
+              <p>El fondo no necesita quedarse en la misma cifra para siempre. Si cambian tus gastos esenciales, personas a cargo o estabilidad laboral, vuelve a calcular qué nivel de reserva te daría margen suficiente.</p>
+              <p>Evita usarlo para gastos previsibles como regalos, vacaciones o renovaciones anuales. Para esos objetivos conviene crear ahorros separados.</p>
+              <h3>¿Dónde debería guardar el fondo?</h3>
+              <p>Prioriza disponibilidad y bajo riesgo. La decisión concreta depende del producto financiero que utilices y de sus condiciones; revisa costos, acceso y protección aplicable antes de elegir.</p>
+            </section>
+
             <GuideAdSlot position="end" />
             <div className="articleNext">
               <span>SIGUIENTE PASO</span>
