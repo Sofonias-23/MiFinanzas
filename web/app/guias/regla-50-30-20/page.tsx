@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import GuideAdSlot from '@/components/GuideAdSlot';
+import GuideTrustBlock from '@/components/GuideTrustBlock';
 
 const description =
   'Entiende cómo funciona la regla 50/30/20, calcula necesidades, deseos y ahorro, y adapta los porcentajes a tu realidad financiera.';
@@ -33,10 +34,12 @@ const articleSchema = {
   mainEntityOfPage: 'https://sfiq.app/guias/regla-50-30-20',
   url: 'https://sfiq.app/guias/regla-50-30-20',
   inLanguage: 'es',
+  datePublished: '2026-10-01',
+  dateModified: '2026-10-15',
   author: {
     '@type': 'Organization',
-    name: 'SFIQ',
-    url: 'https://sfiq.app/',
+    name: 'Equipo editorial de SFIQ',
+    url: 'https://sfiq.app/politica-editorial',
   },
   publisher: {
     '@type': 'Organization',
@@ -60,6 +63,8 @@ export default function ReglaPage() {
           <p>Puede ayudarte a comparar tu distribución mensual, pero no necesita encajar exactamente con la realidad de todos los hogares.</p>
         </header>
 
+        <GuideTrustBlock />
+
         <div className="articleBody">
           <aside><span>EN ESTA GUÍA</span><a href="#bloques">1. Los tres bloques</a><a href="#comparar">2. Cómo compararte</a><a href="#adaptar">3. Cómo adaptarla</a><a href="#util">4. Cuándo es útil</a></aside>
           <div>
@@ -78,4 +83,4 @@ export default function ReglaPage() {
   );
 }
 function ArticleHeader(){return <header className="articleTop"><a className="brand" href="/"><span className="brandMark"><span className="brandDollar">$</span></span><span>SFIQ</span></a><a href="/guias">← Guías</a></header>}
-function ArticleFooter(){return <footer className="publicFooter"><a className="brand" href="/"><span className="brandMark"><span className="brandDollar">$</span></span><span>SFIQ</span></a><div><a href="/guias">Guías</a><a href="/calculadoras">Calculadoras</a></div><span>© 2026 SFIQ</span></footer>}
+function ArticleFooter(){return <footer className="publicFooter"><a className="brand" href="/"><span className="brandMark"><span className="brandDollar">$</span></span><span>SFIQ</span></a><div><a href="/guias">Guías</a><a href="/calculadoras">Calculadoras</a><a href="/acerca">Acerca</a><a href="/contacto">Contacto</a><a href="/politica-editorial">Política editorial</a></div><span>© 2026 SFIQ</span></footer>}
