@@ -51,6 +51,16 @@ export default function ResetPasswordPage() {
       return;
     }
 
+    if (!/[A-Z]/.test(password)) {
+      setErrorMessage('La contraseña debe incluir al menos una letra mayúscula.');
+      return;
+    }
+
+    if (!/[^A-Za-z0-9]/.test(password)) {
+      setErrorMessage('La contraseña debe incluir al menos un carácter especial, por ejemplo: ! @ # $ %.');
+      return;
+    }
+
     if (password !== confirmPassword) {
       setErrorMessage('Las contraseñas no coinciden.');
       return;
@@ -100,11 +110,13 @@ export default function ResetPasswordPage() {
               Nueva contraseña
               <input
                 type="password"
-                placeholder="Mínimo 6 caracteres"
+                placeholder="6+ caracteres, mayúscula y símbolo"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 autoComplete="new-password"
                 minLength={6}
+                pattern="(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{6,}"
+                title="Mínimo 6 caracteres, una mayúscula y un carácter especial."
                 required
               />
             </label>
@@ -121,6 +133,10 @@ export default function ResetPasswordPage() {
                 required
               />
             </label>
+
+            <p className="authPasswordHint">
+              Usa mínimo 6 caracteres, al menos una letra mayúscula y un carácter especial.
+            </p>
 
             {errorMessage ? <p className="formError">{errorMessage}</p> : null}
             {successMessage ? <p className="formSuccess">{successMessage}</p> : null}
