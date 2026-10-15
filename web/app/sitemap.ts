@@ -3,7 +3,7 @@ import type { MetadataRoute } from 'next';
 const baseUrl = 'https://sfiq.app';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const lastModified = new Date('2026-10-01');
+  const lastModified = new Date('2026-10-15');
 
   return [
     {
@@ -65,6 +65,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified,
       changeFrequency: 'monthly',
       priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/acerca`,
+      lastModified,
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    },
+    {
+      url: `${baseUrl}/contacto`,
+      lastModified,
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    },
+    {
+      url: `${baseUrl}/politica-editorial`,
+      lastModified,
+      changeFrequency: 'monthly',
+      priority: 0.5,
     },
     {
       url: `${baseUrl}/privacidad`,
