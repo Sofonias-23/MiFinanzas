@@ -16,7 +16,7 @@ export default function ForgotPasswordPage() {
     setSent(false);
     setLoading(true);
 
-    const redirectTo = `${window.location.origin}/reset-password`;
+    const redirectTo = 'https://sfiq.app/reset-password';
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
       redirectTo,
     });
@@ -37,14 +37,14 @@ export default function ForgotPasswordPage() {
         <span className="brandMark" aria-hidden="true">
           <span className="brandDollar">$</span>
         </span>
-        <span>MiFinanzas</span>
+        <span>SFIQ</span>
       </a>
 
       <section className="authCard">
         <p className="eyebrow">RECUPERAR ACCESO</p>
         <h1>Restablece tu contraseña</h1>
         <p className="authIntro">
-          Ingresa el correo de tu cuenta MiFinanzas. Te enviaremos un enlace para crear una contraseña nueva.
+          Ingresa el correo de tu cuenta SFIQ. Te enviaremos un enlace para crear una contraseña nueva.
         </p>
 
         <form onSubmit={handleSubmit}>
