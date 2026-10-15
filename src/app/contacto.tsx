@@ -33,16 +33,20 @@ export default function ContactoScreen() {
 
     try {
       setSending(true);
-      const { error } = await supabase.from('contact_messages').insert({
-        name: name.trim() || null,
-        email: cleanEmail,
-        subject: subject.trim() || 'Consulta general',
-        message: cleanMessage,
-        source: 'mobile',
+      const { data, error } = await supabase.functions.invoke('send-contact-email', {
+        body: {
+          name: name.trim() || null,
+          email: cleanEmail,
+          subject: subject.trim() || 'Consulta general',
+          message: cleanMessage,
+          source: 'mobile',
+        },
       });
-      if (error) throw error;
+      if (error || !data?.ok) {
+        throw new Error(data?.error || error?.message || 'No se pudo enviar el mensaje.');
+      }
       setMessage('');
-      Alert.alert('Mensaje enviado', 'Tu consulta quedó registrada.');
+      Alert.alert('Mensaje enviado', 'Tu consulta fue enviada por correo.');
     } catch (error: any) {
       Alert.alert('No se pudo enviar', error?.message ?? 'Inténtalo nuevamente en unos minutos.');
     } finally {
