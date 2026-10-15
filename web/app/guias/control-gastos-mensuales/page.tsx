@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import GuideAdSlot from '@/components/GuideAdSlot';
+import GuideTrustBlock from '@/components/GuideTrustBlock';
 
 const description =
   'Revisa tus gastos mensuales por categorías, detecta variaciones importantes y convierte el análisis del mes en acciones concretas.';
@@ -33,10 +34,12 @@ const articleSchema = {
   mainEntityOfPage: 'https://sfiq.app/guias/control-gastos-mensuales',
   url: 'https://sfiq.app/guias/control-gastos-mensuales',
   inLanguage: 'es',
+  datePublished: '2026-10-01',
+  dateModified: '2026-10-15',
   author: {
     '@type': 'Organization',
-    name: 'SFIQ',
-    url: 'https://sfiq.app/',
+    name: 'Equipo editorial de SFIQ',
+    url: 'https://sfiq.app/politica-editorial',
   },
   publisher: {
     '@type': 'Organization',
@@ -60,6 +63,8 @@ export default function ControlGastosPage() {
           <p>Una revisión útil busca patrones: cuánto gastaste, dónde cambió el comportamiento y qué categoría merece atención.</p>
         </header>
 
+        <GuideTrustBlock />
+
         <div className="articleBody">
           <aside><span>EN ESTA GUÍA</span><a href="#total">1. Mira el total</a><a href="#categorias">2. Revisa categorías</a><a href="#cambios">3. Busca cambios</a><a href="#accion">4. Define una acción</a></aside>
           <div>
@@ -78,4 +83,4 @@ export default function ControlGastosPage() {
   );
 }
 function ArticleHeader(){return <header className="articleTop"><a className="brand" href="/"><span className="brandMark"><span className="brandDollar">$</span></span><span>SFIQ</span></a><a href="/guias">← Guías</a></header>}
-function ArticleFooter(){return <footer className="publicFooter"><a className="brand" href="/"><span className="brandMark"><span className="brandDollar">$</span></span><span>SFIQ</span></a><div><a href="/guias">Guías</a><a href="/calculadoras">Calculadoras</a></div><span>© 2026 SFIQ</span></footer>}
+function ArticleFooter(){return <footer className="publicFooter"><a className="brand" href="/"><span className="brandMark"><span className="brandDollar">$</span></span><span>SFIQ</span></a><div><a href="/guias">Guías</a><a href="/calculadoras">Calculadoras</a><a href="/acerca">Acerca</a><a href="/contacto">Contacto</a><a href="/politica-editorial">Política editorial</a></div><span>© 2026 SFIQ</span></footer>}
