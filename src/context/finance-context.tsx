@@ -606,6 +606,16 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
 
   const signUp = useCallback(
     async (email: string, password: string, displayName?: string) => {
+      if (password.length < 6) {
+        throw new Error('La contraseña debe tener al menos 6 caracteres.');
+      }
+      if (!/[A-Z]/.test(password)) {
+        throw new Error('La contraseña debe incluir al menos una letra mayúscula.');
+      }
+      if (!/[^A-Za-z0-9]/.test(password)) {
+        throw new Error('La contraseña debe incluir al menos un carácter especial, por ejemplo: ! @ # $ %.');
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
