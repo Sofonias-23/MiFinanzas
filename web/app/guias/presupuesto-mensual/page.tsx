@@ -94,6 +94,15 @@ export default function PresupuestoMensualPage() {
               <p>No necesitas que cada monto coincida de forma exacta. Lo importante es que el presupuesto te permita anticipar decisiones y detectar rápidamente cuándo una categoría se está desviando.</p>
             </section>
 
+
+            <section id="imprevistos">
+              <h2>6. Reserva espacio para gastos que no ocurren todos los meses</h2>
+              <p>Mantenimiento, regalos, matrículas, seguros o compras del hogar pueden ser previsibles aunque no sean mensuales. Si los ignoras, parecerán “imprevistos” cada vez que aparezcan.</p>
+              <p>Puedes estimar su costo anual y separar una cantidad mensual aproximada. Esto suaviza los meses más caros y evita depender de crédito para gastos que ya sabías que llegarían.</p>
+              <h3>¿Qué pasa si no gasto todo lo presupuestado?</h3>
+              <p>El sobrante no necesita consumirse. Puedes moverlo a ahorro, deuda, una meta futura o dejarlo como margen para el mes siguiente.</p>
+            </section>
+
             <GuideAdSlot position="end" />
             <div className="articleNext">
               <span>PRUÉBALO</span>
