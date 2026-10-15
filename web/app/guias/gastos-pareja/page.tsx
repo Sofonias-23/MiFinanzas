@@ -81,6 +81,15 @@ export default function GastosParejaPage() {
             <section id="pago"><h2>3. Registrar quién pagó evita confundir reparto con desembolso</h2><p>Que un gasto sea 50/50 no significa que ambos hayan pagado en el momento. Si una persona cubre el total, el balance debe reflejar cuánto le corresponde recuperar de la otra.</p><p>Por ejemplo, si una persona paga S/ 120 y el reparto es 50/50, la otra no “gastó cero”: tiene una participación de S/ 60 que debe quedar reflejada en el balance compartido.</p></section>
             <section id="revision"><h2>4. Revisen el balance, no cada operación aislada</h2><p>Compensar varios gastos entre sí suele ser más claro que realizar un pago por cada compra. Un balance acumulado reduce movimientos innecesarios y facilita cerrar cuentas cuando ambos quieran.</p><p>Una revisión semanal o mensual suele ser suficiente. El objetivo es conservar claridad, no convertir cada salida o compra del hogar en una liquidación inmediata.</p></section>
 
+
+            <section id="acuerdos">
+              <h2>6. Dejen por escrito las reglas que suelen generar dudas</h2>
+              <p>Un sistema compartido funciona mejor cuando ambos saben qué entra como gasto de pareja, qué sigue siendo personal y qué ocurre con compras extraordinarias. No hace falta un contrato formal: basta con reglas claras y revisables.</p>
+              <p>También conviene acordar qué hacer cuando uno adelanta dinero, cómo registrar reembolsos y cada cuánto revisarán el balance. Así la conversación se centra en datos y no en recuerdos distintos.</p>
+              <h3>¿El 50/50 siempre es justo?</h3>
+              <p>No necesariamente. Algunas parejas prefieren 50/50; otras usan porcentajes según ingresos o acuerdos específicos. Lo importante es que ambos entiendan y acepten el criterio.</p>
+            </section>
+
             <GuideAdSlot position="end" />
             <div className="articleNext"><span>PRUÉBALO</span><h3>Divide un gasto con 50/50 o con porcentajes personalizados.</h3><a href="/calculadoras#pareja">Abrir calculadora de pareja →</a></div>
           </div>
