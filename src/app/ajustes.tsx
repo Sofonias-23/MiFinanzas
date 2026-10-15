@@ -241,6 +241,8 @@ export default function AjustesScreen() {
 
         <Text style={styles.sectionTitle}>Información de SFIQ</Text>
         <View style={styles.card}>
+          <InfoLink icon="📚" title="Guías financieras" onPress={() => router.push('/guias' as any)} />
+          <Divider />
           <InfoLink icon="ℹ️" title="Acerca de SFIQ" onPress={() => router.push('/acerca' as any)} />
           <Divider />
           <InfoLink icon="✍️" title="Política editorial" onPress={() => router.push('/politica-editorial' as any)} />
