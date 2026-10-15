@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import GuideAdSlot from '@/components/GuideAdSlot';
+import GuideTrustBlock from '@/components/GuideTrustBlock';
 
 const description =
   'Aprende a dividir gastos en pareja con 50/50, porcentajes personalizados, registro de quién pagó y un balance claro entre ambos.';
@@ -33,10 +34,12 @@ const articleSchema = {
   mainEntityOfPage: 'https://sfiq.app/guias/gastos-pareja',
   url: 'https://sfiq.app/guias/gastos-pareja',
   inLanguage: 'es',
+  datePublished: '2026-10-01',
+  dateModified: '2026-10-15',
   author: {
     '@type': 'Organization',
-    name: 'SFIQ',
-    url: 'https://sfiq.app/',
+    name: 'Equipo editorial de SFIQ',
+    url: 'https://sfiq.app/politica-editorial',
   },
   publisher: {
     '@type': 'Organization',
@@ -59,6 +62,8 @@ export default function GastosParejaPage() {
           <h1>Cómo dividir gastos en pareja sin asumir que todo debe ser 50/50.</h1>
           <p>El objetivo no es encontrar una fórmula universal. Es acordar una regla comprensible, consistente y fácil de revisar.</p>
         </header>
+
+        <GuideTrustBlock />
 
         <div className="articleBody">
           <aside>
@@ -86,4 +91,4 @@ export default function GastosParejaPage() {
   );
 }
 function ArticleHeader(){return <header className="articleTop"><a className="brand" href="/"><span className="brandMark"><span className="brandDollar">$</span></span><span>SFIQ</span></a><a href="/guias">← Guías</a></header>}
-function ArticleFooter(){return <footer className="publicFooter"><a className="brand" href="/"><span className="brandMark"><span className="brandDollar">$</span></span><span>SFIQ</span></a><div><a href="/guias">Guías</a><a href="/calculadoras">Calculadoras</a></div><span>© 2026 SFIQ</span></footer>}
+function ArticleFooter(){return <footer className="publicFooter"><a className="brand" href="/"><span className="brandMark"><span className="brandDollar">$</span></span><span>SFIQ</span></a><div><a href="/guias">Guías</a><a href="/calculadoras">Calculadoras</a><a href="/acerca">Acerca</a><a href="/contacto">Contacto</a><a href="/politica-editorial">Política editorial</a></div><span>© 2026 SFIQ</span></footer>}
