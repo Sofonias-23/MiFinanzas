@@ -75,6 +75,41 @@ const guides = [
     href: '/guias/gastos-hormiga',
     read: '6 min',
   },
+  {
+    category: 'DEUDAS',
+    title: 'Cómo salir de deudas sin desordenar todo tu presupuesto',
+    excerpt: 'Ordena saldos, define una prioridad y crea un pago mensual que no te obligue a endeudarte otra vez.',
+    href: '/guias/salir-de-deudas',
+    read: '8 min',
+  },
+  {
+    category: 'CONTROL',
+    title: 'Cómo controlar gastos variables sin revisar cada compra',
+    excerpt: 'Pon límites a comida, transporte, ocio y compras usando ritmo de gasto y bloques semanales.',
+    href: '/guias/controlar-gastos-variables',
+    read: '7 min',
+  },
+  {
+    category: 'PRESUPUESTO',
+    title: 'Cómo organizar tu presupuesto si tienes sueldo fijo',
+    excerpt: 'Separa compromisos, gastos variables, ahorro y dinero realmente disponible desde el día de pago.',
+    href: '/guias/presupuesto-con-sueldo-fijo',
+    read: '7 min',
+  },
+  {
+    category: 'CRÉDITO',
+    title: 'Cómo usar una tarjeta de crédito sin perder el control',
+    excerpt: 'Entiende cierre, pago, cuotas y por qué tu línea de crédito no debe confundirse con dinero propio.',
+    href: '/guias/usar-tarjeta-credito',
+    read: '8 min',
+  },
+  {
+    category: 'ANÁLISIS',
+    title: 'Cómo detectar en qué se va tu dinero cada mes',
+    excerpt: 'Usa categorías, frecuencia, comercios y comparación entre meses para encontrar patrones que sí puedes corregir.',
+    href: '/guias/detectar-en-que-se-va-tu-dinero',
+    read: '7 min',
+  },
 ];
 
 const guidesSchema = {
