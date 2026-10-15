@@ -24,7 +24,16 @@ export default function ForgotPasswordPage() {
     setLoading(false);
 
     if (error) {
-      setErrorMessage('No pudimos enviar el correo de recuperación. Inténtalo nuevamente.');
+      const rateLimited =
+        error.status === 429 ||
+        error.code === 'over_email_send_rate_limit' ||
+        error.message.toLowerCase().includes('rate limit');
+
+      setErrorMessage(
+        rateLimited
+          ? 'Has solicitado varios correos en poco tiempo. Espera unos minutos antes de intentarlo nuevamente.'
+          : 'No pudimos enviar el correo de recuperación. Inténtalo nuevamente.',
+      );
       return;
     }
 
