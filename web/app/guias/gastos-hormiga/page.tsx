@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import GuideAdSlot from '@/components/GuideAdSlot';
+import GuideTrustBlock from '@/components/GuideTrustBlock';
 
 const description =
   'Qué son los gastos hormiga, cómo detectarlos y cómo reducirlos sin eliminar todos tus gustos. Aprende a medir su impacto mensual.';
@@ -31,7 +32,9 @@ const articleSchema = {
   mainEntityOfPage: 'https://sfiq.app/guias/gastos-hormiga',
   url: 'https://sfiq.app/guias/gastos-hormiga',
   inLanguage: 'es',
-  author: { '@type': 'Organization', name: 'SFIQ', url: 'https://sfiq.app/' },
+  datePublished: '2026-10-01',
+  dateModified: '2026-10-15',
+  author: { '@type': 'Organization', name: 'Equipo editorial de SFIQ', url: 'https://sfiq.app/politica-editorial' },
   publisher: { '@type': 'Organization', name: 'SFIQ', url: 'https://sfiq.app/' },
 };
 
@@ -46,6 +49,8 @@ export default function GastosHormigaPage() {
           <h1>Gastos hormiga: qué son y cómo controlarlos sin obsesionarte.</h1>
           <p>Son compras pequeñas y frecuentes que parecen poco importantes de forma aislada, pero pueden sumar una cantidad relevante cuando se repiten durante todo el mes.</p>
         </header>
+
+        <GuideTrustBlock />
 
         <div className="articleBody">
           <aside>
@@ -102,4 +107,4 @@ export default function GastosHormigaPage() {
 }
 
 function ArticleHeader(){return <header className="articleTop"><a className="brand" href="/"><span className="brandMark"><span className="brandDollar">$</span></span><span>SFIQ</span></a><a href="/guias">← Guías</a></header>}
-function ArticleFooter(){return <footer className="publicFooter"><a className="brand" href="/"><span className="brandMark"><span className="brandDollar">$</span></span><span>SFIQ</span></a><div><a href="/guias">Guías</a><a href="/calculadoras">Calculadoras</a></div><span>© 2026 SFIQ</span></footer>}
+function ArticleFooter(){return <footer className="publicFooter"><a className="brand" href="/"><span className="brandMark"><span className="brandDollar">$</span></span><span>SFIQ</span></a><div><a href="/guias">Guías</a><a href="/calculadoras">Calculadoras</a><a href="/acerca">Acerca</a><a href="/contacto">Contacto</a><a href="/politica-editorial">Política editorial</a></div><span>© 2026 SFIQ</span></footer>}
