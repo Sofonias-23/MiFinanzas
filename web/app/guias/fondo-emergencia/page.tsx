@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import GuideAdSlot from '@/components/GuideAdSlot';
+import GuideTrustBlock from '@/components/GuideTrustBlock';
 
 const description =
   'Aprende a crear un fondo de emergencia por etapas, separar tu reserva del gasto cotidiano y definir una meta sostenible.';
@@ -33,10 +34,12 @@ const articleSchema = {
   mainEntityOfPage: 'https://sfiq.app/guias/fondo-emergencia',
   url: 'https://sfiq.app/guias/fondo-emergencia',
   inLanguage: 'es',
+  datePublished: '2026-10-01',
+  dateModified: '2026-10-15',
   author: {
     '@type': 'Organization',
-    name: 'SFIQ',
-    url: 'https://sfiq.app/',
+    name: 'Equipo editorial de SFIQ',
+    url: 'https://sfiq.app/politica-editorial',
   },
   publisher: {
     '@type': 'Organization',
@@ -59,6 +62,8 @@ export default function FondoEmergenciaPage() {
           <h1>Cómo construir un fondo de emergencia sin descuidar tu mes actual.</h1>
           <p>La meta no es ahorrar una cifra enorme de inmediato. Es crear una reserva separada del dinero que usas todos los meses.</p>
         </header>
+
+        <GuideTrustBlock />
 
         <div className="articleBody">
           <aside>
@@ -115,5 +120,5 @@ function ArticleHeader() {
   return <header className="articleTop"><a className="brand" href="/"><span className="brandMark"><span className="brandDollar">$</span></span><span>SFIQ</span></a><a href="/guias">← Guías</a></header>;
 }
 function ArticleFooter() {
-  return <footer className="publicFooter"><a className="brand" href="/"><span className="brandMark"><span className="brandDollar">$</span></span><span>SFIQ</span></a><div><a href="/guias">Guías</a><a href="/calculadoras">Calculadoras</a></div><span>© 2026 SFIQ</span></footer>;
+  return <footer className="publicFooter"><a className="brand" href="/"><span className="brandMark"><span className="brandDollar">$</span></span><span>SFIQ</span></a><div><a href="/guias">Guías</a><a href="/calculadoras">Calculadoras</a><a href="/acerca">Acerca</a><a href="/contacto">Contacto</a><a href="/politica-editorial">Política editorial</a></div><span>© 2026 SFIQ</span></footer>;
 }
