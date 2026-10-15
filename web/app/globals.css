@@ -459,6 +459,12 @@ footer div { display: flex; gap: 26px; flex-wrap: wrap; }
 }
 
 
+.authPasswordHint {
+  margin: -4px 0 0;
+  color: #91a3bd;
+  font-size: 12px;
+  line-height: 1.5;
+}
 .formError {
   margin: 0;
   color: #ff8da0;
