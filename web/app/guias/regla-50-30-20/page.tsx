@@ -73,6 +73,15 @@ export default function ReglaPage() {
             <GuideAdSlot position="mid" />
             <section id="adaptar"><h2>3. Ajusta los porcentajes a tu contexto</h2><p>Un mes con deuda prioritaria, ingresos variables o costos de vivienda elevados puede requerir otra distribución. Mantén las categorías y adapta los porcentajes.</p><p>Por ejemplo, una distribución 60/20/20 o 55/25/20 puede ser más representativa para determinadas situaciones. Lo importante es que el reparto ayude a tomar decisiones y no que coincida exactamente con una fórmula.</p><div className="articleCallout"><b>Úsala como tablero</b><p>Compara tu distribución actual con una referencia y decide qué bloque quieres modificar.</p></div></section>
             <section id="util"><h2>4. Es especialmente útil al comenzar un presupuesto</h2><p>Si todavía no tienes categorías detalladas, tres bloques son suficientes para crear una primera lectura del mes y detectar dónde necesitas más detalle.</p><p>Después puedes pasar a un presupuesto más específico por categorías y usar la regla únicamente como una referencia general de equilibrio entre obligaciones, consumo y objetivos.</p></section>
+
+            <section id="limites-regla">
+              <h2>5. Qué hacer cuando la regla no encaja</h2>
+              <p>En ciudades o etapas de vida donde vivienda, transporte o deudas pesan mucho, el bloque de necesidades puede superar 50%. Eso no vuelve “incorrecto” tu presupuesto: indica que debes analizar tu estructura real antes de usar una proporción como meta.</p>
+              <p>La regla sirve mejor como punto de comparación. Si un bloque se aleja mucho, pregunta por qué y si existe margen de ajuste gradual.</p>
+              <h3>¿Debo llegar exactamente a 50/30/20?</h3>
+              <p>No. Es una referencia educativa, no una condición financiera universal. Tu distribución debe responder a ingresos, responsabilidades y prioridades reales.</p>
+            </section>
+
             <GuideAdSlot position="end" />
             <div className="articleNext"><span>CALCULA</span><h3>Escribe tu ingreso y observa la distribución de referencia.</h3><a href="/calculadoras#503020">Abrir calculadora 50/30/20 →</a></div>
           </div>
